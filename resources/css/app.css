@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* scroll suave */
+html {
+    scroll-behavior: smooth;
+}
+
+/* transición suave al cambiar a dark/light */
+@layer utilities {
+    .theme-transition * {
+        transition: background-color 0.35s ease, color 0.35s ease,
+            border-color 0.35s ease, fill 0.35s ease, stroke 0.35s ease;
+    }
+    /* blobs decorativos */
+    .animate-blob {
+        animation: blob 14s infinite;
+    }
+    .animation-delay-2000 {
+        animation-delay: 2s;
+    }
+    .animation-delay-4000 {
+        animation-delay: 4s;
+    }
+}
+@keyframes blob {
+    0% {
+        transform: translate(0, 0) scale(1);
+    }
+    33% {
+        transform: translate(18px, -8px) scale(1.06);
+    }
+    66% {
+        transform: translate(-14px, 8px) scale(0.97);
+    }
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+}
+
+/* respeta usuarios con reduce-motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation: none !important;
+        transition: none !important;
+    }
+}
