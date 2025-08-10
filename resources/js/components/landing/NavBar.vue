@@ -19,7 +19,7 @@
 
             <nav class="hidden md:flex items-center gap-8 text-sm">
                 <a
-                    href="#buscar"
+                    href="/#buscar"
                     class="hover:text-blue-600 dark:hover:text-cyan-400 transition-colors"
                     >Vuelos</a
                 >
@@ -28,6 +28,16 @@
                     to="/mis-viajes"
                     class="hover:text-blue-600 dark:hover:text-cyan-400"
                     >Mis viajes</RouterLink
+                >
+
+                <RouterLink
+                    v-if="
+                        auth.user?.role?.name === 'admin' ||
+                        auth.user?.role?.name === 'root'
+                    "
+                    to="/admin/flights"
+                    class="hover:text-blue-600 dark:hover:text-cyan-400"
+                    >Admin</RouterLink
                 >
             </nav>
 

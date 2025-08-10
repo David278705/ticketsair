@@ -1,277 +1,301 @@
 <template>
-    <section class="container py-8">
-        <h1 class="text-2xl font-bold mb-4">Mis viajes</h1>
+    <div class="bg-slate-50 dark:bg-slate-900/50 min-h-screen">
+        <div class="container py-8 sm:py-12">
+            <h1 class="text-3xl font-bold mb-6">Mis Viajes</h1>
 
-        <div v-if="loading" class="text-sm text-slate-500">Cargando...</div>
-
-        <div v-else>
-            <div v-if="!list.data?.length" class="text-sm text-slate-500">
-                No tienes reservas/compras aún.
+            <div v-if="loading" class="text-center text-slate-500">
+                Cargando tus viajes...
             </div>
-
-            <div class="grid gap-4">
+            <div
+                v-else-if="!bookings.data?.length"
+                class="text-center text-slate-500 p-8 border rounded-xl bg-white dark:bg-slate-950"
+            >
+                No tienes ninguna reserva o compra realizada.
+            </div>
+            <div v-else class="grid gap-6">
                 <article
-                    v-for="b in list.data"
+                    v-for="b in bookings.data"
                     :key="b.id"
-                    class="rounded-2xl border border-slate-200 dark:border-slate-800 p-4"
+                    class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm overflow-hidden"
                 >
                     <header
-                        class="flex flex-wrap items-center justify-between gap-2"
+                        class="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800"
                     >
-                        <div>
-                            <h3 class="font-semibold">
-                                {{ b.flight.origin.name }} →
-                                {{ b.flight.destination.name }}
-                                <span
-                                    class="text-xs ml-2 px-2 py-0.5 rounded-full border"
-                                    :class="chip(b)"
-                                    >{{ b.type }} / {{ b.status }}</span
-                                >
-                            </h3>
-                            <p class="text-sm text-slate-500">
-                                Sale: {{ fmt(b.flight.departure_at) }} · Llega:
-                                {{ fmt(b.flight.arrival_at) }}
-                            </p>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-sm">
-                                Total:
-                                <b>${{ (+b.total_amount).toLocaleString() }}</b>
+                        <div
+                            class="flex flex-wrap items-center justify-between gap-2"
+                        >
+                            <div>
+                                <h3 class="font-semibold text-lg">
+                                    {{ b.flight.origin.name }} →
+                                    {{ b.flight.destination.name }}
+                                </h3>
+                                <p class="text-sm text-slate-500">
+                                    Sale:
+                                    {{ formatDate(b.flight.departure_at) }}
+                                </p>
                             </div>
-                            <div class="text-xs text-slate-500">
-                                Pax: {{ b.seats_count }}
+                            <div class="text-right">
+                                <span
+                                    class="px-2 py-1 text-xs font-medium rounded-full"
+                                    :class="statusClass(b.status)"
+                                >
+                                    {{ b.type }} / {{ b.status }}
+                                </span>
+                                <div class="text-sm mt-1">
+                                    Total:
+                                    <b
+                                        >${{
+                                            (+b.total_amount).toLocaleString()
+                                        }}</b
+                                    >
+                                </div>
                             </div>
                         </div>
                     </header>
 
-                    <!-- Pasajeros -->
-                    <div class="mt-3 overflow-auto">
-                        <table class="min-w-[640px] w-full text-sm">
-                            <thead class="text-slate-500">
+                    <div class="p-4 sm:p-6 overflow-x-auto">
+                        <h4 class="font-semibold mb-2">Pasajeros</h4>
+                        <table class="min-w-full w-full text-sm">
+                            <thead class="text-left text-slate-500">
                                 <tr>
-                                    <th class="text-left py-2">Pasajero</th>
-                                    <th class="text-left">Documento</th>
-                                    <th class="text-left">Asiento</th>
-                                    <th class="text-left">Acciones</th>
+                                    <th class="py-2 pr-2">Pasajero</th>
+                                    <th class="py-2 px-2">Asiento</th>
+                                    <th class="py-2 pl-2">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr
                                     v-for="p in b.passengers"
                                     :key="p.id"
-                                    class="border-t"
+                                    class="border-t border-slate-200 dark:border-slate-800"
                                 >
-                                    <td class="py-2">
+                                    <td class="py-3 pr-2 font-medium">
                                         {{ p.first_name }} {{ p.last_name }}
-                                    </td>
-                                    <td>{{ p.dni }}</td>
-                                    <td>
-                                        {{ p.seat ? p.seat.number : "—" }}
-                                        <span
-                                            class="uppercase text-xs text-slate-400"
-                                            >({{ p.class }})</span
+                                        <br /><span
+                                            class="font-normal text-xs text-slate-400"
+                                            >{{ p.dni }}</span
                                         >
                                     </td>
-                                    <td class="flex flex-wrap gap-2 py-2">
-                                        <button
-                                            v-if="canChangeSeat(b, p)"
-                                            class="h-9 px-3 rounded-lg border"
-                                            @click="openSeat(b, p)"
-                                        >
-                                            Cambiar silla
-                                        </button>
-                                        <button
-                                            v-if="canCheckin(b, p)"
-                                            class="h-9 px-3 rounded-lg bg-blue-600 text-white"
-                                            @click="checkin(b, p)"
-                                        >
-                                            Check-in
-                                        </button>
-                                        <a
-                                            v-if="ticketPdf(b, p)"
-                                            class="h-9 px-3 rounded-lg border inline-flex items-center"
-                                            :href="ticketPdf(b, p)"
-                                            target="_blank"
-                                            >Pasabordo</a
-                                        >
+                                    <td class="py-3 px-2">
+                                        {{
+                                            p.seat
+                                                ? `${p.seat.number} (${p.class})`
+                                                : "Sin asignar"
+                                        }}
+                                    </td>
+                                    <td class="py-3 pl-2">
+                                        <div class="flex flex-wrap gap-2">
+                                            <button
+                                                v-if="canChangeSeat(b, p)"
+                                                @click="
+                                                    openSeatChangeModal(b, p)
+                                                "
+                                                class="h-9 px-3 text-xs rounded-lg border hover:bg-slate-100 dark:hover:bg-slate-800"
+                                            >
+                                                Cambiar Asiento
+                                            </button>
+                                            <button
+                                                v-if="canCheckin(b, p)"
+                                                @click="performCheckin(p)"
+                                                class="h-9 px-3 text-xs rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                                            >
+                                                Check-in
+                                            </button>
+                                            <a
+                                                v-if="getBoardingPassUrl(p)"
+                                                :href="getBoardingPassUrl(p)"
+                                                target="_blank"
+                                                class="h-9 px-3 text-xs rounded-lg border inline-flex items-center hover:bg-slate-100 dark:hover:bg-slate-800"
+                                                >Ver Pasabordo</a
+                                            >
+                                        </div>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
 
-                    <!-- Acciones booking -->
-                    <div class="mt-3 flex flex-wrap gap-2">
+                    <footer
+                        v-if="canCancel(b)"
+                        class="p-4 sm:p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50"
+                    >
                         <button
-                            v-if="canCancel(b)"
-                            class="h-10 px-4 rounded-xl border"
-                            @click="cancel(b)"
+                            @click="cancelBooking(b)"
+                            class="h-10 px-4 text-sm rounded-xl border border-rose-300 dark:border-rose-700 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/50"
                         >
                             Cancelar
+                            {{ b.type === "purchase" ? "Compra" : "Reserva" }}
                         </button>
-                    </div>
+                    </footer>
                 </article>
             </div>
-
-            <!-- Paginación -->
-            <div
-                v-if="list?.meta?.links?.length"
-                class="mt-6 flex flex-wrap gap-2"
-            >
-                <button
-                    v-for="l in list.meta.links"
-                    :key="l.label"
-                    :disabled="!l.url"
-                    @click="go(l.url)"
-                    class="px-3 h-9 rounded-lg border"
-                    v-html="l.label"
-                />
-            </div>
         </div>
-    </section>
-
-    <!-- Modal cambio de asiento -->
-    <SeatChangeModal
-        v-model:open="seatOpen"
-        :flight-id="seatFlightId"
-        :booking-passenger-id="seatPassengerId"
-        :klass="seatClass"
-        :mine-seat-ids="mineSeatIds"
-        :disabled="seatDisabled"
-        :token="auth.token"
-        @changed="reload()"
-    />
+        <SeatChangeModal
+            v-model:open="isSeatModalOpen"
+            :flight-id="selectedPassengerInfo.flightId"
+            :booking-passenger-id="selectedPassengerInfo.passengerId"
+            :klass="selectedPassengerInfo.klass"
+            :current-seat-id="selectedPassengerInfo.currentSeatId"
+            @seatChanged="fetchBookings"
+        />
+    </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, reactive } from "vue";
 import { api } from "../lib/api";
 import { useAuth } from "../stores/auth";
-import SeatChangeModal from "../components/seats/SeatChangeModal.vue";
+import SeatChangeModal from "../components/booking/SeatChangeModal.vue";
 
 const auth = useAuth();
+const bookings = ref({ data: [] });
+const loading = ref(true);
 
-const list = ref({ data: [], meta: null });
-const loading = ref(false);
+const isSeatModalOpen = ref(false);
+const selectedPassengerInfo = reactive({
+    flightId: null,
+    passengerId: null,
+    klass: null,
+    currentSeatId: null,
+});
 
-async function load(url) {
+onMounted(() => fetchBookings());
+
+async function fetchBookings() {
     loading.value = true;
     try {
-        const { data } = await api.get(url || "/me/bookings", {
+        const { data } = await api.get("/me/bookings", {
             headers: { Authorization: "Bearer " + auth.token },
         });
-        list.value = data;
+        bookings.value = data;
     } finally {
         loading.value = false;
     }
 }
-onMounted(() => load());
 
-function go(url) {
-    const u = new URL(url);
-    load(u.pathname + u.search);
-}
-function fmt(d) {
-    return new Date(d).toLocaleString();
+function formatDate(dateString) {
+    return new Date(dateString).toLocaleString("es-CO", {
+        dateStyle: "long",
+        timeStyle: "short",
+    });
 }
 
-function chip(b) {
-    const base = "ml-2";
-    if (b.status === "confirmed")
-        return base + " border-emerald-300 text-emerald-700";
-    if (b.status === "pending")
-        return base + " border-amber-300 text-amber-700";
-    if (b.status === "cancelled")
-        return base + " border-rose-300 text-rose-700";
-    if (b.status === "expired")
-        return base + " border-slate-300 text-slate-500";
-    return base + " border-slate-300 text-slate-500";
+function statusClass(status) {
+    const classes = {
+        confirmed:
+            "bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200",
+        pending:
+            "bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200",
+        cancelled:
+            "bg-rose-100 dark:bg-rose-900 text-rose-800 dark:text-rose-200",
+        expired:
+            "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400",
+    };
+    return classes[status] || classes.expired;
 }
 
-// Reglas UI
-function flightNotDeparted(b) {
-    return new Date(b.flight.departure_at) > new Date();
+// --- Lógica de Negocio para Acciones en la UI ---
+
+function isFlightDeparted(booking) {
+    return new Date(booking.flight.departure_at) < new Date();
 }
-function canCancel(b) {
-    if (b.type === "purchase")
-        return (
-            flightNotDeparted(b) &&
-            new Date(b.flight.departure_at) - new Date() > 60 * 60 * 1000
-        );
-    if (b.type === "reservation")
-        return b.status === "pending" && new Date(b.expires_at) > new Date();
+
+function canCancel(booking) {
+    if (
+        isFlightDeparted(booking) ||
+        booking.status === "cancelled" ||
+        booking.status === "expired"
+    )
+        return false;
+    if (booking.type === "reservation") return booking.status === "pending";
+    if (booking.type === "purchase") {
+        const hoursBeforeDeparture =
+            (new Date(booking.flight.departure_at) - new Date()) /
+            (1000 * 60 * 60);
+        return hoursBeforeDeparture > 1;
+    }
     return false;
 }
-function passengerTicket(b, p) {
-    return b.tickets?.find((t) => t.booking_passenger_id === p.id);
-}
-function canCheckin(b, p) {
-    const t = passengerTicket(b, p);
-    return (
-        b.type === "purchase" &&
-        b.status === "confirmed" &&
-        flightNotDeparted(b) &&
-        t &&
-        t.status !== "checked_in"
+
+function findTicketForPassenger(passenger) {
+    const booking = bookings.value.data.find((b) =>
+        b.passengers.some((p) => p.id === passenger.id)
     );
-}
-function ticketPdf(b, p) {
-    const t = passengerTicket(b, p);
-    return t?.boarding_pass_pdf_path
-        ? `/storage/${t.boarding_pass_pdf_path}`
-        : null;
-}
-function canChangeSeat(b, p) {
-    const t = passengerTicket(b, p);
-    return (
-        b.type === "purchase" &&
-        b.status === "confirmed" &&
-        flightNotDeparted(b) &&
-        t &&
-        t.status !== "checked_in" &&
-        !p.seat_changed_once
+    return booking?.tickets.find(
+        (t) => t.booking_passenger_id === passenger.id
     );
 }
 
-// Acciones
-async function cancel(b) {
-    if (!confirm("¿Seguro que deseas cancelar?")) return;
-    await api.post(
-        `/bookings/${b.id}/cancel`,
-        {},
-        { headers: { Authorization: "Bearer " + auth.token } }
+function findTicketForPassengerInBooking(booking, passenger) {
+    return booking?.tickets?.find(
+        (t) => t.booking_passenger_id === passenger.id
     );
-    await load();
 }
-async function checkin(b, p) {
-    const t = passengerTicket(b, p);
-    if (!t) return alert("No hay ticket");
-    try {
-        await api.post("/checkin/fast", { ticket_code: t.ticket_code });
-        alert("Check-in exitoso. Se generará tu pasabordo.");
-        await load();
-    } catch (e) {
-        alert("No se pudo hacer check-in");
+// y úsalo donde ya tienes b y p
+
+function canCheckin(booking, passenger) {
+    const ticket = findTicketForPassenger(passenger);
+    return ticket && ticket.status === "issued" && !isFlightDeparted(booking);
+}
+
+function canChangeSeat(booking, passenger) {
+    const ticket = findTicketForPassenger(passenger);
+    return (
+        ticket &&
+        ticket.status === "issued" &&
+        !passenger.seat_changed_once &&
+        !isFlightDeparted(booking)
+    );
+}
+
+function getBoardingPassUrl(passenger) {
+    const ticket = findTicketForPassenger(passenger);
+    return ticket?.status === "checked_in" && ticket.boarding_pass_pdf_path
+        ? `/storage/${ticket.boarding_pass_pdf_path}`
+        : null;
+}
+
+// --- Acciones del Usuario ---
+
+async function cancelBooking(booking) {
+    if (
+        confirm(`¿Estás seguro de que quieres cancelar esta ${booking.type}?`)
+    ) {
+        try {
+            await api.post(
+                `/bookings/${booking.id}/cancel`,
+                {},
+                { headers: { Authorization: "Bearer " + auth.token } }
+            );
+            alert("La solicitud ha sido procesada.");
+            fetchBookings();
+        } catch (e) {
+            alert(
+                "Error al cancelar: " + (e.response?.data?.message || e.message)
+            );
+        }
     }
 }
 
-// Modal cambio de asiento
-const seatOpen = ref(false);
-const seatFlightId = ref(null);
-const seatPassengerId = ref(null);
-const seatClass = ref("economy");
-const seatDisabled = ref(false);
-const mineSeatIds = ref([]);
-
-function openSeat(b, p) {
-    seatFlightId.value = b.flight.id;
-    seatPassengerId.value = p.id;
-    seatClass.value = p.class;
-    seatDisabled.value = false;
-    mineSeatIds.value = p.seat ? [p.seat.id] : [];
-    seatOpen.value = true;
+async function performCheckin(passenger) {
+    const ticket = findTicketForPassenger(passenger);
+    if (!ticket) return alert("No se encontró el tiquete para este pasajero.");
+    try {
+        await api.post("/checkin/fast", { ticket_code: ticket.ticket_code });
+        alert("Check-in exitoso. Tu pasabordo está disponible.");
+        fetchBookings();
+    } catch (e) {
+        alert(
+            "Error en el check-in: " + (e.response?.data?.message || e.message)
+        );
+    }
 }
-function reload() {
-    load();
+
+function openSeatChangeModal(booking, passenger) {
+    selectedPassengerInfo.flightId = booking.flight.id;
+    selectedPassengerInfo.passengerId = passenger.id;
+    selectedPassengerInfo.klass = passenger.class;
+    selectedPassengerInfo.currentSeatId = passenger.seat?.id;
+    isSeatModalOpen.value = true;
 }
 </script>

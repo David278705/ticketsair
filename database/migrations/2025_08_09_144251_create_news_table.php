@@ -13,11 +13,13 @@ return new class extends Migration
     {
         Schema::create('news', function (Blueprint $t){
             $t->id();
-            $t->string('title');
+            $t->string('title', 180);
             $t->text('body')->nullable();
+            $t->string('image_path')->nullable(); // storage/public/news/...
             $t->foreignId('flight_id')->nullable()->constrained()->nullOnDelete();
             $t->boolean('is_promotion')->default(false);
             $t->timestamps();
+
         });
     }
 

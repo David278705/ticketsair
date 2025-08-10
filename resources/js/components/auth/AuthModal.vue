@@ -54,6 +54,7 @@
                                     >
                                         Entrar
                                     </button>
+
                                     <button
                                         @click="switchMode('register')"
                                         :class="tabClass('register')"
@@ -64,7 +65,6 @@
                                 </nav>
                             </div>
 
-                            <!-- LOGIN -->
                             <form
                                 v-if="mode === 'login'"
                                 class="grid gap-3"
@@ -74,13 +74,13 @@
                                     v-model.trim="login.email"
                                     type="email"
                                     placeholder="Email"
-                                    class="h-11 rounded-xl border px-3"
+                                    class="h-11 rounded-xl border px-3 bg-transparent"
                                 />
                                 <input
                                     v-model="login.password"
                                     type="password"
                                     placeholder="Contraseña"
-                                    class="h-11 rounded-xl border px-3"
+                                    class="h-11 rounded-xl border px-3 bg-transparent"
                                 />
                                 <button
                                     class="h-11 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-400 text-white"
@@ -96,7 +96,6 @@
                                 </p>
                             </form>
 
-                            <!-- REGISTER -->
                             <form
                                 v-else
                                 class="grid gap-3"
@@ -106,35 +105,37 @@
                                     <input
                                         v-model.trim="reg.first_name"
                                         placeholder="Nombre"
-                                        class="h-11 rounded-xl border px-3"
+                                        class="h-11 rounded-xl border px-3 bg-transparent"
                                     />
                                     <input
                                         v-model.trim="reg.last_name"
                                         placeholder="Apellido"
-                                        class="h-11 rounded-xl border px-3"
+                                        class="h-11 rounded-xl border px-3 bg-transparent"
                                     />
                                 </div>
                                 <div class="grid sm:grid-cols-2 gap-3">
                                     <input
                                         v-model.trim="reg.dni"
-                                        placeholder="Documento (DNI)"
-                                        class="h-11 rounded-xl border px-3"
+                                        placeholder="Documento (DNI / Cédula)"
+                                        class="h-11 rounded-xl border px-3 bg-transparent"
                                     />
+
                                     <input
                                         v-model.trim="reg.username"
                                         placeholder="Usuario (opcional)"
-                                        class="h-11 rounded-xl border px-3"
+                                        class="h-11 rounded-xl border px-3 bg-transparent"
                                     />
                                 </div>
                                 <div class="grid sm:grid-cols-2 gap-3">
                                     <input
                                         v-model="reg.birth_date"
                                         type="date"
-                                        class="h-11 rounded-xl border px-3"
+                                        title="Fecha de Nacimiento"
+                                        class="h-11 rounded-xl border px-3 bg-transparent"
                                     />
                                     <select
                                         v-model="reg.gender"
-                                        class="h-11 rounded-xl border px-3"
+                                        class="h-11 rounded-xl border px-3 bg-transparent"
                                     >
                                         <option value="">
                                             Género (opcional)
@@ -146,27 +147,28 @@
                                 </div>
                                 <input
                                     v-model.trim="reg.billing_address"
-                                    placeholder="Dirección (opcional)"
-                                    class="h-11 rounded-xl border px-3"
+                                    placeholder="Dirección de facturación (opcional)"
+                                    class="h-11 rounded-xl border px-3 bg-transparent"
                                 />
                                 <input
                                     v-model.trim="reg.email"
                                     type="email"
                                     placeholder="Email"
-                                    class="h-11 rounded-xl border px-3"
+                                    class="h-11 rounded-xl border px-3 bg-transparent"
                                 />
                                 <div class="grid sm:grid-cols-2 gap-3">
                                     <input
                                         v-model="reg.password"
                                         type="password"
                                         placeholder="Contraseña"
-                                        class="h-11 rounded-xl border px-3"
+                                        class="h-11 rounded-xl border px-3 bg-transparent"
                                     />
+
                                     <input
                                         v-model="reg.password_confirmation"
                                         type="password"
                                         placeholder="Confirmar contraseña"
-                                        class="h-11 rounded-xl border px-3"
+                                        class="h-11 rounded-xl border px-3 bg-transparent"
                                     />
                                 </div>
                                 <label
@@ -247,6 +249,14 @@ const reg = reactive({
     news_opt_in: false,
 });
 
+// Limpia los errores al cambiar de modo
+watch(
+    () => props.mode,
+    () => {
+        auth.error = null;
+    }
+);
+
 function close() {
     emit("update:open", false);
 }
@@ -271,20 +281,21 @@ async function doLogin() {
 async function doRegister() {
     try {
         await auth.register(reg);
+        // Si el registro es exitoso, intenta hacer login automáticamente
+        await auth.login({ email: reg.email, password: reg.password });
         close();
     } catch {}
 }
 
-// Parsear mensajes de error del backend (422 con errors{})
 const regErrorsList = computed(() => {
     const e = auth.error;
-    if (!e) return [];
-    const errs = e.errors || e; // soporte a distintos formatos
-    if (typeof errs === "string") return [errs];
-    return Object.values(errs).flat().map(String);
+    if (!e || !e.errors) return [];
+    return Object.values(e.errors).flat();
 });
+
 function friendlyError(e) {
+    if (!e) return "";
     if (typeof e === "string") return e;
-    return e.error || e.message || "Error";
+    return e.error || e.message || "Error desconocido";
 }
 </script>

@@ -11,6 +11,8 @@ use App\Http\Controllers\MessageController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 
+use App\Http\Controllers\Admin\FlightAdminController;
+use App\Http\Controllers\PromotionController;
 
 Route::post('/register', [AuthController::class,'register']);
 Route::post('/login',    [AuthController::class,'login']);
@@ -22,11 +24,17 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::get('/flights', [FlightController::class, 'index']);    // búsqueda pública
 Route::get('/flights/{flight}', [FlightController::class,'show']);
 
+
+
+
 Route::middleware(['auth:sanctum','role:admin,root'])->group(function () {
-    Route::post('/flights', [FlightController::class,'store']);
-    Route::put('/flights/{flight}', [FlightController::class,'update']);
-    Route::delete('/flights/{flight}', [FlightController::class,'destroy']); // cancelar
-    Route::post('/flights/{flight}/promotions', [FlightController::class,'storePromotion']);
+  Route::get('/admin/flights', [FlightAdminController::class,'index']);
+  Route::post('/admin/flights', [FlightAdminController::class,'store']);
+  Route::put('/admin/flights/{flight}', [FlightAdminController::class,'update']);
+  Route::post('/admin/flights/{flight}/cancel', [FlightAdminController::class,'cancel']);
+
+  Route::post('/flights/{flight}/promotions', [PromotionController::class,'store']);
+  Route::post('/news', [NewsController::class,'store']);
 });
 
 Route::middleware(['auth:sanctum','role:client'])->group(function () {
@@ -55,4 +63,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
 Route::get('/cities', fn() => \App\Models\City::orderBy('name')->get());
 
 Route::get('/flights/{flight}/seats', [SeatController::class,'index']); // público
+
+Route::get('/news', [NewsController::class,'index']); // público
 

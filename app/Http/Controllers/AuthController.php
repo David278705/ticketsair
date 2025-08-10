@@ -28,8 +28,7 @@ class AuthController extends Controller
       'billing_address'=> $data['billing_address'] ?? null,
       'news_opt_in'    => (bool)($data['news_opt_in'] ?? false),
       'wallet_balance' => 0,
-      // 'name' opcional: puedes derivarlo
-      'name'           => ($data['first_name'].' '.$data['last_name']),
+       'name'            => $data['first_name'] . ' ' . $data['last_name'],
     ]);
 
     // Si quieres forzar verificación de email (opcional):

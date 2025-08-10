@@ -13,12 +13,13 @@ return new class extends Migration
     {
         Schema::create('promotions', function (Blueprint $t){
             $t->id();
-            $t->foreignId('flight_id')->constrained();
-            $t->string('title');
+            $t->foreignId('flight_id')->constrained()->cascadeOnDelete();
+            $t->string('title', 150);
             $t->text('description')->nullable();
-            $t->unsignedTinyInteger('discount_percent'); // 5..90
-            $t->unsignedInteger('max_seats')->nullable(); // opcional
-            $t->boolean('active')->default(true);
+            $t->unsignedTinyInteger('discount_percent'); // 1..90
+            $t->timestamp('starts_at')->nullable();
+            $t->timestamp('ends_at')->nullable();
+            $t->boolean('is_active')->default(true);
             $t->timestamps();
         });
     }

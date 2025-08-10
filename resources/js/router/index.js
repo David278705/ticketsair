@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import HomePage from "../pages/HomePage.vue";
 import MyTrips from "../pages/MyTrips.vue";
 import { useAuth } from "../stores/auth";
+import AdminFlights from "../pages/admin/AdminFlights.vue";
 
 const router = createRouter({
     history: createWebHistory(),
@@ -11,6 +12,11 @@ const router = createRouter({
             path: "/mis-viajes",
             component: MyTrips,
             meta: { auth: true, role: "client" },
+        },
+        {
+            path: "/admin/flights",
+            component: AdminFlights,
+            meta: { auth: true, role: ["admin", "root"] },
         },
     ],
 });

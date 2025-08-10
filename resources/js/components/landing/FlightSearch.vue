@@ -224,7 +224,7 @@
                     >
                     <Listbox v-model="selectedClass" v-slot="{ open }">
                         <ListboxButton
-                            ref="classBtn"
+                            ref="listboxButtonRef"
                             class="relative w-full cursor-default rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 h-11 pl-3 pr-10 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                         >
                             <span class="block truncate">{{
@@ -242,8 +242,8 @@
                         <Teleport to="body">
                             <ListboxOptions
                                 v-if="open"
-                                ref="classOpts"
-                                :style="classFloatingStyles"
+                                ref="listboxOptionsRef"
+                                :style="listboxFloatingStyles"
                                 static
                                 class="z-50 mt-1 max-h-60 w-52 overflow-auto rounded-md bg-white dark:bg-slate-800 py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm"
                             >
@@ -336,14 +336,14 @@
                 <div class="mt-3 flex gap-2">
                     <button
                         class="h-10 px-4 rounded-xl border border-slate-300 dark:border-slate-700"
-                        @click="reserve(f)"
+                        @click="tryReserve(f)"
                         :disabled="actionLoading"
                     >
                         Reservar
                     </button>
                     <button
                         class="h-10 px-4 rounded-xl bg-blue-600 text-white"
-                        @click="buy(f)"
+                        @click="tryBuy(f)"
                         :disabled="actionLoading"
                     >
                         Comprar
@@ -373,9 +373,14 @@
             />
         </div>
 
-        <PassengersModal v-model:open="modalOpen" @submit="onPassengers" />
+        <!-- Modal de Pasajeros -->
+        <PassengersModal
+            v-model:open="passengersOpen"
+            @submit="onPassengersSubmit"
+        />
     </section>
 </template>
+
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import {
@@ -396,78 +401,36 @@ import {
     Search,
     CalendarDays,
 } from "lucide-vue-next";
-import { useFloating, autoUpdate, offset, flip, shift } from "@floating-ui/vue";
+import { useFloating, autoUpdate, offset } from "@floating-ui/vue";
 import { useDark } from "@vueuse/core";
 import { api } from "../../lib/api";
 import { useAuth } from "../../stores/auth";
-import PassengersModal from "../booking/PassengersModal.vue";
 import { useUi } from "../../stores/ui";
+import PassengersModal from "../booking/PassengersModal.vue";
 
-const ui = useUi();
-const modalOpen = ref(false);
-const pendingAction = ref(null); // 'reservation' | 'purchase'
-const currentFlight = ref(null);
-
-function reserve(f) {
-    if (!auth.user) {
-        ui.openAuth("login");
-        return;
-    }
-    ensureClass();
-    currentFlight.value = f;
-    pendingAction.value = "reservation";
-    modalOpen.value = true;
-}
-function buy(f) {
-    if (!auth.user) {
-        ui.openAuth("login");
-        return;
-    }
-
-    ensureClass();
-    currentFlight.value = f;
-    pendingAction.value = "purchase";
-    modalOpen.value = true;
-}
-
-async function onPassengers(passengers) {
-    // llamada real:
-    await api.post(
-        "/bookings",
-        {
-            flight_id: currentFlight.value.id,
-            type: pendingAction.value,
-            class: selectedClass.value.id,
-            passengers,
-        },
-        { headers: { Authorization: "Bearer " + auth.token } }
-    );
-    alert(
-        pendingAction.value === "purchase"
-            ? "Compra realizada"
-            : "Reserva creada (24h)"
-    );
-}
-function ensureClass() {
-    if (!selectedClass.value) selectedClass.value = classes[0];
-}
-
-// ===================================================================
-// 1. ESTADO CENTRAL Y STORES
-// ===================================================================
 const isDark = useDark();
 const auth = useAuth();
+const ui = useUi();
 
-// ===================================================================
-// 2. ESTADO DEL FORMULARIO
-// ===================================================================
-
-// --- Ciudades (Origen y Destino) ---
+// Ciudades
 const cities = ref([]);
 const originId = ref(null);
 const destinationId = ref(null);
 const originQuery = ref("");
 const destQuery = ref("");
+
+const listboxButtonRef = ref(null);
+const listboxOptionsRef = ref(null);
+const { floatingStyles: listboxFloatingStyles } = useFloating(
+    listboxButtonRef,
+    listboxOptionsRef,
+    {
+        whileElementsMounted: autoUpdate,
+        placement: "bottom-start",
+        middleware: [offset(8)],
+        strategy: "fixed", // evita saltos al hacer scroll
+    }
+);
 
 const originLabel = computed(() => originId.value?.name || "Selecciona origen");
 const destinationLabel = computed(
@@ -485,14 +448,13 @@ const filteredDestinations = computed(() =>
     )
 );
 
-// --- Fecha y Clase ---
+// Fecha y clase
 const date = ref();
 const classes = [
     { id: "economy", name: "Economy" },
     { id: "first", name: "First" },
 ];
 const selectedClass = ref(classes[0]);
-
 const formattedDate = computed(() =>
     date.value
         ? date.value.toLocaleDateString("es-ES", {
@@ -503,76 +465,56 @@ const formattedDate = computed(() =>
         : "Selecciona una fecha"
 );
 
-// ===================================================================
-// 3. CONFIGURACIÓN DE FLOATING UI (POPUPS)
-// ===================================================================
-
-// --- Referencias a los elementos del Template (Refs) ---
+// FloatingUI
 const originBtn = ref(null),
     originOpts = ref(null);
 const destBtn = ref(null),
     destOpts = ref(null);
-const classBtn = ref(null),
-    classOpts = ref(null);
-const datePickerButtonRef = ref(null),
-    datePickerPanelRef = ref(null);
-
-// --- Instancias de Floating UI ---
-const commonMiddleware = [offset(8), flip(), shift()];
-
 const { floatingStyles: originFloatingStyles } = useFloating(
     originBtn,
     originOpts,
     {
         whileElementsMounted: autoUpdate,
         placement: "bottom-start",
-        middleware: commonMiddleware,
+        middleware: [offset(8)],
+        strategy: "fixed",
     }
 );
-
 const { floatingStyles: destFloatingStyles } = useFloating(destBtn, destOpts, {
     whileElementsMounted: autoUpdate,
     placement: "bottom-start",
-    middleware: commonMiddleware,
+    middleware: [offset(8)],
+    strategy: "fixed",
 });
-
+const datePickerButtonRef = ref(null);
+const datePickerPanelRef = ref(null);
 const { floatingStyles: datePickerFloatingStyles } = useFloating(
     datePickerButtonRef,
     datePickerPanelRef,
     {
         whileElementsMounted: autoUpdate,
         placement: "bottom-start",
-        middleware: commonMiddleware,
+        middleware: [offset(8)],
     }
 );
 
-const { floatingStyles: classFloatingStyles } = useFloating(
-    classBtn,
-    classOpts,
-    {
-        whileElementsMounted: autoUpdate,
-        placement: "bottom-start",
-        middleware: commonMiddleware,
-    }
-);
-
-// ===================================================================
-// 4. LÓGICA DE API Y ACCIONES
-// ===================================================================
-
-// --- Estado de Carga y Resultados ---
-const loading = ref(false); // Para el botón de "Buscar"
-const resultsLoading = ref(false); // Para el contenedor de resultados
+// Resultados
+const loading = ref(false);
+const resultsLoading = ref(false);
 const results = ref({ data: [], meta: null });
-const actionLoading = ref(false); // Para los botones de "Reservar/Comprar"
+const actionLoading = ref(false);
 
-// --- Hook de Ciclo de Vida ---
+// Estado de compra/reserva
+const passengersOpen = ref(false);
+const pendingAction = ref(null); // 'reservation' | 'purchase'
+const currentFlight = ref(null);
+
 onMounted(async () => {
     const { data } = await api.get("/cities");
     cities.value = data;
 });
 
-// --- Métodos ---
+// Buscar
 async function search(url) {
     loading.value = true;
     resultsLoading.value = true;
@@ -590,10 +532,65 @@ async function search(url) {
         resultsLoading.value = false;
     }
 }
-
 function go(url) {
-    if (!url) return;
     const u = new URL(url);
     search(u.pathname + u.search);
+}
+
+// Flujo de acciones
+function ensureAuth() {
+    if (!auth.user) {
+        ui.openAuth("login");
+        return false;
+    }
+    return true;
+}
+function ensureClass() {
+    if (!selectedClass.value) selectedClass.value = classes[0];
+}
+
+function tryReserve(f) {
+    if (!ensureAuth()) return;
+    ensureClass();
+    currentFlight.value = f;
+    pendingAction.value = "reservation";
+    passengersOpen.value = true;
+}
+function tryBuy(f) {
+    if (!ensureAuth()) return;
+    ensureClass();
+    currentFlight.value = f;
+    pendingAction.value = "purchase";
+    passengersOpen.value = true;
+}
+
+async function onPassengersSubmit(passengers) {
+    if (!currentFlight.value || !pendingAction.value) return;
+    actionLoading.value = true;
+    try {
+        await api.post(
+            "/bookings",
+            {
+                flight_id: currentFlight.value.id,
+                type: pendingAction.value,
+                class: selectedClass.value.id,
+                passengers,
+            },
+            { headers: { Authorization: "Bearer " + auth.token } }
+        );
+        alert(
+            pendingAction.value === "purchase"
+                ? "Compra realizada. Revisa tu correo."
+                : "Reserva creada (24h)"
+        );
+    } catch (e) {
+        alert(
+            e.response?.data?.message ||
+                e.response?.data?.error ||
+                "No se pudo procesar la solicitud."
+        );
+    } finally {
+        actionLoading.value = false;
+    }
 }
 </script>

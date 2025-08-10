@@ -2,64 +2,35 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\NewsStoreRequest;
 use App\Models\News;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class NewsController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
+  // GET /news (público)
+  public function index(Request $r){
+    $q = News::query()->with('flight:id,code,origin_id,destination_id')
+      ->when($r->filled('is_promotion'), fn($q)=>$q->where('is_promotion', (bool)$r->is_promotion))
+      ->orderByDesc('created_at');
+    return $q->paginate(12);
+  }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+  // POST /news (admin/root)
+  public function store(NewsStoreRequest $r){
+    $data = $r->validated();
+    $imgPath = null;
+    if ($r->hasFile('image')) {
+      $imgPath = $r->file('image')->store('news','public');
     }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(News $news)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(News $news)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, News $news)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(News $news)
-    {
-        //
-    }
+    $news = News::create([
+      'title' => $data['title'],
+      'body'  => $data['body'] ?? null,
+      'flight_id' => $data['flight_id'] ?? null,
+      'is_promotion' => (bool)($data['is_promotion'] ?? false),
+      'image_path' => $imgPath,
+    ]);
+    return response()->json($news, 201);
+  }
 }
