@@ -303,7 +303,7 @@
             </div>
         </div>
 
-        <!-- Resultados -->
+        <!-- Resultados PRUEBA -->
         <div
             v-if="resultsLoading"
             class="container mt-6 text-sm text-slate-500"
