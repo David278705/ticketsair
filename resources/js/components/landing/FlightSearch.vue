@@ -308,7 +308,7 @@
             v-if="resultsLoading"
             class="container mt-6 text-sm text-slate-500"
         >
-            Cargando resultados…
+            Cargando resultados… CAMBIO 1
         </div>
 
         <div
