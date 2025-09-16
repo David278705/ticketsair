@@ -1,8 +1,11 @@
 import { createRouter, createWebHistory } from "vue-router";
 import HomePage from "../pages/HomePage.vue";
 import MyTrips from "../pages/MyTrips.vue";
+import ClientMessages from "../pages/ClientMessages.vue";
 import { useAuth } from "../stores/auth";
 import AdminFlights from "../pages/admin/AdminFlights.vue";
+import UserManagement from "../pages/admin/UserManagement.vue";
+import MessagesAdmin from "../pages/admin/MessagesAdmin.vue";
 
 const router = createRouter({
     history: createWebHistory(),
@@ -14,10 +17,27 @@ const router = createRouter({
             meta: { auth: true, role: "client" },
         },
         {
+            path: "/mensajes",
+            component: ClientMessages,
+            meta: { auth: true, role: "client" },
+        },
+        {
             path: "/admin/flights",
             component: AdminFlights,
             meta: { auth: true, role: ["admin", "root"] },
         },
+        {
+            path: "/admin/users",
+            component: UserManagement,
+            meta: { auth: true, role: "root" },
+        },
+        {
+            path: "/admin/messages",
+            component: MessagesAdmin,
+            meta: { auth: true, role: ["admin", "root"] },
+        },
+        // Ruta catch-all para manejar 404s
+        { path: "/:pathMatch(.*)*", redirect: "/" },
     ],
 });
 

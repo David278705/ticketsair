@@ -1,5 +1,5 @@
 <template>
-    <footer class="border-t border-slate-200 dark:border-slate-800">
+    <footer class="border-t border-slate-200">
         <div class="container py-10 grid gap-8 md:grid-cols-4">
             <div class="space-y-2">
                 <div class="flex items-center gap-2 font-semibold">
@@ -9,7 +9,7 @@
                     >
                     <span>TicketsAir</span>
                 </div>
-                <p class="text-sm text-slate-600 dark:text-slate-300">
+                <p class="text-sm text-slate-600">
                     La forma moderna de encontrar y gestionar tus vuelos.
                 </p>
             </div>
@@ -42,7 +42,7 @@
                     <input
                         type="email"
                         placeholder="tu@email"
-                        class="flex-1 h-11 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3"
+                        class="flex-1 h-11 rounded-xl border border-slate-300 bg-white px-3"
                     />
                     <button
                         class="px-4 h-11 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-400 text-white"
@@ -53,7 +53,7 @@
             </div>
         </div>
 
-        <div class="border-t border-slate-200 dark:border-slate-800">
+        <div class="border-t border-slate-200">
             <div
                 class="container py-4 text-xs text-slate-500 flex items-center justify-between"
             >

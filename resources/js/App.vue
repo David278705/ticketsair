@@ -1,5 +1,5 @@
 <template>
-    <div class="min-h-full">
+    <div class="min-h-full overflow-x-hidden">
         <NavBar />
         <RouterView />
         <SiteFooter class="mt-16" />

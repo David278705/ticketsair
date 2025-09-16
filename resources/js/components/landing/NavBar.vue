@@ -29,16 +29,79 @@
                     class="hover:text-blue-600 dark:hover:text-cyan-400"
                     >Mis viajes</RouterLink
                 >
-
                 <RouterLink
+                    v-if="auth.user?.role?.name === 'client'"
+                    to="/mensajes"
+                    class="hover:text-blue-600 dark:hover:text-cyan-400"
+                    >Mensajes</RouterLink
+                >
+
+                <!-- Menú de administración -->
+                <div
                     v-if="
                         auth.user?.role?.name === 'admin' ||
                         auth.user?.role?.name === 'root'
                     "
-                    to="/admin/flights"
-                    class="hover:text-blue-600 dark:hover:text-cyan-400"
-                    >Admin</RouterLink
+                    class="relative"
+                    @mouseenter="adminMenuOpen = true"
+                    @mouseleave="adminMenuOpen = false"
                 >
+                    <button
+                        class="hover:text-blue-600 dark:hover:text-cyan-400 transition-colors flex items-center gap-1"
+                    >
+                        Administración
+                        <svg
+                            class="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M19 9l-7 7-7-7"
+                            ></path>
+                        </svg>
+                    </button>
+
+                    <Transition
+                        enter-active-class="transition ease-out duration-100"
+                        enter-from-class="transform opacity-0 scale-95"
+                        enter-to-class="transform opacity-100 scale-100"
+                        leave-active-class="transition ease-in duration-75"
+                        leave-from-class="transform opacity-100 scale-100"
+                        leave-to-class="transform opacity-0 scale-95"
+                    >
+                        <div
+                            v-if="adminMenuOpen"
+                            class="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 py-1 z-50"
+                        >
+                            <RouterLink
+                                to="/admin/flights"
+                                class="block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                                @click="adminMenuOpen = false"
+                            >
+                                Gestión de vuelos
+                            </RouterLink>
+                            <RouterLink
+                                v-if="auth.user?.role?.name === 'root'"
+                                to="/admin/users"
+                                class="block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                                @click="adminMenuOpen = false"
+                            >
+                                Gestión de usuarios
+                            </RouterLink>
+                            <RouterLink
+                                to="/admin/messages"
+                                class="block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                                @click="adminMenuOpen = false"
+                            >
+                                Mensajes
+                            </RouterLink>
+                        </div>
+                    </Transition>
+                </div>
             </nav>
 
             <!-- Zona derecha -->
@@ -60,7 +123,8 @@
                 <template v-else>
                     <span
                         class="text-sm text-slate-600 dark:text-slate-300 mr-1"
-                        >Hola, {{ auth.user.first_name }}</span
+                        >Hola,
+                        {{ auth.user.first_name || auth.user.role.name }}</span
                     >
                     <button
                         class="px-4 h-10 rounded-xl border border-slate-300/70 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
@@ -137,6 +201,53 @@
                         @click="close()"
                         >Mis viajes</RouterLink
                     >
+                    <RouterLink
+                        v-if="auth.user?.role?.name === 'client'"
+                        to="/mensajes"
+                        @click="close()"
+                        >Mensajes</RouterLink
+                    >
+
+                    <!-- Opciones de admin en móvil -->
+                    <template
+                        v-if="
+                            auth.user?.role?.name === 'admin' ||
+                            auth.user?.role?.name === 'root'
+                        "
+                    >
+                        <div
+                            class="border-t border-slate-200 dark:border-slate-700 pt-2 mt-2"
+                        >
+                            <p
+                                class="text-xs text-slate-500 dark:text-slate-400 font-medium mb-2"
+                            >
+                                ADMINISTRACIÓN
+                            </p>
+                            <RouterLink
+                                to="/admin/flights"
+                                @click="close()"
+                                class="block py-1"
+                            >
+                                Gestión de vuelos
+                            </RouterLink>
+                            <RouterLink
+                                v-if="auth.user?.role?.name === 'root'"
+                                to="/admin/users"
+                                @click="close()"
+                                class="block py-1"
+                            >
+                                Gestión de usuarios
+                            </RouterLink>
+                            <RouterLink
+                                to="/admin/messages"
+                                @click="close()"
+                                class="block py-1"
+                            >
+                                Mensajes
+                            </RouterLink>
+                        </div>
+                    </template>
+
                     <div class="pt-2 flex gap-2">
                         <template v-if="!auth.user">
                             <button
@@ -176,6 +287,7 @@ const auth = useAuth();
 const ui = useUi();
 
 const open = ref(false);
+const adminMenuOpen = ref(false);
 const isDark = ref(false);
 const scrolled = ref(false);
 

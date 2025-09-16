@@ -275,6 +275,7 @@ async function doLogin() {
     try {
         await auth.login(login);
         close();
+        window.location.reload(); // recargar para actualizar estado
     } catch {}
 }
 
@@ -284,6 +285,7 @@ async function doRegister() {
         // Si el registro es exitoso, intenta hacer login automáticamente
         await auth.login({ email: reg.email, password: reg.password });
         close();
+        window.location.reload(); // recargar para actualizar estado
     } catch {}
 }
 

@@ -21,6 +21,7 @@
         "@headlessui/vue": "^1.7.23",
         "@vitejs/plugin-vue": "^6.0.1",
         "@vueuse/core": "^13.6.0",
+        "lodash": "^4.17.21",
         "lucide-vue-next": "^0.539.0",
         "pinia": "^3.0.3",
         "v-calendar": "^3.1.2",

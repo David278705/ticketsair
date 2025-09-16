@@ -1,5 +1,5 @@
 <template>
-    <section class="relative">
+    <section class="relative overflow-hidden">
         <div class="pointer-events-none absolute inset-0 -z-10">
             <div
                 class="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-gradient-to-br from-blue-600/20 to-cyan-400/20 blur-3xl animate-blob"
@@ -16,7 +16,7 @@
         >
             <div class="space-y-6">
                 <span
-                    class="inline-flex items-center gap-2 rounded-full border border-slate-200 dark:border-slate-800 px-3 py-1 text-xs"
+                    class="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1 text-xs"
                 >
                     <span class="size-2 rounded-full bg-green-500"></span>
                     Mejorando precios en tiempo real
@@ -28,13 +28,11 @@
                         >al mejor precio</span
                     >.
                 </h1>
-                <p class="text-slate-600 dark:text-slate-300 max-w-xl">
+                <p class="text-slate-600 max-w-xl">
                     Explora miles de rutas y encuentra tu opción ideal. Sin
                     sobrecargas: claridad, velocidad y seguridad.
                 </p>
-                <div
-                    class="flex gap-6 text-sm text-slate-600 dark:text-slate-300"
-                >
+                <div class="flex gap-6 text-sm text-slate-600">
                     <div>
                         <span class="text-xl font-bold">+120K</span> viajeros
                     </div>
