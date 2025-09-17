@@ -47,7 +47,7 @@
 
             <div class="relative">
                 <div
-                    class="aspect-[4/3] w-full rounded-3xl bg-gradient-to-tr from-blue-600/15 to-cyan-400/15 border border-slate-200 dark:border-slate-800 shadow-xl"
+                    class="aspect-[4/3] w-full rounded-3xl bg-gradient-to-tr from-blue-600/15 to-cyan-400/15 border border-slate-200 shadow-xl"
                 ></div>
                 <div
                     class="absolute inset-0 -z-10 blur-2xl bg-gradient-to-tr from-blue-600/10 to-cyan-400/10 rounded-3xl"

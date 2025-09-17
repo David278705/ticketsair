@@ -8,6 +8,12 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
+use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\PasswordResetMail;
 
 class AuthController extends Controller
 {
@@ -50,5 +56,148 @@ class AuthController extends Controller
   public function logout(Request $r){
     $r->user()->currentAccessToken()->delete();
     return ['ok'=>true];
+  }
+
+  public function forgotPassword(Request $request)
+  {
+    $request->validate([
+      'email' => 'required|email|exists:users,email'
+    ], [
+      'email.required' => 'El email es requerido.',
+      'email.email' => 'Ingresa un email válido.',
+      'email.exists' => 'No encontramos una cuenta con este email.'
+    ]);
+
+    // Generar token para recuperación
+    $token = Str::random(64);
+    
+    // Buscar usuario
+    $user = User::with('role')->where('email', $request->email)->first();
+    
+    // Guardar token en la tabla password_reset_tokens
+    DB::table('password_reset_tokens')->updateOrInsert(
+      ['email' => $request->email],
+      [
+        'token' => Hash::make($token),
+        'created_at' => now()
+      ]
+    );
+
+    // Enviar email de recuperación
+    try {
+      Mail::to($user->email)->send(new PasswordResetMail($user, $token));
+      
+      return response()->json([
+        'status' => 'success',
+        'message' => 'Enlace de recuperación enviado a tu email.',
+        'user_info' => [
+          'id' => $user->id,
+          'email' => $user->email,
+          'name' => $user->first_name . ' ' . $user->last_name,
+          'role' => $user->role->name ?? 'client'
+        ]
+      ]);
+    } catch (\Exception $e) {
+      // Si falla el envío de email, eliminar el token
+      DB::table('password_reset_tokens')
+        ->where('email', $request->email)
+        ->delete();
+        
+      return response()->json([
+        'status' => 'error',
+        'message' => 'Error al enviar el email. Por favor, inténtalo de nuevo.'
+      ], 500);
+    }
+  }
+
+  public function resetPassword(Request $request)
+  {
+    $request->validate([
+      'token' => 'required',
+      'email' => 'required|email|exists:users,email',
+      'password' => 'required|min:8|confirmed',
+    ], [
+      'email.exists' => 'No encontramos una cuenta con este email.',
+      'password.confirmed' => 'Las contraseñas no coinciden.',
+      'password.min' => 'La contraseña debe tener al menos 8 caracteres.'
+    ]);
+
+    // Verificar token
+    $record = DB::table('password_reset_tokens')
+      ->where('email', $request->email)
+      ->first();
+
+    if (!$record || !Hash::check($request->token, $record->token)) {
+      return response()->json([
+        'status' => 'error',
+        'message' => 'Token inválido o expirado.'
+      ], 422);
+    }
+
+    // Verificar si el token no ha expirado (24 horas)
+    if (now()->diffInHours($record->created_at) > 24) {
+      return response()->json([
+        'status' => 'error',
+        'message' => 'El token ha expirado. Solicita uno nuevo.'
+      ], 422);
+    }
+
+    // Actualizar contraseña
+    $user = User::where('email', $request->email)->first();
+    $user->password = Hash::make($request->password);
+    $user->save();
+
+    // Eliminar el token usado
+    DB::table('password_reset_tokens')
+      ->where('email', $request->email)
+      ->delete();
+
+    // Revocar todos los tokens existentes del usuario
+    $user->tokens()->delete();
+
+    return response()->json([
+      'status' => 'success',
+      'message' => 'Contraseña restablecida correctamente. Por favor, inicia sesión.'
+    ]);
+  }
+
+  public function checkResetToken(Request $request)
+  {
+    $request->validate([
+      'token' => 'required|string',
+      'email' => 'required|email'
+    ]);
+
+    // Verificar si existe un registro con este email
+    $record = DB::table('password_reset_tokens')
+      ->where('email', $request->email)
+      ->first();
+
+    if (!$record || !Hash::check($request->token, $record->token)) {
+      return response()->json([
+        'status' => 'error',
+        'message' => 'Token inválido o expirado.'
+      ], 422);
+    }
+
+    // Verificar si el token no ha expirado (24 horas)
+    if (now()->diffInHours($record->created_at) > 24) {
+      return response()->json([
+        'status' => 'error',
+        'message' => 'El token ha expirado. Solicita uno nuevo.'
+      ], 422);
+    }
+
+    // Retornar información básica del usuario
+    $user = User::with('role')->where('email', $request->email)->first();
+    
+    return response()->json([
+      'status' => 'success',
+      'user' => [
+        'name' => $user->name,
+        'email' => $user->email,
+        'role' => $user->role->name ?? 'client'
+      ]
+    ]);
   }
 }

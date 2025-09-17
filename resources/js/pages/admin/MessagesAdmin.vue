@@ -1,23 +1,17 @@
 <template>
-    <div class="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div class="min-h-screen bg-slate-50">
         <!-- Header -->
-        <div
-            class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-4"
-        >
+        <div class="bg-white border-b border-slate-200 px-6 py-4">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1
-                        class="text-2xl font-bold text-slate-900 dark:text-white"
-                    >
+                    <h1 class="text-2xl font-bold text-slate-900">
                         Mensajería
                     </h1>
-                    <p class="text-slate-600 dark:text-slate-400">
-                        Gestionar mensajes de clientes
-                    </p>
+                    <p class="text-slate-600">Gestionar mensajes de clientes</p>
                 </div>
                 <div class="flex items-center gap-4">
                     <div
-                        class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm font-medium"
+                        class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium"
                     >
                         {{ unreadCount }} mensajes sin leer
                     </div>
@@ -38,11 +32,9 @@
         <div class="flex h-[calc(100vh-88px)]">
             <!-- Lista de conversaciones -->
             <div
-                class="w-1/3 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 overflow-y-auto"
+                class="w-1/3 bg-white border-r border-slate-200 overflow-y-auto"
             >
-                <div
-                    class="p-4 border-b border-slate-200 dark:border-slate-700"
-                >
+                <div class="p-4 border-b border-slate-200">
                     <div class="relative">
                         <Search
                             class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400"
@@ -51,7 +43,7 @@
                             v-model="searchQuery"
                             @input="debouncedSearch"
                             placeholder="Buscar conversaciones..."
-                            class="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                     </div>
                 </div>
@@ -64,32 +56,30 @@
 
                 <div
                     v-else-if="conversations.length"
-                    class="divide-y divide-slate-200 dark:divide-slate-700"
+                    class="divide-y divide-slate-200"
                 >
                     <div
                         v-for="conversation in conversations"
                         :key="conversation.id"
                         @click="selectConversation(conversation)"
-                        class="p-4 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer transition-colors"
+                        class="p-4 hover:bg-slate-50 cursor-pointer transition-colors"
                         :class="{
-                            'bg-blue-50 dark:bg-blue-900/30':
+                            'bg-blue-50':
                                 selectedConversation?.id === conversation.id,
                         }"
                     >
                         <div class="flex items-center gap-3">
                             <div class="flex-shrink-0 h-10 w-10">
                                 <div
-                                    class="h-10 w-10 rounded-full bg-slate-300 dark:bg-slate-600 flex items-center justify-center"
+                                    class="h-10 w-10 rounded-full bg-slate-300 flex items-center justify-center"
                                 >
-                                    <User
-                                        class="w-5 h-5 text-slate-600 dark:text-slate-300"
-                                    />
+                                    <User class="w-5 h-5 text-slate-600" />
                                 </div>
                             </div>
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center justify-between">
                                     <p
-                                        class="text-sm font-medium text-slate-900 dark:text-white truncate"
+                                        class="text-sm font-medium text-slate-900 truncate"
                                     >
                                         {{ conversation.from.first_name }}
                                         {{ conversation.from.last_name }}
@@ -99,23 +89,17 @@
                                             v-if="!conversation.is_read"
                                             class="h-2 w-2 bg-blue-600 rounded-full"
                                         ></span>
-                                        <time
-                                            class="text-xs text-slate-500 dark:text-slate-400"
-                                        >
+                                        <time class="text-xs text-slate-500">
                                             {{
                                                 formatTime(conversation.sent_at)
                                             }}
                                         </time>
                                     </div>
                                 </div>
-                                <p
-                                    class="text-sm text-slate-600 dark:text-slate-400 truncate"
-                                >
+                                <p class="text-sm text-slate-600 truncate">
                                     {{ conversation.subject }}
                                 </p>
-                                <p
-                                    class="text-xs text-slate-500 dark:text-slate-500 truncate mt-1"
-                                >
+                                <p class="text-xs text-slate-500 truncate mt-1">
                                     {{ conversation.body }}
                                 </p>
                             </div>
@@ -123,10 +107,7 @@
                     </div>
                 </div>
 
-                <div
-                    v-else
-                    class="p-4 text-center text-slate-500 dark:text-slate-400"
-                >
+                <div v-else class="p-4 text-center text-slate-500">
                     No hay conversaciones disponibles.
                 </div>
             </div>
@@ -135,20 +116,14 @@
             <div class="flex-1 flex flex-col">
                 <div v-if="selectedConversation" class="flex flex-col h-full">
                     <!-- Header de conversación -->
-                    <div
-                        class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-4"
-                    >
+                    <div class="bg-white border-b border-slate-200 px-6 py-4">
                         <div class="flex items-center justify-between">
                             <div>
-                                <h3
-                                    class="text-lg font-medium text-slate-900 dark:text-white"
-                                >
+                                <h3 class="text-lg font-medium text-slate-900">
                                     {{ selectedConversation.from.first_name }}
                                     {{ selectedConversation.from.last_name }}
                                 </h3>
-                                <p
-                                    class="text-sm text-slate-600 dark:text-slate-400"
-                                >
+                                <p class="text-sm text-slate-600">
                                     {{ selectedConversation.from.email }}
                                 </p>
                             </div>
@@ -164,23 +139,17 @@
 
                     <!-- Mensaje original -->
                     <div
-                        class="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50 dark:bg-slate-900"
+                        class="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50"
                     >
-                        <div
-                            class="bg-white dark:bg-slate-800 rounded-lg p-4 shadow-sm"
-                        >
+                        <div class="bg-white rounded-lg p-4 shadow-sm">
                             <div class="flex items-center justify-between mb-3">
                                 <div class="flex items-center gap-2">
                                     <div
-                                        class="h-8 w-8 rounded-full bg-slate-300 dark:bg-slate-600 flex items-center justify-center"
+                                        class="h-8 w-8 rounded-full bg-slate-300 flex items-center justify-center"
                                     >
-                                        <User
-                                            class="w-4 h-4 text-slate-600 dark:text-slate-300"
-                                        />
+                                        <User class="w-4 h-4 text-slate-600" />
                                     </div>
-                                    <span
-                                        class="font-medium text-slate-900 dark:text-white"
-                                    >
+                                    <span class="font-medium text-slate-900">
                                         {{
                                             selectedConversation.from.first_name
                                         }}
@@ -189,9 +158,7 @@
                                         }}
                                     </span>
                                 </div>
-                                <time
-                                    class="text-sm text-slate-500 dark:text-slate-400"
-                                >
+                                <time class="text-sm text-slate-500">
                                     {{
                                         formatDateTime(
                                             selectedConversation.sent_at
@@ -199,14 +166,10 @@
                                     }}
                                 </time>
                             </div>
-                            <h4
-                                class="font-medium text-slate-900 dark:text-white mb-2"
-                            >
+                            <h4 class="font-medium text-slate-900 mb-2">
                                 {{ selectedConversation.subject }}
                             </h4>
-                            <div
-                                class="text-slate-700 dark:text-slate-300 whitespace-pre-wrap"
-                            >
+                            <div class="text-slate-700 whitespace-pre-wrap">
                                 {{ selectedConversation.body }}
                             </div>
                         </div>
@@ -216,7 +179,7 @@
                             <div
                                 v-for="message in fullConversation"
                                 :key="message.id"
-                                class="bg-white dark:bg-slate-800 rounded-lg p-4 shadow-sm"
+                                class="bg-white rounded-lg p-4 shadow-sm"
                                 :class="
                                     message.from.id === auth.user?.id
                                         ? 'ml-8'
@@ -232,8 +195,8 @@
                                             :class="
                                                 message.from.id ===
                                                 auth.user?.id
-                                                    ? 'bg-blue-100 dark:bg-blue-900'
-                                                    : 'bg-slate-300 dark:bg-slate-600'
+                                                    ? 'bg-blue-100'
+                                                    : 'bg-slate-300'
                                             "
                                         >
                                             <User
@@ -241,13 +204,13 @@
                                                 :class="
                                                     message.from.id ===
                                                     auth.user?.id
-                                                        ? 'text-blue-600 dark:text-blue-300'
-                                                        : 'text-slate-600 dark:text-slate-300'
+                                                        ? 'text-blue-600'
+                                                        : 'text-slate-600'
                                                 "
                                             />
                                         </div>
                                         <span
-                                            class="font-medium text-slate-900 dark:text-white"
+                                            class="font-medium text-slate-900"
                                         >
                                             {{ message.from.first_name }}
                                             {{ message.from.last_name }}
@@ -256,20 +219,16 @@
                                                     message.from.id ===
                                                     auth.user?.id
                                                 "
-                                                class="text-xs text-blue-600 dark:text-blue-400"
+                                                class="text-xs text-blue-600"
                                                 >(Tú)</span
                                             >
                                         </span>
                                     </div>
-                                    <time
-                                        class="text-sm text-slate-500 dark:text-slate-400"
-                                    >
+                                    <time class="text-sm text-slate-500">
                                         {{ formatDateTime(message.sent_at) }}
                                     </time>
                                 </div>
-                                <div
-                                    class="text-slate-700 dark:text-slate-300 whitespace-pre-wrap"
-                                >
+                                <div class="text-slate-700 whitespace-pre-wrap">
                                     {{ message.body }}
                                 </div>
                             </div>
@@ -277,13 +236,11 @@
                     </div>
 
                     <!-- Form de respuesta -->
-                    <div
-                        class="bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 p-6"
-                    >
+                    <div class="bg-white border-t border-slate-200 p-6">
                         <form @submit.prevent="sendReply" class="space-y-4">
                             <div>
                                 <label
-                                    class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+                                    class="block text-sm font-medium text-slate-700 mb-2"
                                 >
                                     Respuesta
                                 </label>
@@ -292,7 +249,7 @@
                                     rows="4"
                                     required
                                     placeholder="Escribe tu respuesta..."
-                                    class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                    class="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                                 />
                             </div>
                             <div class="flex justify-end">
@@ -317,11 +274,11 @@
 
                 <div
                     v-else
-                    class="flex-1 flex items-center justify-center text-slate-500 dark:text-slate-400"
+                    class="flex-1 flex items-center justify-center text-slate-500"
                 >
                     <div class="text-center">
                         <MessageSquare
-                            class="w-16 h-16 mx-auto mb-4 text-slate-300 dark:text-slate-600"
+                            class="w-16 h-16 mx-auto mb-4 text-slate-300"
                         />
                         <p class="text-lg font-medium">
                             Selecciona una conversación

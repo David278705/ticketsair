@@ -5,23 +5,23 @@
             <article
                 v-for="r in routes"
                 :key="r.id"
-                class="rounded-2xl border border-slate-200 dark:border-slate-800 p-5 hover:shadow-md transition"
+                class="rounded-2xl border border-slate-200 p-5 hover:shadow-md transition"
             >
                 <div class="flex items-center justify-between">
                     <h3 class="font-semibold">{{ r.from }} → {{ r.to }}</h3>
                     <span class="text-sm text-slate-500">{{ r.duration }}</span>
                 </div>
-                <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                <p class="mt-2 text-sm text-slate-600">
                     Desde
-                    <b class="text-slate-900 dark:text-white">{{ r.price }}</b>
+                    <b class="text-slate-900">{{ r.price }}</b>
                 </p>
                 <div class="mt-3 flex flex-wrap gap-2 text-xs">
                     <span
-                        class="px-2 py-1 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-200/70 dark:border-blue-500/20"
+                        class="px-2 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200/70"
                         >Economy</span
                     >
                     <span
-                        class="px-2 py-1 rounded-full bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-200/70 dark:border-amber-500/20"
+                        class="px-2 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200/70"
                         >Flexible</span
                     >
                 </div>

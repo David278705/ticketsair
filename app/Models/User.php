@@ -26,6 +26,7 @@ class User extends Authenticatable {
   protected $casts = [
     'birth_date'       => 'date',
     'news_opt_in'      => 'bool',
+    'birth_place'    => 'json',
     'email_verified_at'=> 'datetime',
     'wallet_balance'   => 'decimal:2',
   ];

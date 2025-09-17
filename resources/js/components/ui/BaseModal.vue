@@ -25,14 +25,14 @@
                         leave-to="opacity-0 translate-y-2 scale-95"
                     >
                         <DialogPanel
-                            class="w-full max-w-3xl rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-xl"
+                            class="w-full max-w-3xl rounded-2xl bg-white p-6 shadow-xl"
                         >
                             <div class="flex items-center justify-between mb-3">
                                 <DialogTitle class="text-lg font-semibold">
                                     <slot name="title">{{ title }}</slot>
                                 </DialogTitle>
                                 <button
-                                    class="size-9 grid place-items-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                                    class="size-9 grid place-items-center rounded-lg hover:bg-slate-100"
                                     type="button"
                                     @click="onClose"
                                 >

@@ -1,5 +1,5 @@
 <template>
-    <div class="bg-slate-50 dark:bg-slate-900/50 min-h-screen">
+    <div class="bg-slate-50 min-h-screen">
         <div class="container py-8 sm:py-12">
             <h1 class="text-3xl font-bold mb-6">Mis Viajes</h1>
 
@@ -8,7 +8,7 @@
             </div>
             <div
                 v-else-if="!bookings.data?.length"
-                class="text-center text-slate-500 p-8 border rounded-xl bg-white dark:bg-slate-950"
+                class="text-center text-slate-500 p-8 border rounded-xl bg-white"
             >
                 No tienes ninguna reserva o compra realizada.
             </div>
@@ -16,11 +16,9 @@
                 <article
                     v-for="b in bookings.data"
                     :key="b.id"
-                    class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm overflow-hidden"
+                    class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden"
                 >
-                    <header
-                        class="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800"
-                    >
+                    <header class="p-4 sm:p-6 border-b border-slate-200">
                         <div
                             class="flex flex-wrap items-center justify-between gap-2"
                         >
@@ -67,7 +65,7 @@
                                 <tr
                                     v-for="p in b.passengers"
                                     :key="p.id"
-                                    class="border-t border-slate-200 dark:border-slate-800"
+                                    class="border-t border-slate-200"
                                 >
                                     <td class="py-3 pr-2 font-medium">
                                         {{ p.first_name }} {{ p.last_name }}
@@ -90,7 +88,7 @@
                                                 @click="
                                                     openSeatChangeModal(b, p)
                                                 "
-                                                class="h-9 px-3 text-xs rounded-lg border hover:bg-slate-100 dark:hover:bg-slate-800"
+                                                class="h-9 px-3 text-xs rounded-lg border hover:bg-slate-100"
                                             >
                                                 Cambiar Asiento
                                             </button>
@@ -105,7 +103,7 @@
                                                 v-if="getBoardingPassUrl(p)"
                                                 :href="getBoardingPassUrl(p)"
                                                 target="_blank"
-                                                class="h-9 px-3 text-xs rounded-lg border inline-flex items-center hover:bg-slate-100 dark:hover:bg-slate-800"
+                                                class="h-9 px-3 text-xs rounded-lg border inline-flex items-center hover:bg-slate-100"
                                                 >Ver Pasabordo</a
                                             >
                                         </div>
@@ -117,11 +115,11 @@
 
                     <footer
                         v-if="canCancel(b)"
-                        class="p-4 sm:p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50"
+                        class="p-4 sm:p-6 border-t border-slate-200 bg-slate-50"
                     >
                         <button
                             @click="cancelBooking(b)"
-                            class="h-10 px-4 text-sm rounded-xl border border-rose-300 dark:border-rose-700 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/50"
+                            class="h-10 px-4 text-sm rounded-xl border border-rose-300 text-rose-600 hover:bg-rose-50"
                         >
                             Cancelar
                             {{ b.type === "purchase" ? "Compra" : "Reserva" }}
@@ -182,14 +180,10 @@ function formatDate(dateString) {
 
 function statusClass(status) {
     const classes = {
-        confirmed:
-            "bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200",
-        pending:
-            "bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200",
-        cancelled:
-            "bg-rose-100 dark:bg-rose-900 text-rose-800 dark:text-rose-200",
-        expired:
-            "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400",
+        confirmed: "bg-emerald-100  text-emerald-800 ",
+        pending: "bg-amber-100  text-amber-800 ",
+        cancelled: "bg-rose-100  text-rose-800 ",
+        expired: "bg-slate-100  text-slate-600 ",
     };
     return classes[status] || classes.expired;
 }

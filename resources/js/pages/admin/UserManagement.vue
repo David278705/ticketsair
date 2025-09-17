@@ -1,17 +1,13 @@
 <template>
-    <div class="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div class="min-h-screen bg-slate-50">
         <!-- Header -->
-        <div
-            class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-4"
-        >
+        <div class="bg-white border-b border-slate-200 px-6 py-4">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1
-                        class="text-2xl font-bold text-slate-900 dark:text-white"
-                    >
+                    <h1 class="text-2xl font-bold text-slate-900">
                         Gestión de Usuarios
                     </h1>
-                    <p class="text-slate-600 dark:text-slate-400">
+                    <p class="text-slate-600">
                         Administrar usuarios del sistema
                     </p>
                 </div>
@@ -26,9 +22,7 @@
         </div>
 
         <!-- Filtros -->
-        <div
-            class="p-6 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700"
-        >
+        <div class="p-6 bg-white border-b border-slate-200">
             <div class="flex flex-wrap gap-4">
                 <!-- Búsqueda -->
                 <div class="flex-1 min-w-64">
@@ -40,7 +34,7 @@
                             v-model="filters.search"
                             @input="debouncedSearch"
                             placeholder="Buscar por nombre, email o DNI..."
-                            class="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                     </div>
                 </div>
@@ -49,7 +43,7 @@
                 <select
                     v-model="filters.role"
                     @change="loadUsers"
-                    class="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                    class="px-4 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:ring-2 focus:ring-blue-500"
                 >
                     <option value="">Todos los roles</option>
                     <option value="root">Root</option>
@@ -62,7 +56,7 @@
                 <select
                     v-model="filters.active"
                     @change="loadUsers"
-                    class="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                    class="px-4 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:ring-2 focus:ring-blue-500"
                 >
                     <option value="">Todos los estados</option>
                     <option value="true">Activo</option>
@@ -80,76 +74,68 @@
             </div>
 
             <div
-                v-else-if="users.data?.length"
-                class="bg-white dark:bg-slate-800 rounded-lg shadow overflow-hidden"
+                v-else-if="users.length"
+                class="bg-white rounded-lg shadow overflow-hidden"
             >
                 <div class="overflow-x-auto">
-                    <table
-                        class="min-w-full divide-y divide-slate-200 dark:divide-slate-700"
-                    >
-                        <thead class="bg-slate-50 dark:bg-slate-700">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
                             <tr>
                                 <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider"
+                                    class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
                                 >
                                     Usuario
                                 </th>
                                 <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider"
+                                    class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
                                 >
                                     Rol
                                 </th>
                                 <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider"
+                                    class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
                                 >
                                     Estado
                                 </th>
                                 <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider"
+                                    class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
                                 >
                                     Fecha de registro
                                 </th>
                                 <th
-                                    class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider"
+                                    class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider"
                                 >
                                     Acciones
                                 </th>
                             </tr>
                         </thead>
-                        <tbody
-                            class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700"
-                        >
+                        <tbody class="bg-white divide-y divide-slate-200">
                             <tr
-                                v-for="user in users.data"
+                                v-for="user in users"
                                 :key="user.id"
-                                class="hover:bg-slate-50 dark:hover:bg-slate-700"
+                                class="hover:bg-slate-50"
                             >
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0 h-10 w-10">
                                             <div
-                                                class="h-10 w-10 rounded-full bg-slate-300 dark:bg-slate-600 flex items-center justify-center"
+                                                class="h-10 w-10 rounded-full bg-slate-300 flex items-center justify-center"
                                             >
                                                 <User
-                                                    class="w-5 h-5 text-slate-600 dark:text-slate-300"
+                                                    class="w-5 h-5 text-slate-600"
                                                 />
                                             </div>
                                         </div>
                                         <div class="ml-4">
                                             <div
-                                                class="text-sm font-medium text-slate-900 dark:text-white"
+                                                class="text-sm font-medium text-slate-900"
                                             >
                                                 {{ user.first_name }}
                                                 {{ user.last_name }}
                                             </div>
-                                            <div
-                                                class="text-sm text-slate-500 dark:text-slate-400"
-                                            >
+                                            <div class="text-sm text-slate-500">
                                                 {{ user.email }}
                                             </div>
-                                            <div
-                                                class="text-xs text-slate-400 dark:text-slate-500"
-                                            >
+                                            <div class="text-xs text-slate-400">
                                                 DNI: {{ user.dni }}
                                             </div>
                                         </div>
@@ -172,8 +158,8 @@
                                         class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
                                         :class="
                                             user.is_active
-                                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                                ? 'bg-green-100 text-green-800'
+                                                : 'bg-red-100 text-red-800'
                                         "
                                     >
                                         {{
@@ -184,7 +170,7 @@
                                     </span>
                                 </td>
                                 <td
-                                    class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400"
+                                    class="px-6 py-4 whitespace-nowrap text-sm text-slate-500"
                                 >
                                     {{ formatDate(user.created_at) }}
                                 </td>
@@ -196,14 +182,14 @@
                                     >
                                         <button
                                             @click="editUser(user)"
-                                            class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                                            class="text-blue-600 hover:text-blue-900"
                                             title="Editar"
                                         >
                                             <Edit class="w-4 h-4" />
                                         </button>
                                         <button
                                             @click="resetPassword(user)"
-                                            class="text-orange-600 hover:text-orange-900 dark:text-orange-400 dark:hover:text-orange-300"
+                                            class="text-orange-600 hover:text-orange-900"
                                             title="Resetear contraseña"
                                         >
                                             <Key class="w-4 h-4" />
@@ -213,8 +199,8 @@
                                             @click="toggleStatus(user)"
                                             :class="
                                                 user.is_active
-                                                    ? 'text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300'
-                                                    : 'text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300'
+                                                    ? 'text-red-600 hover:text-red-900'
+                                                    : 'text-green-600 hover:text-green-900'
                                             "
                                             :title="
                                                 user.is_active
@@ -241,10 +227,10 @@
                 <!-- Paginación -->
                 <div
                     v-if="users.meta?.links?.length"
-                    class="px-6 py-4 bg-slate-50 dark:bg-slate-700 border-t border-slate-200 dark:border-slate-600"
+                    class="px-6 py-4 bg-slate-50 border-t border-slate-200"
                 >
                     <div class="flex items-center justify-between">
-                        <div class="text-sm text-slate-700 dark:text-slate-300">
+                        <div class="text-sm text-slate-700">
                             Mostrando {{ users.meta.from }} a
                             {{ users.meta.to }} de
                             {{ users.meta.total }} resultados
@@ -255,11 +241,11 @@
                                 :key="link.label"
                                 @click="changePage(link.url)"
                                 :disabled="!link.url"
-                                class="px-3 py-1 rounded border border-slate-300 dark:border-slate-600 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-600"
+                                class="px-3 py-1 rounded border border-slate-300 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-100"
                                 :class="
                                     link.active
                                         ? 'bg-blue-600 text-white border-blue-600'
-                                        : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+                                        : 'bg-white  text-slate-700'
                                 "
                                 v-html="link.label"
                             />
@@ -268,10 +254,7 @@
                 </div>
             </div>
 
-            <div
-                v-else
-                class="text-center py-8 text-slate-500 dark:text-slate-400"
-            >
+            <div v-else class="text-center py-8 text-slate-500">
                 No se encontraron usuarios.
             </div>
         </div>
@@ -403,11 +386,10 @@ const onPasswordReset = () => {
 // Utilidades
 const getRoleBadgeClass = (role) => {
     const classes = {
-        root: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
-        admin: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-        client: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-        visitor:
-            "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
+        root: "bg-purple-100 text-purple-800  ",
+        admin: "bg-blue-100 text-blue-800  ",
+        client: "bg-green-100 text-green-800  ",
+        visitor: "bg-gray-100 text-gray-800  ",
     };
     return classes[role] || classes.visitor;
 };

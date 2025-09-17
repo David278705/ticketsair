@@ -1,7 +1,7 @@
 <template>
     <section id="buscar" class="md:mb-5 container -mt-8 md:-mt-10">
         <div
-            class="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 backdrop-blur p-4 md:p-5 shadow-sm transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+            class="rounded-2xl border border-slate-200/80 bg-white/60 backdrop-blur p-4 md:p-5 shadow-sm transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg"
         >
             <div class="grid gap-4 md:grid-cols-5 md:items-end">
                 <!-- Origen -->
@@ -15,7 +15,7 @@
                     <Listbox v-model="originId" by="id" v-slot="{ open }">
                         <ListboxButton
                             ref="originBtn"
-                            class="relative w-full cursor-default rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 h-11 pl-10 pr-10 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 flex items-center"
+                            class="relative w-full cursor-default rounded-xl bg-white border border-slate-300 h-11 pl-10 pr-10 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 flex items-center"
                         >
                             <MapPin
                                 class="absolute left-3 w-5 h-5 text-slate-400"
@@ -42,15 +42,15 @@
                                 ref="originOpts"
                                 :style="originFloatingStyles"
                                 static
-                                class="z-50 mt-1 max-h-60 w-64 overflow-auto rounded-xl bg-white dark:bg-slate-800 py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm"
+                                class="z-50 mt-1 max-h-60 w-64 overflow-auto rounded-xl bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm"
                             >
                                 <div
-                                    class="px-3 py-2 sticky top-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur border-b border-slate-200/60 dark:border-slate-700"
+                                    class="px-3 py-2 sticky top-0 bg-white/95 backdrop-blur border-b border-slate-200/60"
                                 >
                                     <input
                                         v-model="originQuery"
                                         placeholder="Buscar ciudad…"
-                                        class="w-full h-9 rounded-lg border px-3 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 outline-none"
+                                        class="w-full h-9 rounded-lg border px-3 bg-white border-slate-300 outline-none"
                                     />
                                 </div>
                                 <ListboxOption
@@ -62,8 +62,8 @@
                                     <li
                                         :class="[
                                             active
-                                                ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100'
-                                                : 'text-gray-900 dark:text-gray-200',
+                                                ? 'bg-blue-100  text-blue-900 '
+                                                : 'text-gray-900',
                                             'relative cursor-default select-none py-2 pl-10 pr-4',
                                         ]"
                                     >
@@ -103,7 +103,7 @@
                     <Listbox v-model="destinationId" by="id" v-slot="{ open }">
                         <ListboxButton
                             ref="destBtn"
-                            class="relative w-full cursor-default rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 h-11 pl-10 pr-10 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 flex items-center"
+                            class="relative w-full cursor-default rounded-xl bg-white border border-slate-300 h-11 pl-10 pr-10 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 flex items-center"
                         >
                             <MapPin
                                 class="absolute left-3 w-5 h-5 text-slate-400"
@@ -130,15 +130,15 @@
                                 ref="destOpts"
                                 :style="destFloatingStyles"
                                 static
-                                class="z-50 mt-1 max-h-60 w-64 overflow-auto rounded-xl bg-white dark:bg-slate-800 py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm"
+                                class="z-50 mt-1 max-h-60 w-64 overflow-auto rounded-xl bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm"
                             >
                                 <div
-                                    class="px-3 py-2 sticky top-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur border-b border-slate-200/60 dark:border-slate-700"
+                                    class="px-3 py-2 sticky top-0 bg-white/95 backdrop-blur border-b border-slate-200/60"
                                 >
                                     <input
                                         v-model="destQuery"
                                         placeholder="Buscar ciudad…"
-                                        class="w-full h-9 rounded-lg border px-3 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 outline-none"
+                                        class="w-full h-9 rounded-lg border px-3 bg-white border-slate-300 outline-none"
                                     />
                                 </div>
                                 <ListboxOption
@@ -150,8 +150,8 @@
                                     <li
                                         :class="[
                                             active
-                                                ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100'
-                                                : 'text-gray-900 dark:text-gray-200',
+                                                ? 'bg-blue-100  text-blue-900'
+                                                : 'text-gray-900',
                                             'relative cursor-default select-none py-2 pl-10 pr-4',
                                         ]"
                                     >
@@ -188,7 +188,7 @@
                     <Popover class="relative" v-slot="{ close }">
                         <PopoverButton
                             ref="datePickerButtonRef"
-                            class="relative w-full cursor-default rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 h-11 pl-10 pr-3 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center"
+                            class="relative w-full cursor-default rounded-xl bg-white border border-slate-300 h-11 pl-10 pr-3 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center"
                         >
                             <CalendarDays
                                 class="absolute left-3 w-5 h-5 text-slate-400"
@@ -225,7 +225,7 @@
                     <Listbox v-model="selectedClass" v-slot="{ open }">
                         <ListboxButton
                             ref="listboxButtonRef"
-                            class="relative w-full cursor-default rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 h-11 pl-3 pr-10 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                            class="relative w-full cursor-default rounded-xl bg-white border border-slate-300 h-11 pl-3 pr-10 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                         >
                             <span class="block truncate">{{
                                 selectedClass.name
@@ -245,7 +245,7 @@
                                 ref="listboxOptionsRef"
                                 :style="listboxFloatingStyles"
                                 static
-                                class="z-50 mt-1 max-h-60 w-52 overflow-auto rounded-md bg-white dark:bg-slate-800 py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm"
+                                class="z-50 mt-1 max-h-60 w-52 overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm"
                             >
                                 <ListboxOption
                                     v-for="clase in classes"
@@ -256,8 +256,8 @@
                                     <li
                                         :class="[
                                             active
-                                                ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100'
-                                                : 'text-gray-900 dark:text-gray-200',
+                                                ? 'bg-blue-100  text-blue-900'
+                                                : 'text-gray-900 ',
                                             'relative cursor-default select-none py-2 pl-10 pr-4',
                                         ]"
                                     >
@@ -319,7 +319,7 @@
             <article
                 v-for="f in results.data"
                 :key="f.id"
-                class="rounded-2xl border border-slate-200 dark:border-slate-800 p-4 transition-transform hover:-translate-y-0.5 hover:shadow-lg"
+                class="rounded-2xl border border-slate-200 p-4 transition-transform hover:-translate-y-0.5 hover:shadow-lg"
             >
                 <header class="flex justify-between">
                     <h3 class="font-semibold">
@@ -335,7 +335,7 @@
                 </p>
                 <div class="mt-3 flex gap-2">
                     <button
-                        class="h-10 px-4 rounded-xl border border-slate-300 dark:border-slate-700"
+                        class="h-10 px-4 rounded-xl border border-slate-300"
                         @click="tryReserve(f)"
                         :disabled="actionLoading"
                     >
@@ -368,7 +368,7 @@
                 :key="l.label"
                 :disabled="!l.url"
                 @click="go(l.url)"
-                class="px-3 h-9 rounded-lg border border-slate-300 dark:border-slate-700"
+                class="px-3 h-9 rounded-lg border border-slate-300"
                 v-html="l.label"
             />
         </div>

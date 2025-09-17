@@ -27,11 +27,11 @@
                         leave-to="opacity-0 scale-95"
                     >
                         <DialogPanel
-                            class="w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-slate-800 p-6 text-left align-middle shadow-xl transition-all"
+                            class="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all"
                         >
                             <DialogTitle
                                 as="h3"
-                                class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4"
+                                class="text-lg font-medium leading-6 text-gray-900 mb-4"
                             >
                                 Editar Usuario
                             </DialogTitle>
@@ -44,14 +44,14 @@
                                 <!-- Email -->
                                 <div>
                                     <label
-                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                                        class="block text-sm font-medium text-gray-700 mb-1"
                                     >
                                         Email
                                     </label>
                                     <input
                                         v-model="form.email"
                                         type="email"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         :class="{
                                             'border-red-500': errors.email,
                                         }"
@@ -68,14 +68,14 @@
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label
-                                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                                            class="block text-sm font-medium text-gray-700 mb-1"
                                         >
                                             Nombre
                                         </label>
                                         <input
                                             v-model="form.first_name"
                                             type="text"
-                                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             :class="{
                                                 'border-red-500':
                                                     errors.first_name,
@@ -90,14 +90,14 @@
                                     </div>
                                     <div>
                                         <label
-                                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                                            class="block text-sm font-medium text-gray-700 mb-1"
                                         >
                                             Apellido
                                         </label>
                                         <input
                                             v-model="form.last_name"
                                             type="text"
-                                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             :class="{
                                                 'border-red-500':
                                                     errors.last_name,
@@ -115,14 +115,14 @@
                                 <!-- DNI -->
                                 <div>
                                     <label
-                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                                        class="block text-sm font-medium text-gray-700 mb-1"
                                     >
                                         DNI
                                     </label>
                                     <input
                                         v-model="form.dni"
                                         type="text"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         :class="{
                                             'border-red-500': errors.dni,
                                         }"
@@ -138,7 +138,7 @@
                                 <!-- Fecha de nacimiento -->
                                 <div>
                                     <label
-                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                                        class="block text-sm font-medium text-gray-700 mb-1"
                                     >
                                         Fecha de nacimiento
                                     </label>
@@ -146,7 +146,7 @@
                                         v-model="form.birth_date"
                                         type="date"
                                         :max="maxDate"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         :class="{
                                             'border-red-500': errors.birth_date,
                                         }"
@@ -162,13 +162,13 @@
                                 <!-- Género -->
                                 <div>
                                     <label
-                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                                        class="block text-sm font-medium text-gray-700 mb-1"
                                     >
                                         Género
                                     </label>
                                     <select
                                         v-model="form.gender"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     >
                                         <option value="">Seleccionar</option>
                                         <option value="M">Masculino</option>
@@ -180,14 +180,14 @@
                                 <!-- Username -->
                                 <div>
                                     <label
-                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                                        class="block text-sm font-medium text-gray-700 mb-1"
                                     >
                                         Nombre de usuario
                                     </label>
                                     <input
                                         v-model="form.username"
                                         type="text"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         :class="{
                                             'border-red-500': errors.username,
                                         }"
@@ -203,14 +203,14 @@
                                 <!-- Dirección de facturación -->
                                 <div>
                                     <label
-                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                                        class="block text-sm font-medium text-gray-700 mb-1"
                                     >
                                         Dirección de facturación
                                     </label>
                                     <textarea
                                         v-model="form.billing_address"
                                         rows="3"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         :class="{
                                             'border-red-500':
                                                 errors.billing_address,
@@ -228,7 +228,7 @@
                                     <button
                                         type="button"
                                         @click="closeModal"
-                                        class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                                     >
                                         Cancelar
                                     </button>

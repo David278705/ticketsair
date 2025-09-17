@@ -5,11 +5,9 @@
             <figure
                 v-for="t in testimonials"
                 :key="t.id"
-                class="rounded-2xl border border-slate-200 dark:border-slate-800 p-5"
+                class="rounded-2xl border border-slate-200 p-5"
             >
-                <blockquote
-                    class="text-sm text-slate-700 dark:text-slate-300 italic"
-                >
+                <blockquote class="text-sm text-slate-700 italic">
                     “{{ t.text }}”
                 </blockquote>
                 <figcaption class="mt-3 text-sm text-slate-500">

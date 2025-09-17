@@ -1,16 +1,14 @@
 <template>
-    <div class="min-h-screen bg-slate-50 dark:bg-slate-900 py-8">
+    <div class="min-h-screen bg-slate-50 py-8">
         <div class="container max-w-2xl">
             <!-- Header -->
             <div
-                class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6 mb-6"
+                class="bg-white rounded-lg shadow-sm border border-slate-200 p-6 mb-6"
             >
-                <h1
-                    class="text-2xl font-bold text-slate-900 dark:text-white mb-2"
-                >
+                <h1 class="text-2xl font-bold text-slate-900 mb-2">
                     Contactar Soporte
                 </h1>
-                <p class="text-slate-600 dark:text-slate-400">
+                <p class="text-slate-600">
                     Envía un mensaje a nuestro equipo de soporte. Responderemos
                     lo antes posible.
                 </p>
@@ -18,13 +16,13 @@
 
             <!-- Formulario -->
             <div
-                class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6"
+                class="bg-white rounded-lg shadow-sm border border-slate-200 p-6"
             >
                 <form @submit.prevent="submitMessage" class="space-y-4">
                     <!-- Asunto -->
                     <div>
                         <label
-                            class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+                            class="block text-sm font-medium text-slate-700 mb-2"
                         >
                             Asunto *
                         </label>
@@ -33,7 +31,7 @@
                             type="text"
                             required
                             placeholder="Describe brevemente tu consulta..."
-                            class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             :class="{ 'border-red-500': errors.subject }"
                         />
                         <p
@@ -47,7 +45,7 @@
                     <!-- Mensaje -->
                     <div>
                         <label
-                            class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+                            class="block text-sm font-medium text-slate-700 mb-2"
                         >
                             Mensaje *
                         </label>
@@ -56,7 +54,7 @@
                             rows="6"
                             required
                             placeholder="Describe detalladamente tu consulta o problema..."
-                            class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                             :class="{ 'border-red-500': errors.body }"
                         />
                         <p v-if="errors.body" class="text-red-500 text-xs mt-1">
@@ -65,19 +63,15 @@
                     </div>
 
                     <!-- Información del usuario -->
-                    <div class="bg-slate-50 dark:bg-slate-700 rounded-lg p-4">
-                        <p
-                            class="text-sm text-slate-600 dark:text-slate-400 mb-2"
-                        >
+                    <div class="bg-slate-50 rounded-lg p-4">
+                        <p class="text-sm text-slate-600 mb-2">
                             Información de contacto:
                         </p>
-                        <p
-                            class="text-sm font-medium text-slate-900 dark:text-white"
-                        >
+                        <p class="text-sm font-medium text-slate-900">
                             {{ auth.user?.first_name }}
                             {{ auth.user?.last_name }}
                         </p>
-                        <p class="text-sm text-slate-600 dark:text-slate-400">
+                        <p class="text-sm text-slate-600">
                             {{ auth.user?.email }}
                         </p>
                     </div>
@@ -102,21 +96,17 @@
 
             <!-- Mensajes enviados -->
             <div v-if="messages.length" class="mt-6">
-                <h2
-                    class="text-lg font-semibold text-slate-900 dark:text-white mb-4"
-                >
+                <h2 class="text-lg font-semibold text-slate-900 mb-4">
                     Mis Mensajes
                 </h2>
                 <div class="space-y-4">
                     <div
                         v-for="message in messages"
                         :key="message.id"
-                        class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4"
+                        class="bg-white rounded-lg shadow-sm border border-slate-200 p-4"
                     >
                         <div class="flex items-center justify-between mb-2">
-                            <h3
-                                class="font-medium text-slate-900 dark:text-white"
-                            >
+                            <h3 class="font-medium text-slate-900">
                                 {{ message.subject }}
                             </h3>
                             <div class="flex items-center gap-2">
@@ -124,22 +114,20 @@
                                     class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
                                     :class="
                                         message.is_read
-                                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                            : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                                            ? 'bg-green-100 text-green-800'
+                                            : 'bg-yellow-100 text-yellow-800'
                                     "
                                 >
                                     {{
                                         message.is_read ? "Leído" : "Pendiente"
                                     }}
                                 </span>
-                                <time
-                                    class="text-sm text-slate-500 dark:text-slate-400"
-                                >
+                                <time class="text-sm text-slate-500">
                                     {{ formatDate(message.sent_at) }}
                                 </time>
                             </div>
                         </div>
-                        <p class="text-slate-700 dark:text-slate-300 text-sm">
+                        <p class="text-slate-700 text-sm">
                             {{ message.body }}
                         </p>
                     </div>

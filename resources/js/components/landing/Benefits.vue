@@ -5,11 +5,11 @@
             <div
                 v-for="b in benefits"
                 :key="b.id"
-                class="rounded-2xl border border-slate-200 dark:border-slate-800 p-5"
+                class="rounded-2xl border border-slate-200 p-5"
             >
                 <div class="text-3xl">{{ b.icon }}</div>
                 <h3 class="mt-3 font-semibold">{{ b.title }}</h3>
-                <p class="text-sm text-slate-600 dark:text-slate-300 mt-1">
+                <p class="text-sm text-slate-600 mt-1">
                     {{ b.text }}
                 </p>
             </div>

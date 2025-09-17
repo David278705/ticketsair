@@ -12,6 +12,14 @@ const router = createRouter({
     routes: [
         { path: "/", component: HomePage },
         {
+            path: "/reset-password",
+            component: () => import("../pages/ResetPassword.vue"),
+            props: (route) => ({
+                token: route.query.token,
+                email: route.query.email,
+            }),
+        },
+        {
             path: "/mis-viajes",
             component: MyTrips,
             meta: { auth: true, role: "client" },

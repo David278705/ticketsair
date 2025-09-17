@@ -27,27 +27,23 @@
                         leave-to="opacity-0 scale-95"
                     >
                         <DialogPanel
-                            class="w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-slate-800 p-6 text-left align-middle shadow-xl transition-all"
+                            class="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all"
                         >
                             <DialogTitle
                                 as="h3"
-                                class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4"
+                                class="text-lg font-medium leading-6 text-gray-900 mb-4"
                             >
                                 Restablecer Contraseña
                             </DialogTitle>
 
                             <div
                                 v-if="user"
-                                class="mb-4 p-3 bg-gray-50 dark:bg-slate-700 rounded-lg"
+                                class="mb-4 p-3 bg-gray-50 rounded-lg"
                             >
-                                <p
-                                    class="text-sm text-gray-600 dark:text-gray-300"
-                                >
+                                <p class="text-sm text-gray-600">
                                     Restableciendo contraseña para:
                                 </p>
-                                <p
-                                    class="font-medium text-gray-900 dark:text-white"
-                                >
+                                <p class="font-medium text-gray-900">
                                     {{ user.first_name }}
                                     {{ user.last_name }} ({{ user.email }})
                                 </p>
@@ -60,7 +56,7 @@
                                 <!-- Nueva contraseña -->
                                 <div>
                                     <label
-                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                                        class="block text-sm font-medium text-gray-700 mb-1"
                                     >
                                         Nueva contraseña *
                                     </label>
@@ -69,7 +65,7 @@
                                         type="password"
                                         required
                                         minlength="8"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         :class="{
                                             'border-red-500': errors.password,
                                         }"
@@ -86,7 +82,7 @@
                                 <!-- Confirmar contraseña -->
                                 <div>
                                     <label
-                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                                        class="block text-sm font-medium text-gray-700 mb-1"
                                     >
                                         Confirmar nueva contraseña *
                                     </label>
@@ -95,7 +91,7 @@
                                         type="password"
                                         required
                                         minlength="8"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         :class="{
                                             'border-red-500': passwordMismatch,
                                         }"
@@ -111,7 +107,7 @@
 
                                 <!-- Advertencia -->
                                 <div
-                                    class="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg p-3"
+                                    class="bg-yellow-50 border border-yellow-200 rounded-lg p-3"
                                 >
                                     <div class="flex">
                                         <div class="flex-shrink-0">
@@ -120,9 +116,7 @@
                                             />
                                         </div>
                                         <div class="ml-3">
-                                            <p
-                                                class="text-sm text-yellow-700 dark:text-yellow-200"
-                                            >
+                                            <p class="text-sm text-yellow-700">
                                                 El usuario será notificado del
                                                 cambio de contraseña y deberá
                                                 iniciar sesión nuevamente.
@@ -135,7 +129,7 @@
                                     <button
                                         type="button"
                                         @click="closeModal"
-                                        class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                                     >
                                         Cancelar
                                     </button>

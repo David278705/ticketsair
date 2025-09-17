@@ -24,7 +24,7 @@
                         leave-to="opacity-0 scale-95"
                     >
                         <DialogPanel
-                            class="w-full max-w-2xl transform rounded-2xl bg-white dark:bg-slate-950 p-6 shadow-xl transition-all"
+                            class="w-full max-w-2xl transform rounded-2xl bg-white p-6 shadow-xl transition-all"
                         >
                             <DialogTitle class="text-lg font-semibold mb-2"
                                 >Cambiar asiento</DialogTitle
@@ -153,8 +153,8 @@ function seatClass(seat) {
     if (seat.id === props.currentSeatId)
         return "bg-blue-500 text-white border-blue-600";
     if (seat.status === "available")
-        return "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 hover:bg-blue-100 dark:hover:bg-blue-900";
-    return "bg-slate-300 dark:bg-slate-700 border-slate-400 dark:border-slate-600 cursor-not-allowed";
+        return "bg-white  border-slate-300  hover:bg-blue-100 ";
+    return "bg-slate-300  border-slate-400  cursor-not-allowed";
 }
 
 async function onSelect(seat) {

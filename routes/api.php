@@ -20,6 +20,9 @@ use App\Http\Controllers\PromotionController;
 // =================================
 Route::post('/register', [AuthController::class,'register']);
 Route::post('/login',    [AuthController::class,'login']);
+Route::post('/forgot-password', [AuthController::class,'forgotPassword']);
+Route::post('/reset-password', [AuthController::class,'resetPassword']);
+Route::post('/check-reset-token', [AuthController::class,'checkResetToken']);
 
 Route::get('/flights', [FlightController::class, 'index']);    // búsqueda pública
 Route::get('/flights/{flight}', [FlightController::class,'show']);

@@ -44,9 +44,8 @@ const visibleSeats = computed(() =>
 );
 function seatClass(s) {
     if (s.status === "available")
-        return "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 hover:bg-blue-50";
-    if (s.__mine)
-        return "bg-blue-200 dark:bg-blue-900 border-blue-300 dark:border-blue-700";
-    return "bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-700 cursor-not-allowed";
+        return "bg-white  border-slate-300  hover:bg-blue-50";
+    if (s.__mine) return "bg-blue-200  border-blue-300 ";
+    return "bg-slate-200  border-slate-300  cursor-not-allowed";
 }
 </script>

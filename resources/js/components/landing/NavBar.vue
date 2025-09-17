@@ -1,11 +1,11 @@
 <template>
     <header
-        class="sticky top-0 z-50 border-b border-slate-200/60 dark:border-slate-800 transition-[background-color,backdrop-filter] duration-300"
+        class="sticky background-blur top-0 z-50 border-b border-slate-200/60 transition-[background-color,backdrop-filter] duration-300"
         :class="[
             scrolled ? 'shadow-md' : '',
             !open
-                ? 'backdrop-blur supports-[backdrop-filter]:bg-white/70 bg-white/90 dark:bg-slate-950/70'
-                : 'bg-white/95 dark:bg-slate-950/95',
+                ? 'backdrop-blur supports-[backdrop-filter]:bg-white/70 bg-white/90'
+                : 'bg-white/95',
         ]"
     >
         <div class="container flex h-16 items-center justify-between">
@@ -18,21 +18,19 @@
             </RouterLink>
 
             <nav class="hidden md:flex items-center gap-8 text-sm">
-                <a
-                    href="/#buscar"
-                    class="hover:text-blue-600 dark:hover:text-cyan-400 transition-colors"
+                <a href="/#buscar" class="hover:text-blue-600 transition-colors"
                     >Vuelos</a
                 >
                 <RouterLink
                     v-if="auth.user?.role?.name === 'client'"
                     to="/mis-viajes"
-                    class="hover:text-blue-600 dark:hover:text-cyan-400"
+                    class="hover:text-blue-600"
                     >Mis viajes</RouterLink
                 >
                 <RouterLink
                     v-if="auth.user?.role?.name === 'client'"
                     to="/mensajes"
-                    class="hover:text-blue-600 dark:hover:text-cyan-400"
+                    class="hover:text-blue-600"
                     >Mensajes</RouterLink
                 >
 
@@ -47,7 +45,7 @@
                     @mouseleave="adminMenuOpen = false"
                 >
                     <button
-                        class="hover:text-blue-600 dark:hover:text-cyan-400 transition-colors flex items-center gap-1"
+                        class="hover:text-blue-600 transition-colors flex items-center gap-1"
                     >
                         Administración
                         <svg
@@ -75,11 +73,11 @@
                     >
                         <div
                             v-if="adminMenuOpen"
-                            class="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 py-1 z-50"
+                            class="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50"
                         >
                             <RouterLink
                                 to="/admin/flights"
-                                class="block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                                class="block px-4 py-2 text-sm hover:bg-slate-100 transition-colors"
                                 @click="adminMenuOpen = false"
                             >
                                 Gestión de vuelos
@@ -87,14 +85,14 @@
                             <RouterLink
                                 v-if="auth.user?.role?.name === 'root'"
                                 to="/admin/users"
-                                class="block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                                class="block px-4 py-2 text-sm hover:bg-slate-100 transition-colors"
                                 @click="adminMenuOpen = false"
                             >
                                 Gestión de usuarios
                             </RouterLink>
                             <RouterLink
                                 to="/admin/messages"
-                                class="block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                                class="block px-4 py-2 text-sm hover:bg-slate-100 transition-colors"
                                 @click="adminMenuOpen = false"
                             >
                                 Mensajes
@@ -108,7 +106,7 @@
             <div class="hidden md:flex items-center gap-2">
                 <template v-if="!auth.user">
                     <button
-                        class="px-4 h-10 rounded-xl border border-slate-300/70 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
+                        class="px-4 h-10 rounded-xl border border-slate-300/70 hover:bg-slate-100 transition-colors"
                         @click="ui.openAuth('login')"
                     >
                         Iniciar sesión
@@ -121,31 +119,30 @@
                     </button>
                 </template>
                 <template v-else>
-                    <span
-                        class="text-sm text-slate-600 dark:text-slate-300 mr-1"
+                    <span class="text-sm text-slate-600 mr-1"
                         >Hola,
                         {{ auth.user.first_name || auth.user.role.name }}</span
                     >
                     <button
-                        class="px-4 h-10 rounded-xl border border-slate-300/70 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
+                        class="px-4 h-10 rounded-xl border border-slate-300/70 hover:bg-slate-100 transition-colors"
                         @click="logout"
                     >
                         Cerrar sesión
                     </button>
                 </template>
-                <button
+                <!-- <button
                     @click="toggleDark"
-                    class="ml-1 size-10 grid place-items-center rounded-xl border border-slate-300/70 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
+                    class="ml-1 size-10 grid place-items-center rounded-xl border border-slate-300/70 hover:bg-slate-100 transition-colors"
                     :title="isDark ? 'Modo claro' : 'Modo oscuro'"
                 >
                     <span v-if="isDark">🌙</span>
                     <span v-else>☀️</span>
-                </button>
+                </button> -->
             </div>
 
             <!-- Botón hamburguesa móvil -->
             <button
-                class="md:hidden relative size-10 grid place-items-center rounded-xl border border-slate-300/70 dark:border-slate-700"
+                class="md:hidden relative size-10 grid place-items-center rounded-xl border border-slate-300/70"
                 @click="open = !open"
                 aria-label="Menú"
             >
@@ -191,7 +188,7 @@
         >
             <div
                 v-if="open"
-                class="md:hidden z-50 relative border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95"
+                class="md:hidden z-50 relative border-t border-slate-200 bg-white/95"
             >
                 <div class="container py-3 flex flex-col gap-2">
                     <a href="#buscar" @click="close()">Vuelos</a>
@@ -215,12 +212,8 @@
                             auth.user?.role?.name === 'root'
                         "
                     >
-                        <div
-                            class="border-t border-slate-200 dark:border-slate-700 pt-2 mt-2"
-                        >
-                            <p
-                                class="text-xs text-slate-500 dark:text-slate-400 font-medium mb-2"
-                            >
+                        <div class="border-t border-slate-200 pt-2 mt-2">
+                            <p class="text-xs text-slate-500 font-medium mb-2">
                                 ADMINISTRACIÓN
                             </p>
                             <RouterLink
@@ -251,7 +244,7 @@
                     <div class="pt-2 flex gap-2">
                         <template v-if="!auth.user">
                             <button
-                                class="flex-1 h-10 rounded-xl border border-slate-300/70 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
+                                class="flex-1 h-10 rounded-xl border border-slate-300/70 hover:bg-slate-100 transition-colors"
                                 @click="openLogin"
                             >
                                 Iniciar sesión
@@ -317,6 +310,7 @@ function toggleDark() {
 async function logout() {
     auth.logout();
     close();
+    window.location.reload();
 }
 
 watch(open, (v) => {

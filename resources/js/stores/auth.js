@@ -60,6 +60,43 @@ export const useAuth = defineStore("auth", {
         },
         bootstrap() {
             if (this.token) setAuthToken(this.token);
-        }, // <-- NUEVO
+        },
+        async forgotPassword(email) {
+            this.loading = true;
+            this.error = null;
+            try {
+                const { data } = await api.post("/forgot-password", { email });
+                return data;
+            } catch (e) {
+                this.error = e.response?.data || e.message;
+                throw e;
+            } finally {
+                this.loading = false;
+            }
+        },
+        async resetPassword(payload) {
+            this.loading = true;
+            this.error = null;
+            try {
+                const { data } = await api.post("/reset-password", payload);
+                return data;
+            } catch (e) {
+                this.error = e.response?.data || e.message;
+                throw e;
+            } finally {
+                this.loading = false;
+            }
+        },
+        async checkResetToken(token, email) {
+            try {
+                const { data } = await api.post("/check-reset-token", {
+                    token,
+                    email,
+                });
+                return data.user;
+            } catch (e) {
+                throw e;
+            }
+        },
     },
 });

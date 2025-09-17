@@ -25,7 +25,7 @@
                         leave-to="opacity-0 translate-y-2 scale-95"
                     >
                         <DialogPanel
-                            class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white dark:bg-slate-950 p-6 shadow-xl transition-all"
+                            class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-6 shadow-xl transition-all"
                         >
                             <DialogTitle class="text-lg font-semibold mb-4">
                                 Datos de los pasajeros para el vuelo
@@ -88,7 +88,7 @@
 
                             <div class="mt-4 flex items-center justify-between">
                                 <button
-                                    class="h-10 rounded-xl border px-4 text-sm hover:bg-slate-100 dark:hover:bg-slate-800"
+                                    class="h-10 rounded-xl border px-4 text-sm hover:bg-slate-100"
                                     @click="addPassenger"
                                     :disabled="passengers.length >= 5"
                                 >
