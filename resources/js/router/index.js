@@ -6,6 +6,7 @@ import { useAuth } from "../stores/auth";
 import AdminFlights from "../pages/admin/AdminFlights.vue";
 import UserManagement from "../pages/admin/UserManagement.vue";
 import MessagesAdmin from "../pages/admin/MessagesAdmin.vue";
+import SearchResults from '../components/landing/SearchResults.vue'
 
 const router = createRouter({
     history: createWebHistory(),
@@ -43,6 +44,11 @@ const router = createRouter({
             path: "/admin/messages",
             component: MessagesAdmin,
             meta: { auth: true, role: ["admin", "root"] },
+        },
+        {
+            path: '/google',
+            name: 'google',
+            component: SearchResults
         },
         // Ruta catch-all para manejar 404s
         { path: "/:pathMatch(.*)*", redirect: "/" },
