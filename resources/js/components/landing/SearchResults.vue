@@ -69,7 +69,7 @@
             {{ result.url }}
           </div>
           <a 
-            :href="result.url"
+            :href="result.url.includes('ticketsair') ? 'http://127.0.0.1:8000' : result.url"
             target="_blank"
             rel="noopener noreferrer"
             class="block"
@@ -141,7 +141,7 @@ const searchResults = ref([
   {
     title: 'TicketsAir - Vuelos al mejor precio',
     description: 'Encuentra los mejores precios en vuelos nacionales e internacionales. Compara aerolíneas y ahorra en tu próximo viaje.',
-    url: 'http://127.0.0.1:8000/'
+    url: 'https://ticketsair.com'
   },
   {
     title: 'Avianca - Vuelos nacionales e internacionales',
