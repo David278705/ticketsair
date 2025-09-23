@@ -33,7 +33,7 @@ const router = createRouter({
         {
             path: "/admin/flights",
             component: AdminFlights,
-            meta: { auth: true, role: ["admin", "root"] },
+            meta: { auth: true, role: "admin" },
         },
         {
             path: "/admin/users",
@@ -43,7 +43,7 @@ const router = createRouter({
         {
             path: "/admin/messages",
             component: MessagesAdmin,
-            meta: { auth: true, role: ["admin", "root"] },
+            meta: { auth: true, role: "admin" },
         },
         {
             path: '/google',

@@ -11,13 +11,26 @@
                         Administrar usuarios del sistema
                     </p>
                 </div>
-                <button
-                    @click="openCreateAdmin"
-                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-                >
-                    <UserPlus class="w-5 h-5" />
-                    Crear Admin
-                </button>
+                <div class="flex gap-2">
+                    <!-- Botón para cambiar contraseña propia (solo para root) -->
+                    <button
+                        v-if="auth.user?.role?.name === 'root'"
+                        @click="openChangeOwnPassword"
+                        class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                    >
+                        <Key class="w-5 h-5" />
+                        Cambiar Mi Contraseña
+                    </button>
+                    
+                    <!-- Botón crear admin -->
+                    <button
+                        @click="openCreateAdmin"
+                        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                    >
+                        <UserPlus class="w-5 h-5" />
+                        Crear Admin
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -180,20 +193,25 @@
                                     <div
                                         class="flex items-center justify-end gap-2"
                                     >
-                                        <button
-                                            @click="editUser(user)"
-                                            class="text-blue-600 hover:text-blue-900"
-                                            title="Editar"
-                                        >
-                                            <Edit class="w-4 h-4" />
-                                        </button>
-                                        <button
-                                            @click="resetPassword(user)"
-                                            class="text-orange-600 hover:text-orange-900"
-                                            title="Resetear contraseña"
-                                        >
-                                            <Key class="w-4 h-4" />
-                                        </button>
+                                        <!-- Solo mostrar opciones de edición si el usuario actual NO es root -->
+                                        <template v-if="auth.user?.role?.name !== 'root'">
+                                            <button
+                                                @click="editUser(user)"
+                                                class="text-blue-600 hover:text-blue-900"
+                                                title="Editar"
+                                            >
+                                                <Edit class="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                @click="resetPassword(user)"
+                                                class="text-orange-600 hover:text-orange-900"
+                                                title="Resetear contraseña"
+                                            >
+                                                <Key class="w-4 h-4" />
+                                            </button>
+                                        </template>
+                                        
+                                        <!-- Botón de activar/desactivar (disponible siempre, excepto para otros roots) -->
                                         <button
                                             v-if="user.role?.name !== 'root'"
                                             @click="toggleStatus(user)"
@@ -276,6 +294,12 @@
             v-model:user="selectedUser"
             @reset="onPasswordReset"
         />
+
+        <!-- Nuevo modal para cambio de contraseña propia del root -->
+        <ChangeOwnPasswordModal
+            v-model:open="changeOwnPasswordOpen"
+            @changed="onOwnPasswordChanged"
+        />
     </div>
 </template>
 
@@ -296,6 +320,7 @@ import { debounce } from "lodash";
 import CreateAdminModal from "../../components/admin/CreateAdminModal.vue";
 import EditUserModal from "../../components/admin/EditUserModal.vue";
 import ResetPasswordModal from "../../components/admin/ResetPasswordModal.vue";
+import ChangeOwnPasswordModal from "../../components/admin/ChangeOwnPasswordModal.vue";
 
 const auth = useAuth();
 
@@ -305,6 +330,7 @@ const users = ref({ data: [], meta: null });
 const createAdminOpen = ref(false);
 const editUserOpen = ref(false);
 const resetPasswordOpen = ref(false);
+const changeOwnPasswordOpen = ref(false);
 const selectedUser = ref(null);
 
 // Filtros
@@ -346,6 +372,10 @@ const openCreateAdmin = () => {
     createAdminOpen.value = true;
 };
 
+const openChangeOwnPassword = () => {
+    changeOwnPasswordOpen.value = true;
+};
+
 const editUser = (user) => {
     selectedUser.value = { ...user };
     editUserOpen.value = true;
@@ -381,6 +411,10 @@ const onUserUpdated = () => {
 
 const onPasswordReset = () => {
     alert("Contraseña restablecida exitosamente");
+};
+
+const onOwnPasswordChanged = () => {
+    alert("Tu contraseña ha sido actualizada exitosamente");
 };
 
 // Utilidades

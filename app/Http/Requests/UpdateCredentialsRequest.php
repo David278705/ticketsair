@@ -11,8 +11,9 @@ class UpdateCredentialsRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // Solo el usuario root puede actualizar credenciales de otros usuarios
-        return $this->user() && $this->user()->role->name === 'root';
+        // Esta funcionalidad ya no está disponible para el root
+        // El root ahora solo puede cambiar su propia contraseña y crear administradores
+        return false; // Siempre retorna false para deshabilitar completamente esta funcionalidad
     }
 
     /**

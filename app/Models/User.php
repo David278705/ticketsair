@@ -18,7 +18,8 @@ class User extends Authenticatable {
 
   protected $fillable = [
     'role_id','name','email','password','dni','first_name','last_name','birth_date',
-    'birth_place','billing_address','gender','username','avatar_path','news_opt_in','wallet_balance'
+    'birth_place','billing_address','gender','username','avatar_path','news_opt_in','wallet_balance',
+    'temp_password_token','temp_password_expires_at','registration_completed'
   ];
 
   protected $hidden = ['password','remember_token'];
@@ -29,6 +30,8 @@ class User extends Authenticatable {
     'birth_place'    => 'json',
     'email_verified_at'=> 'datetime',
     'wallet_balance'   => 'decimal:2',
+    'temp_password_expires_at' => 'datetime',
+    'registration_completed' => 'boolean',
   ];
 
   // Relaciones (ya ok)

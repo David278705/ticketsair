@@ -33,7 +33,7 @@
                                 as="h3"
                                 class="text-lg font-medium leading-6 text-gray-900 mb-4"
                             >
-                                Crear Nuevo Administrador
+                                Invitar Administrador
                             </DialogTitle>
 
                             <form
@@ -51,6 +51,7 @@
                                         v-model="form.email"
                                         type="email"
                                         required
+                                        placeholder="admin@ticketsair.com"
                                         class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         :class="{
                                             'border-red-500': errors.email,
@@ -64,230 +65,67 @@
                                     </p>
                                 </div>
 
-                                <!-- Nombre -->
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label
-                                            class="block text-sm font-medium text-gray-700 mb-1"
-                                        >
-                                            Nombre *
-                                        </label>
-                                        <input
-                                            v-model="form.first_name"
-                                            type="text"
-                                            required
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            :class="{
-                                                'border-red-500':
-                                                    errors.first_name,
-                                            }"
-                                        />
-                                        <p
-                                            v-if="errors.first_name"
-                                            class="text-red-500 text-xs mt-1"
-                                        >
-                                            {{ errors.first_name[0] }}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <label
-                                            class="block text-sm font-medium text-gray-700 mb-1"
-                                        >
-                                            Apellido *
-                                        </label>
-                                        <input
-                                            v-model="form.last_name"
-                                            type="text"
-                                            required
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            :class="{
-                                                'border-red-500':
-                                                    errors.last_name,
-                                            }"
-                                        />
-                                        <p
-                                            v-if="errors.last_name"
-                                            class="text-red-500 text-xs mt-1"
-                                        >
-                                            {{ errors.last_name[0] }}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <!-- DNI -->
+                                <!-- Nombre Completo -->
                                 <div>
                                     <label
                                         class="block text-sm font-medium text-gray-700 mb-1"
                                     >
-                                        DNI *
+                                        Nombre Completo *
                                     </label>
                                     <input
-                                        v-model="form.dni"
+                                        v-model="form.full_name"
                                         type="text"
                                         required
+                                        placeholder="Juan Pérez García"
                                         class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         :class="{
-                                            'border-red-500': errors.dni,
+                                            'border-red-500': errors.full_name,
                                         }"
                                     />
                                     <p
-                                        v-if="errors.dni"
+                                        v-if="errors.full_name"
                                         class="text-red-500 text-xs mt-1"
                                     >
-                                        {{ errors.dni[0] }}
+                                        {{ errors.full_name[0] }}
                                     </p>
                                 </div>
 
-                                <!-- Fecha de nacimiento -->
-                                <div>
-                                    <label
-                                        class="block text-sm font-medium text-gray-700 mb-1"
-                                    >
-                                        Fecha de nacimiento *
-                                    </label>
-                                    <input
-                                        v-model="form.birth_date"
-                                        type="date"
-                                        required
-                                        :max="maxDate"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        :class="{
-                                            'border-red-500': errors.birth_date,
-                                        }"
-                                    />
-                                    <p
-                                        v-if="errors.birth_date"
-                                        class="text-red-500 text-xs mt-1"
-                                    >
-                                        {{ errors.birth_date[0] }}
-                                    </p>
-                                </div>
-
-                                <!-- Género -->
-                                <div>
-                                    <label
-                                        class="block text-sm font-medium text-gray-700 mb-1"
-                                    >
-                                        Género
-                                    </label>
-                                    <select
-                                        v-model="form.gender"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    >
-                                        <option value="">Seleccionar</option>
-                                        <option value="M">Masculino</option>
-                                        <option value="F">Femenino</option>
-                                        <option value="X">Otro</option>
-                                    </select>
-                                </div>
-
-                                <!-- Username -->
-                                <div>
-                                    <label
-                                        class="block text-sm font-medium text-gray-700 mb-1"
-                                    >
-                                        Nombre de usuario
-                                    </label>
-                                    <input
-                                        v-model="form.username"
-                                        type="text"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        :class="{
-                                            'border-red-500': errors.username,
-                                        }"
-                                    />
-                                    <p
-                                        v-if="errors.username"
-                                        class="text-red-500 text-xs mt-1"
-                                    >
-                                        {{ errors.username[0] }}
-                                    </p>
-                                </div>
-
-                                <!-- Contraseña -->
-                                <div class="grid grid-cols-1 gap-4">
-                                    <div>
-                                        <label
-                                            class="block text-sm font-medium text-gray-700 mb-1"
-                                        >
-                                            Contraseña *
-                                        </label>
-                                        <input
-                                            v-model="form.password"
-                                            type="password"
-                                            required
-                                            minlength="8"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            :class="{
-                                                'border-red-500':
-                                                    errors.password,
-                                            }"
-                                        />
-                                        <p
-                                            v-if="errors.password"
-                                            class="text-red-500 text-xs mt-1"
-                                        >
-                                            {{ errors.password[0] }}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <label
-                                            class="block text-sm font-medium text-gray-700 mb-1"
-                                        >
-                                            Confirmar contraseña *
-                                        </label>
-                                        <input
-                                            v-model="form.password_confirmation"
-                                            type="password"
-                                            required
-                                            minlength="8"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
+                                <!-- Información -->
+                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                    <div class="flex items-start">
+                                        <Info class="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
+                                        <div class="text-sm text-blue-700">
+                                            <p class="font-medium mb-1">¿Qué sucederá después?</p>
+                                            <ul class="list-disc list-inside space-y-1">
+                                                <li>Se enviará una invitación por email</li>
+                                                <li>Incluirá credenciales temporales (válidas 24h)</li>
+                                                <li>El administrador completará su registro</li>
+                                                <li>Podrá acceder al panel una vez completado</li>
+                                            </ul>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <!-- Dirección de facturación -->
-                                <div>
-                                    <label
-                                        class="block text-sm font-medium text-gray-700 mb-1"
-                                    >
-                                        Dirección de facturación
-                                    </label>
-                                    <textarea
-                                        v-model="form.billing_address"
-                                        rows="3"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        :class="{
-                                            'border-red-500':
-                                                errors.billing_address,
-                                        }"
-                                    />
-                                    <p
-                                        v-if="errors.billing_address"
-                                        class="text-red-500 text-xs mt-1"
-                                    >
-                                        {{ errors.billing_address[0] }}
-                                    </p>
-                                </div>
-
+                                <!-- Botones -->
                                 <div class="flex justify-end gap-3 mt-6">
                                     <button
                                         type="button"
                                         @click="closeModal"
-                                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                        class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                                        :disabled="loading"
                                     >
                                         Cancelar
                                     </button>
                                     <button
                                         type="submit"
+                                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                         :disabled="loading"
-                                        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                                     >
-                                        {{
-                                            loading
-                                                ? "Creando..."
-                                                : "Crear Administrador"
-                                        }}
+                                        <div
+                                            v-if="loading"
+                                            class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"
+                                        ></div>
+                                        {{ loading ? 'Enviando...' : 'Enviar Invitación' }}
                                     </button>
                                 </div>
                             </form>
@@ -300,7 +138,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch } from "vue";
+import { ref, reactive, watch } from "vue";
 import {
     TransitionRoot,
     TransitionChild,
@@ -308,6 +146,7 @@ import {
     DialogPanel,
     DialogTitle,
 } from "@headlessui/vue";
+import { Info } from "lucide-vue-next";
 import { api } from "../../lib/api";
 
 const props = defineProps({
@@ -321,21 +160,7 @@ const errors = ref({});
 
 const form = reactive({
     email: "",
-    first_name: "",
-    last_name: "",
-    dni: "",
-    birth_date: "",
-    gender: "",
-    username: "",
-    password: "",
-    password_confirmation: "",
-    billing_address: "",
-});
-
-const maxDate = computed(() => {
-    const today = new Date();
-    today.setFullYear(today.getFullYear() - 18); // Mínimo 18 años
-    return today.toISOString().split("T")[0];
+    full_name: "",
 });
 
 const closeModal = () => {
@@ -360,14 +185,14 @@ const submitForm = async () => {
         if (data.status === "success") {
             emit("created", data.data);
             closeModal();
-            alert("Administrador creado exitosamente");
+            alert(data.message);
         }
     } catch (error) {
         if (error.response?.status === 422) {
             errors.value = error.response.data.errors || {};
         } else {
             alert(
-                error.response?.data?.message || "Error al crear administrador"
+                error.response?.data?.message || "Error al enviar invitación"
             );
         }
     } finally {

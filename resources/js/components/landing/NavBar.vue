@@ -75,13 +75,16 @@
                             v-if="adminMenuOpen"
                             class="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50"
                         >
+                            <!-- Solo para administradores, no para root -->
                             <RouterLink
+                                v-if="auth.user?.role?.name === 'admin'"
                                 to="/admin/flights"
                                 class="block px-4 py-2 text-sm hover:bg-slate-100 transition-colors"
                                 @click="adminMenuOpen = false"
                             >
                                 Gestión de vuelos
                             </RouterLink>
+                            <!-- Solo para root -->
                             <RouterLink
                                 v-if="auth.user?.role?.name === 'root'"
                                 to="/admin/users"
@@ -90,7 +93,9 @@
                             >
                                 Gestión de usuarios
                             </RouterLink>
+                            <!-- Solo para administradores, no para root -->
                             <RouterLink
+                                v-if="auth.user?.role?.name === 'admin'"
                                 to="/admin/messages"
                                 class="block px-4 py-2 text-sm hover:bg-slate-100 transition-colors"
                                 @click="adminMenuOpen = false"
@@ -216,13 +221,16 @@
                             <p class="text-xs text-slate-500 font-medium mb-2">
                                 ADMINISTRACIÓN
                             </p>
+                            <!-- Solo para administradores, no para root -->
                             <RouterLink
+                                v-if="auth.user?.role?.name === 'admin'"
                                 to="/admin/flights"
                                 @click="close()"
                                 class="block py-1"
                             >
                                 Gestión de vuelos
                             </RouterLink>
+                            <!-- Solo para root -->
                             <RouterLink
                                 v-if="auth.user?.role?.name === 'root'"
                                 to="/admin/users"
@@ -231,7 +239,9 @@
                             >
                                 Gestión de usuarios
                             </RouterLink>
+                            <!-- Solo para administradores, no para root -->
                             <RouterLink
+                                v-if="auth.user?.role?.name === 'admin'"
                                 to="/admin/messages"
                                 @click="close()"
                                 class="block py-1"

@@ -24,14 +24,7 @@ class CreateAdminRequest extends FormRequest
     {
         return [
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:8|confirmed',
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'dni' => 'required|string|unique:users,dni',
-            'birth_date' => 'required|date|before:today',
-            'gender' => 'nullable|in:M,F,X',
-            'username' => 'nullable|string|unique:users,username',
-            'billing_address' => 'nullable|string|max:500'
+            'full_name' => 'required|string|max:255',
         ];
     }
 
@@ -44,17 +37,9 @@ class CreateAdminRequest extends FormRequest
             'email.required' => 'El email es obligatorio.',
             'email.email' => 'El email debe tener un formato válido.',
             'email.unique' => 'Este email ya está registrado en el sistema.',
-            'password.required' => 'La contraseña es obligatoria.',
-            'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
-            'password.confirmed' => 'La confirmación de contraseña no coincide.',
-            'first_name.required' => 'El nombre es obligatorio.',
-            'last_name.required' => 'El apellido es obligatorio.',
-            'dni.required' => 'El DNI es obligatorio.',
-            'dni.unique' => 'Este DNI ya está registrado en el sistema.',
-            'birth_date.required' => 'La fecha de nacimiento es obligatoria.',
-            'birth_date.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
-            'gender.in' => 'El género debe ser M, F o X.',
-            'username.unique' => 'Este nombre de usuario ya está en uso.'
+            'full_name.required' => 'El nombre completo es obligatorio.',
+            'full_name.string' => 'El nombre completo debe ser una cadena de texto.',
+            'full_name.max' => 'El nombre completo no puede exceder 255 caracteres.',
         ];
     }
 }

@@ -8,9 +8,12 @@ use App\Http\Requests\UpdateCredentialsRequest;
 use App\Http\Requests\ResetPasswordRequest;
 use App\Models\User;
 use App\Models\Role;
+use App\Mail\AdminInvitationMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class UserAdminController extends Controller
 {
@@ -75,29 +78,41 @@ class UserAdminController extends Controller
                 ], 500);
             }
 
+            // Generar contraseña temporal y token
+            $temporaryPassword = Str::random(12);
+            $token = Str::random(60);
+            
+            // Separar el nombre completo
+            $nameParts = explode(' ', trim($request->full_name), 2);
+            $firstName = $nameParts[0];
+            $lastName = isset($nameParts[1]) ? $nameParts[1] : '';
+
             $admin = User::create([
                 'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'dni' => $request->dni,
-                'birth_date' => $request->birth_date,
-                'gender' => $request->gender,
-                'username' => $request->username,
-                'billing_address' => $request->billing_address,
+                'password' => Hash::make($temporaryPassword),
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'name' => $request->full_name,
                 'role_id' => $adminRole->id,
-                'is_active' => true,
+                'temp_password_token' => $token,
+                'temp_password_expires_at' => now()->addHours(24),
+                'registration_completed' => false,
                 'email_verified_at' => now(),
-                'name' => $request->first_name . ' ' . $request->last_name,
                 'news_opt_in' => false,
-                'wallet_balance' => 0
+                'wallet_balance' => 0,
             ]);
+
+            // Generar URL para completar registro
+            $completeRegistrationUrl = url('/complete-admin-registration?token=' . $token . '&email=' . urlencode($request->email));
+
+            // Enviar email con credenciales temporales
+            Mail::to($admin->email)->send(new AdminInvitationMail($admin, $temporaryPassword, $completeRegistrationUrl));
 
             DB::commit();
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Administrador creado exitosamente',
+                'message' => 'Invitación de administrador enviada exitosamente. El administrador recibirá un correo con las instrucciones para completar su registro.',
                 'data' => $admin->load('role')
             ], 201);
 
@@ -111,77 +126,25 @@ class UserAdminController extends Controller
     }
 
     /**
-     * Update user credentials (only for root)
+     * Update user credentials (restricted)
      */
     public function updateCredentials(UpdateCredentialsRequest $request, $id)
     {
-        try {
-            $user = User::findOrFail($id);
-
-            // No permitir editar usuarios root si no es root
-            if ($user->role->name === 'root' && $request->user()->role->name !== 'root') {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'No tienes permisos para editar este usuario'
-                ], 403);
-            }
-
-            $updateData = $request->validated();
-
-            // Actualizar el nombre completo si se actualizan nombres
-            if (isset($updateData['first_name']) || isset($updateData['last_name'])) {
-                $firstName = $updateData['first_name'] ?? $user->first_name;
-                $lastName = $updateData['last_name'] ?? $user->last_name;
-                $updateData['name'] = $firstName . ' ' . $lastName;
-            }
-
-            $user->update($updateData);
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Credenciales actualizadas exitosamente',
-                'data' => $user->load('role')
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Error al actualizar credenciales: ' . $e->getMessage()
-            ], 500);
-        }
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Funcionalidad no disponible para usuario root'
+        ], 403);
     }
 
     /**
-     * Reset user password (only for root)
+     * Reset user password (restricted)
      */
     public function resetPassword(ResetPasswordRequest $request, $id)
     {
-        try {
-            $user = User::findOrFail($id);
-
-            // No permitir cambiar contraseña a usuarios root si no es root
-            if ($user->role->name === 'root' && $request->user()->role->name !== 'root') {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'No tienes permisos para cambiar la contraseña de este usuario'
-                ], 403);
-            }
-
-            $user->update([
-                'password' => Hash::make($request->password)
-            ]);
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Contraseña restablecida exitosamente'
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Error al restablecer contraseña: ' . $e->getMessage()
-            ], 500);
-        }
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Funcionalidad no disponible para usuario root'
+        ], 403);
     }
 
     /**
@@ -237,6 +200,53 @@ class UserAdminController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'Error al obtener roles: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update root's own password (only root can change their own password)
+     */
+    public function updateOwnPassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        try {
+            $user = $request->user();
+
+            // Verificar que realmente es root
+            if ($user->role->name !== 'root') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Solo el usuario root puede usar esta funcionalidad'
+                ], 403);
+            }
+
+            // Verificar la contraseña actual
+            if (!Hash::check($request->current_password, $user->password)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'La contraseña actual es incorrecta'
+                ], 400);
+            }
+
+            // Actualizar la contraseña
+            $user->update([
+                'password' => Hash::make($request->new_password)
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Contraseña actualizada exitosamente'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al actualizar contraseña: ' . $e->getMessage()
             ], 500);
         }
     }

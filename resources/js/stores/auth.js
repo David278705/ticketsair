@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { api, setAuthToken } from "../lib/api";
+import { api, setAuthToken, getCsrfCookie } from "../lib/api";
 
 export const useAuth = defineStore("auth", {
     state: () => ({
@@ -13,6 +13,8 @@ export const useAuth = defineStore("auth", {
             this.loading = true;
             this.error = null;
             try {
+                // Get CSRF cookie before making the request
+                await getCsrfCookie();
                 await api.post("/register", payload);
                 return await this.login({
                     email: payload.email,
@@ -29,6 +31,8 @@ export const useAuth = defineStore("auth", {
             this.loading = true;
             this.error = null;
             try {
+                // Get CSRF cookie before making the login request
+                await getCsrfCookie();
                 const { data } = await api.post("/login", { email, password });
                 this.token = data.token;
                 localStorage.setItem("token", this.token);
@@ -65,6 +69,8 @@ export const useAuth = defineStore("auth", {
             this.loading = true;
             this.error = null;
             try {
+                // Get CSRF cookie before making the request
+                await getCsrfCookie();
                 const { data } = await api.post("/forgot-password", { email });
                 return data;
             } catch (e) {
@@ -78,6 +84,8 @@ export const useAuth = defineStore("auth", {
             this.loading = true;
             this.error = null;
             try {
+                // Get CSRF cookie before making the request
+                await getCsrfCookie();
                 const { data } = await api.post("/reset-password", payload);
                 return data;
             } catch (e) {
@@ -89,6 +97,8 @@ export const useAuth = defineStore("auth", {
         },
         async checkResetToken(token, email) {
             try {
+                // Get CSRF cookie before making the request
+                await getCsrfCookie();
                 const { data } = await api.post("/check-reset-token", {
                     token,
                     email,

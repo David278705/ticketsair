@@ -10,6 +10,7 @@ use App\Http\Controllers\NewsController;
 use App\Http\Controllers\MessageController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AdminRegistrationController;
 
 use App\Http\Controllers\Admin\FlightAdminController;
 use App\Http\Controllers\Admin\UserAdminController;
@@ -30,6 +31,10 @@ Route::get('/flights/{flight}/seats', [SeatController::class,'index']); // públ
 Route::get('/cities', fn() => \App\Models\City::orderBy('name')->get());
 Route::get('/news', [NewsController::class,'index']); // público
 Route::post('/checkin/fast', [CheckinController::class,'fast']); // por código o DNI
+
+// Rutas para completar registro de administrador
+Route::post('/verify-admin-token', [AdminRegistrationController::class, 'verifyToken']);
+Route::post('/complete-admin-registration', [AdminRegistrationController::class, 'completeRegistration']);
 
 // =================================
 // RUTAS AUTENTICADAS (Cualquier usuario logueado)
@@ -55,14 +60,21 @@ Route::middleware('auth:sanctum')->group(function () {
 // RUTAS PARA ROOT (Solo usuario root)
 // =================================
 Route::middleware(['auth:sanctum','role:root'])->group(function () {
-    // Gestión de usuarios (solo root)
+    // Gestión de usuarios (solo root) - FUNCIONALIDADES RESTRINGIDAS
     Route::get('/admin/users', [UserAdminController::class,'index']);
     Route::get('/admin/users/{user}', [UserAdminController::class,'show']);
     Route::post('/admin/users/create-admin', [UserAdminController::class,'createAdmin']);
-    Route::put('/admin/users/{user}/credentials', [UserAdminController::class,'updateCredentials']);
-    Route::post('/admin/users/{user}/reset-password', [UserAdminController::class,'resetPassword']);
-    Route::patch('/admin/users/{user}/toggle-status', [UserAdminController::class,'toggleStatus']);
     Route::get('/admin/roles', [UserAdminController::class,'getRoles']);
+    
+    // Funcionalidad para que root cambie su propia contraseña
+    Route::post('/admin/change-own-password', [UserAdminController::class,'updateOwnPassword']);
+    
+    // RUTAS RESTRINGIDAS - El root YA NO puede usar estas funcionalidades:
+    // Route::put('/admin/users/{user}/credentials', [UserAdminController::class,'updateCredentials']); // DESHABILITADA
+    // Route::post('/admin/users/{user}/reset-password', [UserAdminController::class,'resetPassword']); // DESHABILITADA
+    
+    // Funcionalidad de activar/desactivar usuarios permanece igual
+    Route::patch('/admin/users/{user}/toggle-status', [UserAdminController::class,'toggleStatus']);
 });
 
 // =================================

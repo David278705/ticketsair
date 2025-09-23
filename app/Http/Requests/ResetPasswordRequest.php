@@ -11,8 +11,9 @@ class ResetPasswordRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // Solo el usuario root puede restablecer contraseñas
-        return $this->user() && $this->user()->role->name === 'root';
+        // Esta funcionalidad ya no está disponible para el root
+        // El root ahora solo puede cambiar su propia contraseña usando la ruta específica
+        return false; // Siempre retorna false para deshabilitar completamente esta funcionalidad
     }
 
     /**
