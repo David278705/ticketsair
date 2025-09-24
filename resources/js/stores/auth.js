@@ -38,7 +38,12 @@ export const useAuth = defineStore("auth", {
                 localStorage.setItem("token", this.token);
                 setAuthToken(this.token);
                 this.user = data.user;
-                return data.user;
+                
+                // Return both user data and completion status
+                return {
+                    user: data.user,
+                    requires_completion: data.requires_completion || false
+                };
             } catch (e) {
                 this.error = e.response?.data || e.message;
                 throw e;

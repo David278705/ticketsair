@@ -124,16 +124,73 @@
                     </button>
                 </template>
                 <template v-else>
-                    <span class="text-sm text-slate-600 mr-1"
-                        >Hola,
-                        {{ auth.user.first_name || auth.user.role.name }}</span
+                    <!-- Menú de usuario -->
+                    <div
+                        class="relative"
+                        @mouseenter="userMenuOpen = true"
+                        @mouseleave="userMenuOpen = false"
                     >
-                    <button
-                        class="px-4 h-10 rounded-xl border border-slate-300/70 hover:bg-slate-100 transition-colors"
-                        @click="logout"
-                    >
-                        Cerrar sesión
-                    </button>
+                        <button
+                            class="flex items-center gap-2 px-4 h-10 rounded-xl border border-slate-300/70 hover:bg-slate-100 transition-colors"
+                        >
+                            <div class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center">
+                                <span class="text-xs text-indigo-600 font-medium">
+                                    {{ (auth.user.first_name || auth.user.name || 'U').charAt(0).toUpperCase() }}
+                                </span>
+                            </div>
+                            <span class="text-sm">
+                                {{ auth.user.first_name || auth.user.name || 'Usuario' }}
+                            </span>
+                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+
+                        <!-- Dropdown del usuario -->
+                        <Transition
+                            enter-active-class="transition duration-200 ease-out"
+                            enter-from-class="transform scale-95 opacity-0"
+                            enter-to-class="transform scale-100 opacity-100"
+                            leave-active-class="transition duration-150 ease-in"
+                            leave-from-class="transform scale-100 opacity-100"
+                            leave-to-class="transform scale-95 opacity-0"
+                        >
+                            <div
+                                v-if="userMenuOpen"
+                                class="absolute right-0 top-full mt-2 w-56 rounded-lg bg-white shadow-xl border border-slate-200/60 py-2 z-50"
+                            >
+                                <div class="px-4 py-2 border-b border-slate-100">
+                                    <p class="text-sm font-medium text-slate-900">{{ auth.user.name }}</p>
+                                    <p class="text-xs text-slate-500">{{ auth.user.email }}</p>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mt-1"
+                                          :class="getRoleBadgeClass(auth.user.role?.name)">
+                                        {{ getRoleDisplayName(auth.user.role?.name) }}
+                                    </span>
+                                </div>
+                                
+                                <RouterLink
+                                    to="/profile"
+                                    class="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                                    @click="userMenuOpen = false"
+                                >
+                                    <svg class="w-4 h-4 mr-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                    Mi Perfil
+                                </RouterLink>
+                                
+                                <button
+                                    @click="logout"
+                                    class="w-full flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors text-left"
+                                >
+                                    <svg class="w-4 h-4 mr-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                    </svg>
+                                    Cerrar Sesión
+                                </button>
+                            </div>
+                        </Transition>
+                    </div>
                 </template>
                 <!-- <button
                     @click="toggleDark"
@@ -251,6 +308,20 @@
                         </div>
                     </template>
 
+                    <!-- Perfil de usuario en móvil -->
+                    <div v-if="auth.user" class="pt-2 border-t border-slate-200">
+                        <RouterLink
+                            to="/profile"
+                            @click="close()"
+                            class="flex items-center py-2 text-slate-700 hover:text-blue-600 transition-colors"
+                        >
+                            <svg class="w-4 h-4 mr-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            Mi Perfil
+                        </RouterLink>
+                    </div>
+
                     <div class="pt-2 flex gap-2">
                         <template v-if="!auth.user">
                             <button
@@ -291,6 +362,7 @@ const ui = useUi();
 
 const open = ref(false);
 const adminMenuOpen = ref(false);
+const userMenuOpen = ref(false);
 const isDark = ref(false);
 const scrolled = ref(false);
 
@@ -320,8 +392,28 @@ function toggleDark() {
 async function logout() {
     auth.logout();
     close();
+    userMenuOpen.value = false;
     window.location.reload();
 }
+
+// Utilidades para roles
+const getRoleBadgeClass = (role) => {
+    const classes = {
+        root: "bg-red-100 text-red-800",
+        admin: "bg-blue-100 text-blue-800",
+        client: "bg-green-100 text-green-800",
+    };
+    return classes[role] || "bg-gray-100 text-gray-800";
+};
+
+const getRoleDisplayName = (role) => {
+    const names = {
+        root: "Administrador Root",
+        admin: "Administrador",
+        client: "Cliente",
+    };
+    return names[role] || "Usuario";
+};
 
 watch(open, (v) => {
     document.body.classList.toggle("overflow-hidden", v);

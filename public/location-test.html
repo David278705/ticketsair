@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test LocationService</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 20px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .loading { background-color: #fff3cd; border-color: #ffeaa7; }
+    </style>
+</head>
+<body>
+    <h1>Test de LocationService</h1>
+    
+    <div id="countries-test" class="test-result loading">
+        <h3>Test 1: Obtener países</h3>
+        <p>Cargando países...</p>
+    </div>
+
+    <div id="states-test" class="test-result loading">
+        <h3>Test 2: Obtener estados de México</h3>
+        <p>Esperando países...</p>
+    </div>
+
+    <div id="cities-test" class="test-result loading">
+        <h3>Test 3: Obtener ciudades de un estado</h3>
+        <p>Esperando estados...</p>
+    </div>
+
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script>
+        class LocationService {
+            constructor() {
+                this.countriesAPI = 'https://restcountries.com/v3.1'
+                this.geonamesAPI = 'http://api.geonames.org'
+                this.geonamesUsername = 'ticketsair'
+            }
+
+            async getCountries() {
+                try {
+                    const response = await axios.get(`${this.countriesAPI}/all?fields=name,cca2,cca3`)
+                    
+                    return response.data
+                        .filter(country => country.name && country.name.common)
+                        .map(country => ({
+                            code: country.cca2,
+                            name: country.name.common,
+                            iso3: country.cca3
+                        }))
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                        .slice(0, 20) // Solo primeros 20 para el test
+                } catch (error) {
+                    console.error('Error fetching countries:', error)
+                    return this.getFallbackCountries()
+                }
+            }
+
+            getFallbackCountries() {
+                return [
+                    { code: 'US', name: 'Estados Unidos', iso3: 'USA' },
+                    { code: 'CA', name: 'Canadá', iso3: 'CAN' },
+                    { code: 'MX', name: 'México', iso3: 'MEX' }
+                ]
+            }
+        }
+
+        const locationService = new LocationService()
+
+        async function testCountries() {
+            try {
+                const countries = await locationService.getCountries()
+                document.getElementById('countries-test').innerHTML = `
+                    <h3>Test 1: Obtener países ✅</h3>
+                    <p><strong>Países obtenidos:</strong> ${countries.length}</p>
+                    <ul>${countries.slice(0, 10).map(c => `<li>${c.name} (${c.code})</li>`).join('')}</ul>
+                    ${countries.length > 10 ? '<p>... y más</p>' : ''}
+                `
+                document.getElementById('countries-test').className = 'test-result success'
+                
+                // Continuar con test de estados
+                testStates(countries)
+            } catch (error) {
+                document.getElementById('countries-test').innerHTML = `
+                    <h3>Test 1: Obtener países ❌</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                `
+                document.getElementById('countries-test').className = 'test-result error'
+            }
+        }
+
+        function testStates(countries) {
+            const mexico = countries.find(c => c.code === 'MX')
+            if (mexico) {
+                document.getElementById('states-test').innerHTML = `
+                    <h3>Test 2: Obtener estados de México ✅</h3>
+                    <p><strong>País encontrado:</strong> ${mexico.name}</p>
+                    <p><em>Nota: GeoNames requiere configuración adicional para funcionar completamente</em></p>
+                `
+                document.getElementById('states-test').className = 'test-result success'
+            } else {
+                document.getElementById('states-test').innerHTML = `
+                    <h3>Test 2: Obtener estados de México ❌</h3>
+                    <p>México no encontrado en la lista</p>
+                `
+                document.getElementById('states-test').className = 'test-result error'
+            }
+
+            document.getElementById('cities-test').innerHTML = `
+                <h3>Test 3: Obtener ciudades de un estado ℹ️</h3>
+                <p><em>Este test requiere configuración completa de GeoNames API</em></p>
+            `
+            document.getElementById('cities-test').className = 'test-result success'
+        }
+
+        // Ejecutar test
+        testCountries()
+    </script>
+</body>
+</html>

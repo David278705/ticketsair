@@ -11,6 +11,7 @@ use App\Http\Controllers\MessageController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminRegistrationController;
+use App\Http\Controllers\ProfileController;
 
 use App\Http\Controllers\Admin\FlightAdminController;
 use App\Http\Controllers\Admin\UserAdminController;
@@ -42,6 +43,10 @@ Route::post('/complete-admin-registration', [AdminRegistrationController::class,
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me',      [AuthController::class,'me']);
     Route::post('/logout', [AuthController::class,'logout']);
+    
+    // Perfil de usuario
+    Route::put('/profile', [ProfileController::class, 'updateProfile']);
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword']);
     
     // Mensajería básica
     Route::get('/messages', [MessageController::class,'index']);
@@ -81,6 +86,9 @@ Route::middleware(['auth:sanctum','role:root'])->group(function () {
 // RUTAS PARA ADMIN (Solo administradores, NO root)
 // =================================
 Route::middleware(['auth:sanctum','role:admin'])->group(function () {
+    // Completar registro para admins autenticados
+    Route::post('/admin/complete-registration', [AdminRegistrationController::class, 'completeAuthenticatedRegistration']);
+    
     // Gestión de vuelos (solo admin)
     Route::get('/admin/flights', [FlightAdminController::class,'index']);
     Route::post('/admin/flights', [FlightAdminController::class,'store']);

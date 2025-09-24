@@ -202,13 +202,6 @@
                                             >
                                                 <Edit class="w-4 h-4" />
                                             </button>
-                                            <button
-                                                @click="resetPassword(user)"
-                                                class="text-orange-600 hover:text-orange-900"
-                                                title="Resetear contraseña"
-                                            >
-                                                <Key class="w-4 h-4" />
-                                            </button>
                                         </template>
                                         
                                         <!-- Botón de activar/desactivar (disponible siempre, excepto para otros roots) -->
@@ -289,13 +282,7 @@
             @updated="onUserUpdated"
         />
 
-        <ResetPasswordModal
-            v-model:open="resetPasswordOpen"
-            v-model:user="selectedUser"
-            @reset="onPasswordReset"
-        />
-
-        <!-- Nuevo modal para cambio de contraseña propia del root -->
+        <!-- Modal para cambio de contraseña propia del root -->
         <ChangeOwnPasswordModal
             v-model:open="changeOwnPasswordOpen"
             @changed="onOwnPasswordChanged"
@@ -319,7 +306,6 @@ import { useAuth } from "../../stores/auth";
 import { debounce } from "lodash";
 import CreateAdminModal from "../../components/admin/CreateAdminModal.vue";
 import EditUserModal from "../../components/admin/EditUserModal.vue";
-import ResetPasswordModal from "../../components/admin/ResetPasswordModal.vue";
 import ChangeOwnPasswordModal from "../../components/admin/ChangeOwnPasswordModal.vue";
 
 const auth = useAuth();
@@ -329,7 +315,6 @@ const loading = ref(false);
 const users = ref({ data: [], meta: null });
 const createAdminOpen = ref(false);
 const editUserOpen = ref(false);
-const resetPasswordOpen = ref(false);
 const changeOwnPasswordOpen = ref(false);
 const selectedUser = ref(null);
 
@@ -381,11 +366,6 @@ const editUser = (user) => {
     editUserOpen.value = true;
 };
 
-const resetPassword = (user) => {
-    selectedUser.value = { ...user };
-    resetPasswordOpen.value = true;
-};
-
 const toggleStatus = async (user) => {
     try {
         const { data } = await api.patch(
@@ -407,10 +387,6 @@ const onUserCreated = () => {
 
 const onUserUpdated = () => {
     loadUsers();
-};
-
-const onPasswordReset = () => {
-    alert("Contraseña restablecida exitosamente");
 };
 
 const onOwnPasswordChanged = () => {

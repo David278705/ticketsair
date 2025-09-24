@@ -21,6 +21,16 @@ const router = createRouter({
             }),
         },
         {
+            path: "/admin/complete-registration",
+            component: () => import("../pages/AdminCompleteRegistration.vue"),
+            meta: { auth: true, role: "admin" },
+        },
+        {
+            path: "/profile",
+            component: () => import("../pages/UserProfile.vue"),
+            meta: { auth: true },
+        },
+        {
             path: "/mis-viajes",
             component: MyTrips,
             meta: { auth: true, role: "client" },
@@ -59,6 +69,14 @@ router.beforeEach(async (to) => {
     const auth = useAuth();
     if (auth.token && !auth.user) await auth.me();
     if (to.meta?.auth && !auth.user) return { path: "/" };
+    
+    // Verificar si es un admin con registro incompleto que intenta ir a otra página
+    if (auth.user && auth.user.role?.name === 'admin' && !auth.user.registration_completed) {
+        if (to.path !== '/admin/complete-registration') {
+            return { path: '/admin/complete-registration' };
+        }
+    }
+    
     if (to.meta?.role) {
         const need = Array.isArray(to.meta.role)
             ? to.meta.role

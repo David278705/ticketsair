@@ -57,6 +57,14 @@ class AdminRegistrationController extends Controller
             'billing_address' => 'nullable|string|max:500',
             'username' => 'nullable|string|unique:users,username',
             'new_password' => ['required', 'confirmed', Password::min(8)],
+            
+            // Campos de ubicación
+            'location.country' => 'required|string|max:3',
+            'location.country_name' => 'required|string|max:100',
+            'location.state' => 'nullable|string|max:10',
+            'location.state_name' => 'nullable|string|max:100',
+            'location.city' => 'nullable|string|max:20',
+            'location.city_name' => 'nullable|string|max:100',
         ]);
 
         $admin = User::where('email', $request->email)
@@ -83,13 +91,83 @@ class AdminRegistrationController extends Controller
             'temp_password_token' => null,
             'temp_password_expires_at' => null,
             'registration_completed' => true,
-            'is_active' => true,
+            
+            // Campos de ubicación
+            'country_code' => $request->input('location.country'),
+            'country_name' => $request->input('location.country_name'),
+            'state_code' => $request->input('location.state'),
+            'state_name' => $request->input('location.state_name'),
+            'city_id' => $request->input('location.city'),
+            'city_name' => $request->input('location.city_name'),
         ]);
 
         return response()->json([
             'status' => 'success',
             'message' => 'Registro completado exitosamente. Ya puedes iniciar sesión con tus credenciales.',
             'data' => $admin->load('role')
+        ]);
+    }
+
+    /**
+     * Completar registro para admin ya autenticado
+     */
+    public function completeAuthenticatedRegistration(Request $request)
+    {
+        $user = $request->user();
+
+        // Verificar que es un admin con registro incompleto
+        if ($user->role->name !== 'admin' || $user->registration_completed) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No autorizado'
+            ], 403);
+        }
+
+        $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'dni' => 'required|string|unique:users,dni,' . $user->id,
+            'birth_date' => 'required|date|before:today',
+            'gender' => 'nullable|in:M,F,X',
+            'username' => 'nullable|string|unique:users,username,' . $user->id,
+            'password' => ['required', 'confirmed', Password::min(8)],
+            
+            // Campos de ubicación
+            'location.country' => 'required|string|max:3',
+            'location.country_name' => 'required|string|max:100',
+            'location.state' => 'nullable|string|max:10',
+            'location.state_name' => 'nullable|string|max:100',
+            'location.city' => 'nullable|string|max:20',
+            'location.city_name' => 'nullable|string|max:100',
+        ]);
+
+        // Actualizar datos del usuario
+        $user->update([
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'name' => $request->first_name . ' ' . $request->last_name,
+            'dni' => $request->dni,
+            'birth_date' => $request->birth_date,
+            'gender' => $request->gender,
+            'username' => $request->username,
+            'password' => Hash::make($request->password),
+            'temp_password_token' => null,
+            'temp_password_expires_at' => null,
+            'registration_completed' => true,
+            
+            // Campos de ubicación
+            'country_code' => $request->input('location.country'),
+            'country_name' => $request->input('location.country_name'),
+            'state_code' => $request->input('location.state'),
+            'state_name' => $request->input('location.state_name'),
+            'city_id' => $request->input('location.city'),
+            'city_name' => $request->input('location.city_name'),
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Registro completado exitosamente.',
+            'data' => $user->load('role')
         ]);
     }
 }

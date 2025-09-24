@@ -16,16 +16,14 @@ class AdminInvitationMail extends Mailable
 
     public $user;
     public $temporaryPassword;
-    public $completeRegistrationUrl;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(User $user, string $temporaryPassword, string $completeRegistrationUrl)
+    public function __construct(User $user, string $temporaryPassword)
     {
         $this->user = $user;
         $this->temporaryPassword = $temporaryPassword;
-        $this->completeRegistrationUrl = $completeRegistrationUrl;
     }
 
     /**

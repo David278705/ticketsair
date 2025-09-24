@@ -102,11 +102,8 @@ class UserAdminController extends Controller
                 'wallet_balance' => 0,
             ]);
 
-            // Generar URL para completar registro
-            $completeRegistrationUrl = url('/complete-admin-registration?token=' . $token . '&email=' . urlencode($request->email));
-
             // Enviar email con credenciales temporales
-            Mail::to($admin->email)->send(new AdminInvitationMail($admin, $temporaryPassword, $completeRegistrationUrl));
+            Mail::to($admin->email)->send(new AdminInvitationMail($admin, $temporaryPassword));
 
             DB::commit();
 

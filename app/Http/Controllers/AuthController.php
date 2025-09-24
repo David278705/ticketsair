@@ -47,8 +47,21 @@ class AuthController extends Controller
     $r->validate(['email'=>'required|email','password'=>'required']);
     if(!Auth::attempt($r->only('email','password')))
       return response()->json(['error'=>'invalid_credentials'],422);
-    $token = $r->user()->createToken('web')->plainTextToken;
-    return response()->json(['token'=>$token,'user'=>$r->user()]);
+    
+    $user = $r->user()->load('role');
+    
+    // Verificar si es un admin con registro incompleto
+    if ($user->role->name === 'admin' && !$user->registration_completed) {
+      $token = $user->createToken('web')->plainTextToken;
+      return response()->json([
+        'token' => $token,
+        'user' => $user,
+        'requires_completion' => true
+      ]);
+    }
+    
+    $token = $user->createToken('web')->plainTextToken;
+    return response()->json(['token'=>$token,'user'=>$user]);
   }
 
   public function me(Request $r){ return $r->user()->load('role'); }

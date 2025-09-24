@@ -19,7 +19,8 @@ class User extends Authenticatable {
   protected $fillable = [
     'role_id','name','email','password','dni','first_name','last_name','birth_date',
     'birth_place','billing_address','gender','username','avatar_path','news_opt_in','wallet_balance',
-    'temp_password_token','temp_password_expires_at','registration_completed'
+    'temp_password_token','temp_password_expires_at','registration_completed',
+    'country_code','country_name','state_code','state_name','city_id','city_name'
   ];
 
   protected $hidden = ['password','remember_token'];

@@ -96,11 +96,11 @@
         <div class="welcome">
             <p>Hola <strong>{{ $user->name }}</strong>,</p>
             
-            <p>Has sido invitado a formar parte del equipo administrativo de <strong>TicketsAir</strong>. Para completar tu registro como administrador, necesitarás usar las credenciales temporales que te proporcionamos a continuación.</p>
+            <p>Has sido invitado a formar parte del equipo administrativo de <strong>TicketsAir</strong>. Para acceder a tu cuenta, necesitarás iniciar sesión con las credenciales temporales que te proporcionamos.</p>
         </div>
 
         <div class="credentials">
-            <h3>🔐 Credenciales Temporales</h3>
+            <h3>🔐 Credenciales de Acceso</h3>
             <div class="credential-item">
                 <strong>Email:</strong> {{ $user->email }}
             </div>
@@ -110,17 +110,18 @@
         </div>
 
         <div style="text-align: center;">
-            <a href="{{ $completeRegistrationUrl }}" class="button">
-                Completar Registro
+            <a href="{{ url('/') }}" class="button">
+                Iniciar Sesión
             </a>
         </div>
 
         <div class="warning">
-            <strong>⚠️ Importante:</strong>
+            <strong>⚠️ Instrucciones importantes:</strong>
             <ul>
-                <li>Esta contraseña temporal es válida por <strong>24 horas</strong></li>
-                <li>Deberás cambiar tu contraseña al completar el registro</li>
-                <li>Solo podrás acceder al sistema después de completar tu registro</li>
+                <li><strong>Paso 1:</strong> Haz clic en "Iniciar Sesión" e ingresa tus credenciales</li>
+                <li><strong>Paso 2:</strong> Serás redirigido automáticamente para completar tu registro</li>
+                <li><strong>Paso 3:</strong> Completa tus datos personales y establece una nueva contraseña</li>
+                <li>Las credenciales temporales son válidas por <strong>24 horas</strong></li>
                 <li>Si no completas el registro en 24 horas, será necesario generar una nueva invitación</li>
             </ul>
         </div>

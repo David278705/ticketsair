@@ -1,9 +1,9 @@
 <template>
     <div class="min-h-full overflow-x-hidden">
-        <!-- NavBar se oculta solo en la página de Google -->
-        <NavBar v-if="!isGooglePage" />
+        <!-- NavBar se oculta en páginas fullscreen -->
+        <NavBar v-if="!isFullscreenPage" />
         <RouterView />
-        <SiteFooter v-if="!isGooglePage" class="mt-16" />
+        <SiteFooter v-if="!isFullscreenPage" class="mt-16" />
         <!-- Modal global -->
         <AuthModal v-model:open="ui.authOpen" :mode="ui.authMode" />
     </div>
@@ -22,9 +22,9 @@ const route = useRoute();
 const auth = useAuth();
 const ui = useUi();
 
-// Detectar si estamos en la página de Google
-const isGooglePage = computed(() => {
-    return route.path === '/google'
+// Detectar si estamos en páginas que no necesitan header/footer
+const isFullscreenPage = computed(() => {
+    return route.path === '/google' || route.path === '/admin/complete-registration'
 });
 
 onMounted(async () => {

@@ -428,6 +428,7 @@ import {
 import { CheckIcon } from "lucide-vue-next";
 import { useAuth } from "../../stores/auth";
 import { useUi } from "../../stores/ui";
+import { useRouter } from "vue-router";
 
 const props = defineProps({
     open: Boolean,
@@ -437,6 +438,7 @@ const emit = defineEmits(["update:open"]);
 
 const auth = useAuth();
 const ui = useUi();
+const router = useRouter();
 
 const login = reactive({ email: "", password: "" });
 const reg = reactive({
@@ -498,9 +500,15 @@ function tabClass(m) {
 
 async function doLogin() {
     try {
-        await auth.login(login);
+        const result = await auth.login(login);
         close();
-        window.location.reload(); // recargar para actualizar estado
+        
+        // Si es un admin que necesita completar el registro, redirigir
+        if (result.requires_completion) {
+            router.push('/admin/complete-registration');
+        } else {
+            window.location.reload(); // recargar para actualizar estado
+        }
     } catch {}
 }
 
