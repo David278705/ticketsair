@@ -79,7 +79,10 @@
                     id="first_name"
                     v-model="personalForm.first_name"
                     type="text"
+                    pattern="[A-Za-zÀ-ÿ\u00f1\u00d1\s]+"
+                    title="Solo se permiten letras y espacios"
                     required
+                    @input="validateNameInput($event)"
                     class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   />
                 </div>
@@ -91,7 +94,10 @@
                     id="last_name"
                     v-model="personalForm.last_name"
                     type="text"
+                    pattern="[A-Za-zÀ-ÿ\u00f1\u00d1\s]+"
+                    title="Solo se permiten letras y espacios"
                     required
+                    @input="validateNameInput($event)"
                     class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   />
                 </div>
@@ -121,7 +127,11 @@
                   id="dni"
                   v-model="personalForm.dni"
                   type="text"
+                  pattern="[A-Za-z0-9]+"
+                  title="Solo se permiten letras y números"
+                  maxlength="20"
                   required
+                  @input="validateAlphanumericInput($event)"
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 />
               </div>
@@ -169,6 +179,11 @@
                     id="username"
                     v-model="personalForm.username"
                     type="text"
+                    pattern="[A-Za-z0-9_-]+"
+                    title="Solo letras, números, guiones y guiones bajos"
+                    minlength="3"
+                    maxlength="20"
+                    @input="validateUsernameInput($event)"
                     class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   />
                 </div>
@@ -613,4 +628,23 @@ onMounted(async () => {
   }
   loadUserData()
 })
+
+// Validation functions
+function validateNameInput(event) {
+  // Only allow letters, spaces, and accented characters
+  const regex = /[^A-Za-zÀ-ÿ\u00f1\u00d1\s]/g;
+  event.target.value = event.target.value.replace(regex, '');
+}
+
+function validateAlphanumericInput(event) {
+  // Only allow letters and numbers
+  const regex = /[^A-Za-z0-9]/g;
+  event.target.value = event.target.value.replace(regex, '');
+}
+
+function validateUsernameInput(event) {
+  // Only allow letters, numbers, hyphens, and underscores
+  const regex = /[^A-Za-z0-9_-]/g;
+  event.target.value = event.target.value.replace(regex, '');
+}
 </script>

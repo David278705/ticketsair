@@ -75,6 +75,9 @@
                                         <input
                                             v-model="form.first_name"
                                             type="text"
+                                            pattern="[A-Za-zÀ-ÿ\u00f1\u00d1\s]+"
+                                            title="Solo se permiten letras y espacios"
+                                            @input="validateNameInput($event)"
                                             class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             :class="{
                                                 'border-red-500':
@@ -97,6 +100,9 @@
                                         <input
                                             v-model="form.last_name"
                                             type="text"
+                                            pattern="[A-Za-zÀ-ÿ\u00f1\u00d1\s]+"
+                                            title="Solo se permiten letras y espacios"
+                                            @input="validateNameInput($event)"
                                             class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             :class="{
                                                 'border-red-500':
@@ -122,6 +128,10 @@
                                     <input
                                         v-model="form.dni"
                                         type="text"
+                                        pattern="[A-Za-z0-9]+"
+                                        title="Solo se permiten letras y números"
+                                        maxlength="20"
+                                        @input="validateAlphanumericInput($event)"
                                         class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         :class="{
                                             'border-red-500': errors.dni,
@@ -378,4 +388,17 @@ watch(
         }
     }
 );
+
+// Validation functions
+function validateNameInput(event) {
+    // Only allow letters, spaces, and accented characters
+    const regex = /[^A-Za-zÀ-ÿ\u00f1\u00d1\s]/g;
+    event.target.value = event.target.value.replace(regex, '');
+}
+
+function validateAlphanumericInput(event) {
+    // Only allow letters and numbers
+    const regex = /[^A-Za-z0-9]/g;
+    event.target.value = event.target.value.replace(regex, '');
+}
 </script>

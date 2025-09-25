@@ -165,7 +165,11 @@
             <div class="grid gap-4">
                 <!-- Primera fila: Tipo de vuelo -->
                 <div>
+                    <label for="flight_scope" class="block text-sm font-medium text-gray-700 mb-1">
+                        Tipo de Vuelo *
+                    </label>
                     <select
+                        id="flight_scope"
                         v-model="form.scope"
                         class="h-10 rounded-lg border px-3 w-full"
                     >
@@ -186,11 +190,15 @@
                                 <!-- Segunda fila: Origen y Destino -->
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
+                        <label for="flight_origin" class="block text-sm font-medium text-gray-700 mb-1">
+                            Ciudad de Origen *
+                        </label>
                         <select
+                            id="flight_origin"
                             v-model="form.origin_id"
                             class="h-10 rounded-lg border px-3 w-full"
                         >
-                            <option value="">Origen</option>
+                            <option value="">Selecciona origen</option>
                             <option v-for="c in availableOriginCities" :key="c.id" :value="c.id">
                                 {{ c.name }}
                             </option>
@@ -205,11 +213,15 @@
                         </p>
                     </div>
                     <div>
+                        <label for="flight_destination" class="block text-sm font-medium text-gray-700 mb-1">
+                            Ciudad de Destino *
+                        </label>
                         <select
+                            id="flight_destination"
                             v-model="form.destination_id"
                             class="h-10 rounded-lg border px-3 w-full"
                         >
-                            <option value="">Destino</option>
+                            <option value="">Selecciona destino</option>
                             <option v-for="c in availableDestinationCities" :key="c.id" :value="c.id">
                                 {{ c.name }}
                             </option>
@@ -227,39 +239,85 @@
                 
                 <!-- Tercera fila: Otros campos -->
                 <div class="grid md:grid-cols-2 gap-4">
-                    <input
-                        v-model="form.departure_at"
-                        type="datetime-local"
-                        class="h-10 rounded-lg border px-3"
-                    />
-                    <input
-                        v-model.number="form.duration_minutes"
-                        type="number"
-                        min="10"
-                        class="h-10 rounded-lg border px-3"
-                        placeholder="Duración (min)"
-                    />
-                    <input
-                        v-model.number="form.price_per_seat"
-                        type="number"
-                        min="0"
-                        class="h-10 rounded-lg border px-3"
-                        placeholder="Precio por silla"
-                    />
-                    <input
-                        v-model.number="form.capacity_first"
-                        type="number"
-                        min="0"
-                        class="h-10 rounded-lg border px-3"
-                        placeholder="Capacidad First"
-                    />
-                    <input
-                        v-model.number="form.capacity_economy"
-                        type="number"
-                        min="1"
-                        class="h-10 rounded-lg border px-3"
-                        placeholder="Capacidad Economy"
-                    />
+                    <div>
+                        <label for="flight_departure" class="block text-sm font-medium text-gray-700 mb-1">
+                            Fecha y Hora de Salida *
+                        </label>
+                        <input
+                            id="flight_departure"
+                            v-model="form.departure_at"
+                            type="datetime-local"
+                            class="h-10 rounded-lg border px-3 w-full"
+                        />
+                    </div>
+                    <div>
+                        <label for="flight_duration" class="block text-sm font-medium text-gray-700 mb-1">
+                            Duración (minutos) *
+                        </label>
+                        <input
+                            id="flight_duration"
+                            v-model.number="form.duration_minutes"
+                            type="number"
+                            min="10"
+                            max="1440"
+                            pattern="[0-9]+"
+                            title="Solo se permiten números"
+                            class="h-10 rounded-lg border px-3 w-full"
+                            placeholder="ej: 90"
+                            @input="validateNumericInput($event)"
+                        />
+                    </div>
+                    <div>
+                        <label for="flight_price" class="block text-sm font-medium text-gray-700 mb-1">
+                            Precio por Asiento *
+                        </label>
+                        <input
+                            id="flight_price"
+                            v-model.number="form.price_per_seat"
+                            type="number"
+                            min="0"
+                            max="9999999"
+                            pattern="[0-9]+"
+                            title="Solo se permiten números"
+                            class="h-10 rounded-lg border px-3 w-full"
+                            placeholder="ej: 150000"
+                            @input="validateNumericInput($event)"
+                        />
+                    </div>
+                    <div>
+                        <label for="flight_capacity_first" class="block text-sm font-medium text-gray-700 mb-1">
+                            Capacidad Primera Clase
+                        </label>
+                        <input
+                            id="flight_capacity_first"
+                            v-model.number="form.capacity_first"
+                            type="number"
+                            min="0"
+                            max="500"
+                            pattern="[0-9]+"
+                            title="Solo se permiten números"
+                            class="h-10 rounded-lg border px-3 w-full"
+                            placeholder="ej: 12"
+                            @input="validateNumericInput($event)"
+                        />
+                    </div>
+                    <div>
+                        <label for="flight_capacity_economy" class="block text-sm font-medium text-gray-700 mb-1">
+                            Capacidad Clase Económica *
+                        </label>
+                        <input
+                            id="flight_capacity_economy"
+                            v-model.number="form.capacity_economy"
+                            type="number"
+                            min="1"
+                            max="1000"
+                            pattern="[0-9]+"
+                            title="Solo se permiten números"
+                            class="h-10 rounded-lg border px-3 w-full"
+                            placeholder="ej: 180"
+                            @input="validateNumericInput($event)"
+                        />
+                    </div>
                 </div>
             </div>
             <ul
@@ -291,29 +349,56 @@
                 >Crear promoción — {{ currentFlight?.code }}</template
             >
             <div class="grid md:grid-cols-2 gap-3">
-                <input
-                    v-model="promo.title"
-                    placeholder="Título"
-                    class="h-10 rounded-lg border px-3"
-                />
-                <input
-                    v-model.number="promo.discount_percent"
-                    type="number"
-                    min="1"
-                    max="90"
-                    class="h-10 rounded-lg border px-3"
-                    placeholder="% Descuento"
-                />
-                <input
-                    v-model="promo.starts_at"
-                    type="datetime-local"
-                    class="h-10 rounded-lg border px-3"
-                />
-                <input
-                    v-model="promo.ends_at"
-                    type="datetime-local"
-                    class="h-10 rounded-lg border px-3"
-                />
+                <div>
+                    <label for="promo_title" class="block text-sm font-medium text-gray-700 mb-1">
+                        Título de la Promoción *
+                    </label>
+                    <input
+                        id="promo_title"
+                        v-model="promo.title"
+                        placeholder="ej: Descuento de Temporada"
+                        class="h-10 rounded-lg border px-3 w-full"
+                    />
+                </div>
+                <div>
+                    <label for="promo_discount" class="block text-sm font-medium text-gray-700 mb-1">
+                        Porcentaje de Descuento *
+                    </label>
+                    <input
+                        id="promo_discount"
+                        v-model.number="promo.discount_percent"
+                        type="number"
+                        min="1"
+                        max="90"
+                        pattern="[0-9]+"
+                        title="Solo se permiten números"
+                        class="h-10 rounded-lg border px-3 w-full"
+                        placeholder="ej: 25"
+                        @input="validateNumericInput($event)"
+                    />
+                </div>
+                <div>
+                    <label for="promo_start" class="block text-sm font-medium text-gray-700 mb-1">
+                        Fecha de Inicio *
+                    </label>
+                    <input
+                        id="promo_start"
+                        v-model="promo.starts_at"
+                        type="datetime-local"
+                        class="h-10 rounded-lg border px-3 w-full"
+                    />
+                </div>
+                <div>
+                    <label for="promo_end" class="block text-sm font-medium text-gray-700 mb-1">
+                        Fecha de Fin *
+                    </label>
+                    <input
+                        id="promo_end"
+                        v-model="promo.ends_at"
+                        type="datetime-local"
+                        class="h-10 rounded-lg border px-3 w-full"
+                    />
+                </div>
                 <label class="inline-flex items-center gap-2 mt-1"
                     ><input type="checkbox" v-model="promo.is_active" />
                     Activa</label
@@ -345,27 +430,47 @@
                 {{ currentFlight?.code || "General" }}</template
             >
             <div class="grid gap-3">
-                <input
-                    v-model="news.title"
-                    placeholder="Título"
-                    class="h-10 rounded-lg border px-3"
-                />
-                <textarea
-                    v-model="news.body"
-                    rows="4"
-                    placeholder="Contenido"
-                    class="rounded-lg border px-3 py-2"
-                ></textarea>
-                <label class="inline-flex items-center gap-2"
-                    ><input type="checkbox" v-model="news.is_promotion" /> Es
-                    promoción</label
-                >
-                <input
-                    type="file"
-                    @change="onNewsFile"
-                    accept="image/*"
-                    class="block"
-                />
+                <div>
+                    <label for="news_title" class="block text-sm font-medium text-gray-700 mb-1">
+                        Título de la Noticia *
+                    </label>
+                    <input
+                        id="news_title"
+                        v-model="news.title"
+                        placeholder="ej: Nuevos destinos disponibles"
+                        class="h-10 rounded-lg border px-3 w-full"
+                    />
+                </div>
+                <div>
+                    <label for="news_body" class="block text-sm font-medium text-gray-700 mb-1">
+                        Contenido *
+                    </label>
+                    <textarea
+                        id="news_body"
+                        v-model="news.body"
+                        rows="4"
+                        placeholder="Escribe el contenido de la noticia..."
+                        class="rounded-lg border px-3 py-2 w-full"
+                    ></textarea>
+                </div>
+                <div>
+                    <label class="inline-flex items-center gap-2 text-sm font-medium text-gray-700"
+                        ><input id="news_is_promotion" type="checkbox" v-model="news.is_promotion" /> Es
+                        promoción</label
+                    >
+                </div>
+                <div>
+                    <label for="news_image" class="block text-sm font-medium text-gray-700 mb-1">
+                        Imagen (opcional)
+                    </label>
+                    <input
+                        id="news_image"
+                        type="file"
+                        @change="onNewsFile"
+                        accept="image/*"
+                        class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    />
+                </div>
             </div>
             <p v-if="newsError" class="mt-2 text-rose-600 text-sm">
                 {{ newsError }}
@@ -726,5 +831,12 @@ async function saveNews() {
         newsError.value =
             e.response?.data?.message || "Error al publicar noticia";
     }
+}
+
+// Validation functions
+function validateNumericInput(event) {
+    // Only allow numbers
+    const regex = /[^0-9]/g;
+    event.target.value = event.target.value.replace(regex, '');
 }
 </script>

@@ -72,18 +72,32 @@
                                 class="grid gap-3"
                                 @submit.prevent="doLogin"
                             >
-                                <input
-                                    v-model.trim="login.email"
-                                    type="email"
-                                    placeholder="Email"
-                                    class="h-11 rounded-xl border px-3 bg-transparent"
-                                />
-                                <input
-                                    v-model="login.password"
-                                    type="password"
-                                    placeholder="Contraseña"
-                                    class="h-11 rounded-xl border px-3 bg-transparent"
-                                />
+                                <div>
+                                    <label for="login_email" class="block text-sm font-medium text-gray-700 mb-1">
+                                        Correo Electrónico
+                                    </label>
+                                    <input
+                                        id="login_email"
+                                        v-model.trim="login.email"
+                                        type="email"
+                                        placeholder="ejemplo@correo.com"
+                                        required
+                                        class="h-11 rounded-xl border px-3 bg-transparent w-full"
+                                    />
+                                </div>
+                                <div>
+                                    <label for="login_password" class="block text-sm font-medium text-gray-700 mb-1">
+                                        Contraseña
+                                    </label>
+                                    <input
+                                        id="login_password"
+                                        v-model="login.password"
+                                        type="password"
+                                        placeholder="Tu contraseña"
+                                        required
+                                        class="h-11 rounded-xl border px-3 bg-transparent w-full"
+                                    />
+                                </div>
                                 <button
                                     class="h-11 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-400 text-white"
                                     :disabled="auth.loading"
@@ -114,10 +128,14 @@
                                 @submit.prevent="doForgotPassword"
                             >
                                 <div v-if="!forgotPasswordSent">
+                                    <label for="forgot_email" class="block text-sm font-medium text-gray-700 mb-1">
+                                        Correo Electrónico
+                                    </label>
                                     <input
+                                        id="forgot_email"
                                         v-model.trim="forgotEmail"
                                         type="email"
-                                        placeholder="Ingresa tu email"
+                                        placeholder="ejemplo@correo.com"
                                         required
                                         class="h-11 rounded-xl border px-3 bg-transparent w-full"
                                     />
@@ -245,23 +263,35 @@
                                     <strong>{{ forgotEmail }}</strong>
                                 </p>
 
-                                <input
-                                    v-model="resetForm.password"
-                                    type="password"
-                                    placeholder="Nueva contraseña"
-                                    required
-                                    minlength="8"
-                                    class="h-11 rounded-xl border px-3 bg-transparent"
-                                />
+                                <div>
+                                    <label for="reset_password" class="block text-sm font-medium text-gray-700 mb-1">
+                                        Nueva Contraseña
+                                    </label>
+                                    <input
+                                        id="reset_password"
+                                        v-model="resetForm.password"
+                                        type="password"
+                                        placeholder="Mínimo 8 caracteres"
+                                        required
+                                        minlength="8"
+                                        class="h-11 rounded-xl border px-3 bg-transparent w-full"
+                                    />
+                                </div>
 
-                                <input
-                                    v-model="resetForm.password_confirmation"
-                                    type="password"
-                                    placeholder="Confirmar nueva contraseña"
-                                    required
-                                    minlength="8"
-                                    class="h-11 rounded-xl border px-3 bg-transparent"
-                                />
+                                <div>
+                                    <label for="reset_password_confirmation" class="block text-sm font-medium text-gray-700 mb-1">
+                                        Confirmar Nueva Contraseña
+                                    </label>
+                                    <input
+                                        id="reset_password_confirmation"
+                                        v-model="resetForm.password_confirmation"
+                                        type="password"
+                                        placeholder="Repite la contraseña"
+                                        required
+                                        minlength="8"
+                                        class="h-11 rounded-xl border px-3 bg-transparent w-full"
+                                    />
+                                </div>
 
                                 <button
                                     type="submit"
@@ -305,56 +335,121 @@
                                 @submit.prevent="doRegister"
                             >
                                 <div class="grid sm:grid-cols-2 gap-3">
-                                    <input
-                                        v-model.trim="reg.first_name"
-                                        placeholder="Nombre"
-                                        class="h-11 rounded-xl border px-3 bg-transparent"
-                                    />
-                                    <input
-                                        v-model.trim="reg.last_name"
-                                        placeholder="Apellido"
-                                        class="h-11 rounded-xl border px-3 bg-transparent"
-                                    />
+                                    <div>
+                                        <label for="reg_first_name" class="block text-sm font-medium text-gray-700 mb-1">
+                                            Nombre *
+                                        </label>
+                                        <input
+                                            id="reg_first_name"
+                                            v-model.trim="reg.first_name"
+                                            type="text"
+                                            placeholder="Ingresa tu nombre"
+                                            pattern="[A-Za-zÀ-ÿ\u00f1\u00d1\s]+"
+                                            title="Solo se permiten letras y espacios"
+                                            required
+                                            class="h-11 rounded-xl border px-3 bg-transparent w-full"
+                                            @input="validateNameInput($event)"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label for="reg_last_name" class="block text-sm font-medium text-gray-700 mb-1">
+                                            Apellido *
+                                        </label>
+                                        <input
+                                            id="reg_last_name"
+                                            v-model.trim="reg.last_name"
+                                            type="text"
+                                            placeholder="Ingresa tu apellido"
+                                            pattern="[A-Za-zÀ-ÿ\u00f1\u00d1\s]+"
+                                            title="Solo se permiten letras y espacios"
+                                            required
+                                            class="h-11 rounded-xl border px-3 bg-transparent w-full"
+                                            @input="validateNameInput($event)"
+                                        />
+                                    </div>
                                 </div>
                                 <div class="grid sm:grid-cols-2 gap-3">
-                                    <input
-                                        v-model.trim="reg.dni"
-                                        placeholder="Documento (DNI / Cédula)"
-                                        class="h-11 rounded-xl border px-3 bg-transparent"
-                                    />
+                                    <div>
+                                        <label for="reg_dni" class="block text-sm font-medium text-gray-700 mb-1">
+                                            Documento de Identidad *
+                                        </label>
+                                        <input
+                                            id="reg_dni"
+                                            v-model.trim="reg.dni"
+                                            type="text"
+                                            placeholder="DNI / Cédula"
+                                            pattern="[A-Za-z0-9]+"
+                                            title="Solo se permiten letras y números"
+                                            maxlength="20"
+                                            required
+                                            class="h-11 rounded-xl border px-3 bg-transparent w-full"
+                                            @input="validateAlphanumericInput($event)"
+                                        />
+                                    </div>
 
-                                    <input
-                                        v-model.trim="reg.username"
-                                        placeholder="Usuario (opcional)"
-                                        class="h-11 rounded-xl border px-3 bg-transparent"
-                                    />
+                                    <div>
+                                        <label for="reg_username" class="block text-sm font-medium text-gray-700 mb-1">
+                                            Nombre de Usuario
+                                        </label>
+                                        <input
+                                            id="reg_username"
+                                            v-model.trim="reg.username"
+                                            type="text"
+                                            placeholder="Usuario (opcional)"
+                                            pattern="[A-Za-z0-9_-]+"
+                                            title="Solo letras, números, guiones y guiones bajos"
+                                            minlength="3"
+                                            maxlength="20"
+                                            class="h-11 rounded-xl border px-3 bg-transparent w-full"
+                                            @input="validateUsernameInput($event)"
+                                        />
+                                    </div>
                                 </div>
                                 <div class="grid sm:grid-cols-2 gap-3">
-                                    <input
-                                        v-model="reg.birth_date"
-                                        type="date"
-                                        title="Fecha de Nacimiento"
-                                        :min="minBirthDate"
-                                        :max="maxBirthDate"
-                                        class="h-11 rounded-xl border px-3 bg-transparent"
-                                    />
-                                    <select
-                                        v-model="reg.gender"
-                                        class="h-11 rounded-xl border px-3 bg-transparent"
-                                    >
-                                        <option value="">
-                                            Género (opcional)
-                                        </option>
-                                        <option value="M">Masculino</option>
-                                        <option value="F">Femenino</option>
-                                        <option value="X">No binario</option>
-                                    </select>
+                                    <div>
+                                        <label for="reg_birth_date" class="block text-sm font-medium text-gray-700 mb-1">
+                                            Fecha de Nacimiento *
+                                        </label>
+                                        <input
+                                            id="reg_birth_date"
+                                            v-model="reg.birth_date"
+                                            type="date"
+                                            title="Fecha de Nacimiento"
+                                            :min="minBirthDate"
+                                            :max="maxBirthDate"
+                                            required
+                                            class="h-11 rounded-xl border px-3 bg-transparent w-full"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label for="reg_gender" class="block text-sm font-medium text-gray-700 mb-1">
+                                            Género
+                                        </label>
+                                        <select
+                                            id="reg_gender"
+                                            v-model="reg.gender"
+                                            class="h-11 rounded-xl border px-3 bg-transparent w-full"
+                                        >
+                                            <option value="">
+                                                Selecciona género (opcional)
+                                            </option>
+                                            <option value="M">Masculino</option>
+                                            <option value="F">Femenino</option>
+                                            <option value="X">No binario</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                <input
-                                    v-model.trim="reg.billing_address"
-                                    placeholder="Dirección de facturación (opcional)"
-                                    class="h-11 rounded-xl border px-3 bg-transparent"
-                                />
+                                <div>
+                                    <label for="reg_billing_address" class="block text-sm font-medium text-gray-700 mb-1">
+                                        Dirección de Facturación
+                                    </label>
+                                    <input
+                                        id="reg_billing_address"
+                                        v-model.trim="reg.billing_address"
+                                        placeholder="Dirección completa (opcional)"
+                                        class="h-11 rounded-xl border px-3 bg-transparent w-full"
+                                    />
+                                </div>
 
                                 <!-- Selector de ubicación -->
                                 <div class="space-y-3">
@@ -435,26 +530,47 @@
                                     </select>
                                 </div>
 
-                                <input
-                                    v-model.trim="reg.email"
-                                    type="email"
-                                    placeholder="Email"
-                                    class="h-11 rounded-xl border px-3 bg-transparent"
-                                />
+                                <div>
+                                    <label for="reg_email" class="block text-sm font-medium text-gray-700 mb-1">
+                                        Correo Electrónico *
+                                    </label>
+                                    <input
+                                        id="reg_email"
+                                        v-model.trim="reg.email"
+                                        type="email"
+                                        placeholder="ejemplo@correo.com"
+                                        required
+                                        class="h-11 rounded-xl border px-3 bg-transparent w-full"
+                                    />
+                                </div>
                                 <div class="grid sm:grid-cols-2 gap-3">
-                                    <input
-                                        v-model="reg.password"
-                                        type="password"
-                                        placeholder="Contraseña"
-                                        class="h-11 rounded-xl border px-3 bg-transparent"
-                                    />
+                                    <div>
+                                        <label for="reg_password" class="block text-sm font-medium text-gray-700 mb-1">
+                                            Contraseña *
+                                        </label>
+                                        <input
+                                            id="reg_password"
+                                            v-model="reg.password"
+                                            type="password"
+                                            placeholder="Mínimo 8 caracteres"
+                                            required
+                                            class="h-11 rounded-xl border px-3 bg-transparent w-full"
+                                        />
+                                    </div>
 
-                                    <input
-                                        v-model="reg.password_confirmation"
-                                        type="password"
-                                        placeholder="Confirmar contraseña"
-                                        class="h-11 rounded-xl border px-3 bg-transparent"
-                                    />
+                                    <div>
+                                        <label for="reg_password_confirmation" class="block text-sm font-medium text-gray-700 mb-1">
+                                            Confirmar Contraseña *
+                                        </label>
+                                        <input
+                                            id="reg_password_confirmation"
+                                            v-model="reg.password_confirmation"
+                                            type="password"
+                                            placeholder="Repite la contraseña"
+                                            required
+                                            class="h-11 rounded-xl border px-3 bg-transparent w-full"
+                                        />
+                                    </div>
                                 </div>
                                 <label
                                     class="inline-flex items-center gap-2 text-sm text-slate-600"
@@ -851,5 +967,30 @@ function friendlyError(e) {
     if (!e) return "";
     if (typeof e === "string") return e;
     return e.error || e.message || "Error desconocido";
+}
+
+// Validation functions
+function validateNameInput(event) {
+    // Only allow letters, spaces, and accented characters
+    const regex = /[^A-Za-zÀ-ÿ\u00f1\u00d1\s]/g;
+    event.target.value = event.target.value.replace(regex, '');
+}
+
+function validateAlphanumericInput(event) {
+    // Only allow letters and numbers
+    const regex = /[^A-Za-z0-9]/g;
+    event.target.value = event.target.value.replace(regex, '');
+}
+
+function validateUsernameInput(event) {
+    // Only allow letters, numbers, hyphens, and underscores
+    const regex = /[^A-Za-z0-9_-]/g;
+    event.target.value = event.target.value.replace(regex, '');
+}
+
+function validateNumericInput(event) {
+    // Only allow numbers
+    const regex = /[^0-9]/g;
+    event.target.value = event.target.value.replace(regex, '');
 }
 </script>

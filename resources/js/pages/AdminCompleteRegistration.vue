@@ -25,8 +25,11 @@
                 id="first_name"
                 name="first_name"
                 type="text"
+                pattern="[A-Za-zÀ-ÿ\u00f1\u00d1\s]+"
+                title="Solo se permiten letras y espacios"
                 required
                 v-model="form.first_name"
+                @input="validateNameInput($event)"
                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 placeholder="Tu nombre"
               />
@@ -39,8 +42,11 @@
                 id="last_name"
                 name="last_name"
                 type="text"
+                pattern="[A-Za-zÀ-ÿ\u00f1\u00d1\s]+"
+                title="Solo se permiten letras y espacios"
                 required
                 v-model="form.last_name"
+                @input="validateNameInput($event)"
                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 placeholder="Tu apellido"
               />
@@ -55,8 +61,12 @@
               id="dni"
               name="dni"
               type="text"
+              pattern="[A-Za-z0-9]+"
+              title="Solo se permiten letras y números"
+              maxlength="20"
               required
               v-model="form.dni"
+              @input="validateAlphanumericInput($event)"
               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
               placeholder="Número de documento"
             />
@@ -103,7 +113,12 @@
               id="username"
               name="username"
               type="text"
+              pattern="[A-Za-z0-9_-]+"
+              title="Solo letras, números, guiones y guiones bajos"
+              minlength="3"
+              maxlength="20"
               v-model="form.username"
+              @input="validateUsernameInput($event)"
               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
               placeholder="Nombre de usuario único"
             />
@@ -284,5 +299,24 @@ const completeRegistration = async () => {
   } finally {
     loading.value = false
   }
+}
+
+// Validation functions
+function validateNameInput(event) {
+  // Only allow letters, spaces, and accented characters
+  const regex = /[^A-Za-zÀ-ÿ\u00f1\u00d1\s]/g;
+  event.target.value = event.target.value.replace(regex, '');
+}
+
+function validateAlphanumericInput(event) {
+  // Only allow letters and numbers
+  const regex = /[^A-Za-z0-9]/g;
+  event.target.value = event.target.value.replace(regex, '');
+}
+
+function validateUsernameInput(event) {
+  // Only allow letters, numbers, hyphens, and underscores
+  const regex = /[^A-Za-z0-9_-]/g;
+  event.target.value = event.target.value.replace(regex, '');
 }
 </script>
