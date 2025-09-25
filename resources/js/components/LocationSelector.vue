@@ -46,7 +46,7 @@
                 <option
                     v-for="state in states"
                     :key="state.id"
-                    :value="state.code"
+                    :value="state.id"
                 >
                     {{ state.name }}
                 </option>
@@ -91,7 +91,7 @@
         </div>
 
         <!-- Selector de Ciudad -->
-        <div v-if="selectedState && cities.length" class="mb-4">
+        <div v-if="selectedState" class="mb-4">
             <label class="block text-sm font-medium text-slate-700 mb-2">
                 Ciudad *
             </label>
@@ -131,24 +131,32 @@
             </p>
         </div>
 
+        <!-- Información de ubicación existente (si hay datos pero no están cargando) -->
+        <div v-else-if="modelValue && (modelValue.country_name || modelValue.state_name || modelValue.city_name)" 
+             class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p class="text-sm text-blue-700">
+                <span class="font-medium">📍 Ubicación actual:</span>
+            </p>
+            <p class="text-sm text-blue-600 mt-1">
+                <span v-if="modelValue.city_name">{{ modelValue.city_name }}, </span>
+                <span v-if="modelValue.state_name">{{ modelValue.state_name }}, </span>
+                <span v-if="modelValue.country_name">{{ modelValue.country_name }}</span>
+            </p>
+            <p v-if="loading.countries || loading.states" class="text-xs text-blue-500 mt-1">
+                Cargando opciones de edición...
+            </p>
+        </div>
+
         <!-- Estado de carga -->
         <div v-if="loading.countries" class="flex items-center justify-center py-4">
             <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
             <span class="ml-2 text-slate-600">Cargando datos de ubicación...</span>
         </div>
-
-        <!-- Información sobre fuente de datos -->
-        <div v-if="selectedCountry && !loading.countries" class="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
-            <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-            </svg>
-            Los datos se obtienen de fuentes actualizadas. Si no encuentras tu ubicación, puedes buscarla directamente.
-        </div>
     </div>
 </template>
 
 <script>
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue'
 import locationService from '@/services/locationService'
 
 export default {
@@ -183,6 +191,9 @@ export default {
         const cities = ref([])
         const searchedCities = ref([])
         const citySearchQuery = ref('')
+        
+        // Flag para evitar reinicialización en cambios internos
+        const isInternalChange = ref(false)
         
         const loading = reactive({
             countries: false,
@@ -225,17 +236,24 @@ export default {
             }
         }
 
-        const loadCities = async (stateId, countryCode) => {
-            if (!stateId) return
+        const loadCities = async (selectedStateObj, countryCode) => {
+            if (!selectedStateObj) {
+                return
+            }
             
             loading.cities = true
             cities.value = []
             selectedCity.value = ''
             
             try {
-                cities.value = await locationService.getCities(stateId, countryCode)
+                const countryName = countries.value.find(c => c.code === countryCode)?.name
+                const stateName = selectedStateObj.originalName || selectedStateObj.name
+                
+                if (countryName && stateName) {
+                    cities.value = await locationService.getCities(countryName, stateName)
+                }
             } catch (error) {
-                console.error('Error loading cities:', error)
+                console.error('LocationSelector: Error loading cities:', error)
             } finally {
                 loading.cities = false
             }
@@ -271,9 +289,10 @@ export default {
 
         const onStateChange = () => {
             if (selectedState.value) {
-                const state = states.value.find(s => s.code === selectedState.value)
+                const state = states.value.find(s => s.id === selectedState.value)
+                
                 if (state) {
-                    loadCities(state.id, selectedCountry.value)
+                    loadCities(state, selectedCountry.value)
                 }
             }
             emitChange()
@@ -291,14 +310,31 @@ export default {
         }
 
         const emitChange = () => {
+            // Marcar como cambio interno para evitar reinicialización
+            isInternalChange.value = true
+            
+            // Obtener nombres completos para el backend
+            const country = countries.value.find(c => c.code === selectedCountry.value)
+            const state = states.value.find(s => s.id === selectedState.value)
+            const city = cities.value.find(c => c.id === selectedCity.value) ||
+                        searchedCities.value.find(c => c.id === selectedCity.value)
+
             const value = {
                 country: selectedCountry.value,
+                country_name: country ? country.name : '',
                 state: selectedState.value,
-                city: selectedCity.value
+                state_name: state ? state.name : '',
+                city: selectedCity.value,
+                city_name: city ? city.name : ''
             }
             
             emit('update:modelValue', value)
             emit('change', value)
+            
+            // Resetear flag después de un tick
+            nextTick(() => {
+                isInternalChange.value = false
+            })
         }
 
         // Métodos auxiliares
@@ -318,7 +354,7 @@ export default {
             }
             
             if (selectedState.value) {
-                const state = states.value.find(s => s.code === selectedState.value)
+                const state = states.value.find(s => s.id === selectedState.value)
                 if (state) parts.push(state.name)
             }
             
@@ -340,30 +376,68 @@ export default {
             return population.toString()
         }
 
+        // Función para inicializar los datos seleccionados
+        const initializeSelection = async () => {
+            if (selectedCountry.value) {
+                await loadStates(selectedCountry.value)
+                
+                if (selectedState.value) {
+                    // Buscar el estado por ID o por código para compatibilidad
+                    let state = states.value.find(s => s.id === selectedState.value)
+                    if (!state) {
+                        state = states.value.find(s => s.code === selectedState.value)
+                        // Si encontramos por código, actualizar el valor seleccionado al ID
+                        if (state) {
+                            selectedState.value = state.id
+                        }
+                    }
+                    if (state) {
+                        await loadCities(state, selectedCountry.value)
+                        
+                        // Si hay una ciudad seleccionada después de cargar las ciudades
+                        if (selectedCity.value) {
+                            const city = cities.value.find(c => c.id === selectedCity.value)
+                            if (!city) {
+                                // Si no se encuentra por ID, buscar por nombre si está disponible
+                                const cityName = props.modelValue?.city_name
+                                if (cityName) {
+                                    const cityByName = cities.value.find(c => c.name === cityName)
+                                    if (cityByName) {
+                                        selectedCity.value = cityByName.id
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // Watchers
-        watch(() => props.modelValue, (newValue) => {
-            if (newValue) {
+        watch(() => props.modelValue, async (newValue) => {
+            // Solo procesar si no es un cambio interno (del usuario)
+            if (isInternalChange.value) {
+                return
+            }
+            
+            if (newValue && typeof newValue === 'object') {
                 selectedCountry.value = newValue.country || ''
                 selectedState.value = newValue.state || ''
                 selectedCity.value = newValue.city || ''
+                
+                // Inicializar la selección cuando cambien los datos
+                if (countries.value.length > 0) {
+                    await initializeSelection()
+                }
             }
-        }, { deep: true })
+        }, { deep: true, immediate: true })
 
         // Inicialización
         onMounted(async () => {
             await loadCountries()
             
-            // Si ya hay valores seleccionados, cargar los datos correspondientes
-            if (selectedCountry.value) {
-                await loadStates(selectedCountry.value)
-                
-                if (selectedState.value) {
-                    const state = states.value.find(s => s.code === selectedState.value)
-                    if (state) {
-                        await loadCities(state.id, selectedCountry.value)
-                    }
-                }
-            }
+            // Después de cargar países, inicializar la selección
+            await initializeSelection()
         })
 
         return {
@@ -396,7 +470,5 @@ export default {
 </script>
 
 <style scoped>
-.location-selector {
-    /* Estilos específicos si es necesario */
-}
+/* Estilos específicos si es necesario */
 </style>

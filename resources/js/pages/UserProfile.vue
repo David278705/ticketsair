@@ -390,7 +390,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useAuth } from '../stores/auth'
 import { api, getCsrfCookie } from '../lib/api'
 import LocationSelector from '../components/LocationSelector.vue'
@@ -468,7 +468,7 @@ const loadUserData = () => {
     personalForm.news_opt_in = user.value.news_opt_in || false
     
     // Load location data
-    personalForm.location = {
+    const locationData = {
       country: user.value.country_code || '',
       country_name: user.value.country_name || '',
       state: user.value.state_code || '',
@@ -476,6 +476,8 @@ const loadUserData = () => {
       city: user.value.city_id || '',
       city_name: user.value.city_name || ''
     }
+    
+    personalForm.location = locationData
   }
 }
 
@@ -507,6 +509,8 @@ const updatePersonalInfo = async () => {
       personalSuccess.value = ''
     }, 5000)
   } catch (error) {
+    console.error('❌ Error al actualizar perfil:', error.response?.data || error)
+    
     if (error.response?.data?.errors) {
       const errors = error.response.data.errors
       
@@ -578,10 +582,20 @@ const clearMessages = () => {
 }
 
 // Watch for tab changes
-import { watch } from 'vue'
 watch(activeTab, clearMessages)
 
-onMounted(() => {
+// Watch for changes in user data and reload form
+watch(user, (newUser) => {
+  if (newUser) {
+    loadUserData()
+  }
+}, { immediate: true })
+
+onMounted(async () => {
+  // Ensure user data is fresh
+  if (auth.token) {
+    await auth.me()
+  }
   loadUserData()
 })
 </script>

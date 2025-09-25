@@ -15,6 +15,9 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
+        // Debug: Log datos recibidos
+        \Log::info('Profile update data:', $request->all());
+
         $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',

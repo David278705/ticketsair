@@ -33,8 +33,8 @@
                                         mode === "login"
                                             ? "Iniciar sesión"
                                             : mode === "register"
-                                            ? "Crear cuenta"
-                                            : "Recuperar contraseña"
+                                              ? "Crear cuenta"
+                                              : "Recuperar contraseña"
                                     }}
                                 </DialogTitle>
                                 <button
@@ -182,9 +182,9 @@
                                                         userInfo.role === "root"
                                                             ? "Administrador Root"
                                                             : userInfo.role ===
-                                                              "admin"
-                                                            ? "Administrador"
-                                                            : "Cliente"
+                                                                "admin"
+                                                              ? "Administrador"
+                                                              : "Cliente"
                                                     }}
                                                 </span>
                                             </p>
@@ -353,6 +353,86 @@
                                     placeholder="Dirección de facturación (opcional)"
                                     class="h-11 rounded-xl border px-3 bg-transparent"
                                 />
+
+                                <!-- Selector de ubicación -->
+                                <div class="space-y-3">
+                                    <label
+                                        class="text-sm font-medium text-gray-700"
+                                    >
+                                        📍 Ubicación
+                                    </label>
+
+                                    <!-- País -->
+                                    <select
+                                        v-model="regLocation.country"
+                                        @change="onRegCountryChange"
+                                        class="h-11 rounded-xl border px-3 bg-transparent w-full"
+                                        :disabled="regLoading.countries"
+                                    >
+                                        <option value="">
+                                            {{
+                                                regLoading.countries
+                                                    ? "Cargando países..."
+                                                    : "Selecciona un país"
+                                            }}
+                                        </option>
+                                        <option
+                                            v-for="country in regCountries"
+                                            :key="country.code"
+                                            :value="country.code"
+                                        >
+                                            {{ country.name }}
+                                        </option>
+                                    </select>
+
+                                    <!-- Estado -->
+                                    <select
+                                        v-if="regLocation.country"
+                                        v-model="regLocation.state"
+                                        @change="onRegStateChange"
+                                        class="h-11 rounded-xl border px-3 bg-transparent w-full"
+                                        :disabled="
+                                            regLoading.states ||
+                                            !regStates.length
+                                        "
+                                    >
+                                        <option value="">
+                                            {{ getRegStateSelectText() }}
+                                        </option>
+                                        <option
+                                            v-for="state in regStates"
+                                            :key="state.id"
+                                            :value="state.id"
+                                        >
+                                            {{ state.name }}
+                                        </option>
+                                    </select>
+
+                                    <!-- Ciudad -->
+                                    <select
+                                        v-if="regLocation.state"
+                                        v-model="regLocation.city"
+                                        @change="onRegCityChange"
+                                        class="h-11 rounded-xl border px-3 bg-transparent w-full"
+                                        :disabled="regLoading.cities"
+                                    >
+                                        <option value="">
+                                            {{
+                                                regLoading.cities
+                                                    ? "Cargando ciudades..."
+                                                    : "Selecciona una ciudad"
+                                            }}
+                                        </option>
+                                        <option
+                                            v-for="city in regCities"
+                                            :key="city.id"
+                                            :value="city.id"
+                                        >
+                                            {{ city.name }}
+                                        </option>
+                                    </select>
+                                </div>
+
                                 <input
                                     v-model.trim="reg.email"
                                     type="email"
@@ -429,6 +509,8 @@ import { CheckIcon } from "lucide-vue-next";
 import { useAuth } from "../../stores/auth";
 import { useUi } from "../../stores/ui";
 import { useRouter } from "vue-router";
+import LocationSelector from "../LocationSelector.vue";
+import locationService from "../../services/locationService.js";
 
 const props = defineProps({
     open: Boolean,
@@ -453,6 +535,13 @@ const reg = reactive({
     password: "",
     password_confirmation: "",
     news_opt_in: false,
+    // Campos de ubicación
+    country: "",
+    country_name: "",
+    state: "",
+    state_name: "",
+    city: "",
+    city_name: "",
 });
 
 // Variables para recuperación de contraseña
@@ -465,17 +554,63 @@ const resetForm = reactive({
     password_confirmation: "",
 });
 
+// Variables para selector de ubicación en registro
+const regLocation = reactive({
+    country: "",
+    country_name: "",
+    state: "",
+    state_name: "",
+    city: "",
+    city_name: "",
+});
+
+const regCountries = ref([]);
+const regStates = ref([]);
+const regCities = ref([]);
+
+const regLoading = reactive({
+    countries: false,
+    states: false,
+    cities: false,
+});
+
 // Limpia los errores al cambiar de modo
 watch(
     () => props.mode,
-    () => {
+    async () => {
         auth.error = null;
         // Resetear estados cuando se cambia de modo
         if (props.mode === "login") {
             forgotPasswordSent.value = false;
             resetToken.value = "";
         }
-    }
+        // Limpiar ubicación cuando se cambia de modo
+        if (props.mode === "register") {
+            regLocation.country = "";
+            regLocation.country_name = "";
+            regLocation.state = "";
+            regLocation.state_name = "";
+            regLocation.city = "";
+            regLocation.city_name = "";
+            regStates.value = [];
+            regCities.value = [];
+
+            // Cargar países si aún no están cargados
+            if (!regCountries.value.length) {
+                await loadRegCountries();
+            }
+        }
+    },
+);
+
+// También cargar países cuando se abre el modal
+watch(
+    () => props.open,
+    async (isOpen) => {
+        if (isOpen && props.mode === "register" && !regCountries.value.length) {
+            await loadRegCountries();
+        }
+    },
 );
 
 function close() {
@@ -502,15 +637,115 @@ async function doLogin() {
     try {
         const result = await auth.login(login);
         close();
-        
+
         // Si es un admin que necesita completar el registro, redirigir
         if (result.requires_completion) {
-            router.push('/admin/complete-registration');
+            router.push("/admin/complete-registration");
         } else {
             window.location.reload(); // recargar para actualizar estado
         }
     } catch {}
 }
+
+// Funciones para manejar cambios en la ubicación durante el registro
+const loadRegCountries = async () => {
+    try {
+        regLoading.countries = true;
+        regCountries.value = await locationService.getCountries();
+    } catch (error) {
+        console.error("❌ loadRegCountries - Error loading countries:", error);
+    } finally {
+        regLoading.countries = false;
+    }
+};
+
+const getRegCountryNameByCode = (code) => {
+    const country = regCountries.value.find((c) => c.code === code);
+    const result = country ? country.name : code;
+    return result;
+};
+
+const onRegCountryChange = async () => {
+    regLocation.state = "";
+    regLocation.city = "";
+    regStates.value = [];
+    regCities.value = [];
+
+    if (!regLocation.country) {
+        return;
+    }
+
+    try {
+        regLoading.states = true;
+        const countryName = getRegCountryNameByCode(regLocation.country);
+        regLocation.country_name = countryName;
+
+        regStates.value = await locationService.getStates(regLocation.country);
+        
+        updateRegFormData();
+    } catch (error) {
+        console.error("❌ onRegCountryChange - Error loading states:", error);
+    } finally {
+        regLoading.states = false;
+    }
+};
+
+const onRegStateChange = async () => {
+    regLocation.city = "";
+    regCities.value = [];
+
+    if (!regLocation.state || !regLocation.country) {
+        return;
+    }
+
+    try {
+        regLoading.cities = true;
+        const countryName = getRegCountryNameByCode(regLocation.country);
+        const selectedStateObj = regStates.value.find(
+            (s) => s.id === regLocation.state,
+        );
+        const stateName = selectedStateObj
+            ? selectedStateObj.originalName || selectedStateObj.name
+            : regLocation.state;
+        regLocation.state_name = selectedStateObj
+            ? selectedStateObj.name
+            : regLocation.state;
+
+        regCities.value = await locationService.getCities(
+            countryName,
+            stateName,
+        );
+        
+        updateRegFormData();
+    } catch (error) {
+        console.error("❌ onRegStateChange - Error loading cities:", error);
+    } finally {
+        regLoading.cities = false;
+    }
+};
+
+const onRegCityChange = () => {
+    if (regLocation.city) {
+        const cityObj = regCities.value.find((c) => c.id === regLocation.city);
+        regLocation.city_name = cityObj ? cityObj.name : regLocation.city;
+        updateRegFormData();
+    }
+};
+
+const getRegStateSelectText = () => {
+    if (regLoading.states) return "Cargando estados...";
+    if (!regStates.value.length) return "No hay estados disponibles";
+    return "Selecciona un estado";
+};
+
+const updateRegFormData = () => {
+    reg.country = regLocation.country;
+    reg.country_name = regLocation.country_name;
+    reg.state = regLocation.state;
+    reg.state_name = regLocation.state_name;
+    reg.city = regLocation.city;
+    reg.city_name = regLocation.city_name;
+};
 
 async function doRegister() {
     try {

@@ -24,7 +24,14 @@ class RegisterRequest extends FormRequest
             'gender'       => ['nullable', 'in:M,F,X'], 
             'username'     => ['nullable', 'alpha_dash', 'min:3', 'max:60', 'unique:users,username'], 
             'billing_address' => ['nullable', 'string', 'max:200'], 
-            'news_opt_in'  => ['boolean'], 
+            'news_opt_in'  => ['boolean'],
+            // Campos de ubicación
+            'country'      => ['nullable', 'string', 'max:3'], 
+            'country_name' => ['nullable', 'string', 'max:100'], 
+            'state'        => ['nullable', 'string', 'max:100'], 
+            'state_name'   => ['nullable', 'string', 'max:100'], 
+            'city'         => ['nullable', 'string', 'max:100'], 
+            'city_name'    => ['nullable', 'string', 'max:100'], 
         ];
     }
 

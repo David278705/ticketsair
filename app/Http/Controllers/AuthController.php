@@ -34,7 +34,14 @@ class AuthController extends Controller
       'billing_address'=> $data['billing_address'] ?? null,
       'news_opt_in'    => (bool)($data['news_opt_in'] ?? false),
       'wallet_balance' => 0,
-       'name'            => $data['first_name'] . ' ' . $data['last_name'],
+      'name'           => $data['first_name'] . ' ' . $data['last_name'],
+      // Campos de ubicación
+      'country_code'   => $data['country'] ?? null,
+      'country_name'   => $data['country_name'] ?? null,
+      'state_code'     => $data['state'] ?? null,
+      'state_name'     => $data['state_name'] ?? null,
+      'city_id'        => $data['city'] ?? null,
+      'city_name'      => $data['city_name'] ?? null,
     ]);
 
     // Si quieres forzar verificación de email (opcional):
@@ -64,7 +71,9 @@ class AuthController extends Controller
     return response()->json(['token'=>$token,'user'=>$user]);
   }
 
-  public function me(Request $r){ return $r->user()->load('role'); }
+  public function me(Request $r){ 
+    return $r->user()->load('role'); 
+  }
 
   public function logout(Request $r){
     $r->user()->currentAccessToken()->delete();

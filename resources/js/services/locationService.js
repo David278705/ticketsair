@@ -2,73 +2,76 @@ import axios from 'axios'
 
 class LocationService {
     constructor() {
-        // REST Countries API para países
-        this.countriesAPI = 'https://restcountries.com/v3.1'
-        // Alternativa: usar APIs gratuitas sin autenticación
-        this.countryStateAPI = 'https://api.countrystatecity.in/v1'
-        this.geonamesAPI = 'http://api.geonames.org'
-        this.geonamesUsername = 'demo' // Username público de demostración
+        // Countries Now API - URL corregida
+        this.countriesNowAPI = 'https://countriesnow.space/api/v0.1/countries'
         
-        // Headers para Country State City API (gratuita sin clave)
+        // Headers estándar
         this.headers = {
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
         }
     }
 
     /**
-     * Obtiene lista de países
+     * Obtiene lista de países desde Countries Now API
      */
     async getCountries() {
         try {
-            const response = await axios.get(`${this.countriesAPI}/all?fields=name,cca2,cca3`)
+            const response = await axios.get(this.countriesNowAPI, {
+                headers: this.headers
+            })
             
-            return response.data
-                .filter(country => country.name && country.name.common)
-                .map(country => ({
-                    code: country.cca2,
-                    name: country.name.common,
-                    iso3: country.cca3
-                }))
-                .sort((a, b) => a.name.localeCompare(b.name))
+            if (response.data && response.data.error === false && response.data.data) {
+                const countries = response.data.data
+                    .map(country => ({
+                        code: country.iso2,
+                        name: country.country,
+                        iso3: country.iso3
+                    }))
+                    .sort((a, b) => a.name.localeCompare(b.name))
+
+                return countries
+            } else {
+                throw new Error('API response indicates error or empty data')
+            }
         } catch (error) {
-            console.error('Error fetching countries:', error)
-            // Fallback con algunos países principales
-            return this.getFallbackCountries()
+            console.warn('⚠️ Error obteniendo países desde API, usando fallback estático:', error.message)
+            return this.getStaticCountries()
         }
     }
 
     /**
-     * Obtiene estados/regiones de un país
+     * Obtiene estados/regiones de un país usando Countries Now API
      */
     async getStates(countryCode) {
         try {
-            // Usar datos estáticos para países principales
-            const staticStates = this.getStaticStates(countryCode)
-            if (staticStates.length > 0) {
-                return staticStates
-            }
+            // Buscar el nombre del país en los datos ya cargados
+            const countryName = await this.getCountryNameByCode(countryCode)
             
-            // Fallback: intentar con GeoNames usando username demo
-            const geonameId = this.getCountryGeonameId(countryCode)
-            if (geonameId) {
-                const response = await axios.get(
-                    `${this.geonamesAPI}/childrenJSON?geonameId=${geonameId}&username=${this.geonamesUsername}`
+            if (countryName) {
+                const response = await axios.post(`${this.countriesNowAPI}/states`, 
+                    { country: countryName }, 
+                    { headers: this.headers }
                 )
                 
-                if (response.data && response.data.geonames) {
-                    return response.data.geonames
-                        .filter(state => state.fcodeName === 'first-order administrative division')
-                        .map(state => ({
-                            id: state.geonameId,
-                            name: state.name,
-                            code: state.adminCode1
-                        }))
-                        .sort((a, b) => a.name.localeCompare(b.name))
-                        .slice(0, 30) // Limitar resultados
+                if (response.data && response.data.error === false && response.data.data && response.data.data.states) {
+                    const states = response.data.data.states.map((state, index) => ({
+                        id: `${countryCode}_${index}`,
+                        name: this.cleanStateName(state.name),
+                        originalName: state.name, // Guardamos el nombre original para las peticiones
+                        code: state.state_code || state.name.substring(0, 2).toUpperCase()
+                    }))
+                    
+                    if (states.length > 0) {
+                        return states
+                    }
+                } else {
+                    console.warn(`⚠️ No se encontraron estados para ${countryName} en la API`)
                 }
+            } else {
+                console.warn(`⚠️ No se encontró nombre para el código de país: ${countryCode}`)
             }
-            
-            return []
+            return this.getStaticStates(countryCode)
         } catch (error) {
             console.error('Error fetching states:', error)
             // Retornar estados estáticos como fallback
@@ -77,48 +80,37 @@ class LocationService {
     }
 
     /**
-     * Obtiene ciudades de un estado/región
+     * Obtiene ciudades de un estado/región usando Countries Now API
      */
-    async getCities(stateId, countryCode) {
+    async getCities(countryName, stateName) {
         try {
-            // Usar datos estáticos para casos principales
-            const staticCities = this.getStaticCities(countryCode, stateId)
-            if (staticCities.length > 0) {
-                return staticCities
-            }
-            
-            // Intentar con GeoNames
-            const response = await axios.get(
-                `${this.geonamesAPI}/childrenJSON?geonameId=${stateId}&username=${this.geonamesUsername}&maxRows=50`
-            )
-            
-            if (response.data && response.data.geonames) {
-                return response.data.geonames
-                    .filter(city => 
-                        city.fcodeName === 'populated place' || 
-                        city.fcodeName === 'seat of a first-order administrative division' ||
-                        city.fcode === 'PPL' ||
-                        city.fcode === 'PPLA'
-                    )
-                    .map(city => ({
-                        id: city.geonameId,
-                        name: city.name,
-                        population: city.population || 0
+            if (countryName && stateName) {
+                const response = await axios.post(`${this.countriesNowAPI}/state/cities`, 
+                    { 
+                        country: countryName,
+                        state: stateName
+                    }, 
+                    { headers: this.headers }
+                )
+                
+                if (response.data && response.data.data) {
+                    const cities = response.data.data.map((cityName, index) => ({
+                        id: `${countryName}_${stateName}_${index}`,
+                        name: cityName,
+                        population: 0 // La API no devuelve población
                     }))
-                    .sort((a, b) => {
-                        // Ordenar por población primero, luego alfabéticamente
-                        if (b.population !== a.population) {
-                            return b.population - a.population
-                        }
-                        return a.name.localeCompare(b.name)
-                    })
-                    .slice(0, 30)
+                    
+                    if (cities.length > 0) {
+                        return cities.slice(0, 50) // Aumentamos el límite a 50 ciudades
+                    }
+                }
             }
             
+            // Fallback a datos estáticos
             return []
         } catch (error) {
-            console.error('Error fetching cities:', error)
-            return this.getStaticCities(countryCode, stateId)
+            console.error('LocationService: Error fetching cities:', error)
+            return []
         }
     }
 
@@ -232,19 +224,363 @@ class LocationService {
     }
 
     /**
+     * Obtiene el nombre del país por su código ISO
+     * Primero intenta buscar en los datos cargados de la API, luego usa mapeo estático
+     */
+    async getCountryNameByCode(countryCode) {
+        try {
+            // Intentar obtener países de la API primero
+            const countries = await this.getCountries()
+            const country = countries.find(c => c.code === countryCode)
+            if (country) {
+                return country.name
+            }
+        } catch (error) {
+            console.warn('Error obteniendo países para mapeo:', error.message)
+        }
+
+        // Fallback con mapeo estático más completo
+        const countryMapping = {
+            'AD': 'Andorra',
+            'AE': 'United Arab Emirates',
+            'AF': 'Afghanistan', 
+            'AG': 'Antigua and Barbuda',
+            'AI': 'Anguilla',
+            'AL': 'Albania',
+            'AM': 'Armenia',
+            'AO': 'Angola',
+            'AQ': 'Antarctica',
+            'AR': 'Argentina',
+            'AS': 'American Samoa',
+            'AT': 'Austria',
+            'AU': 'Australia',
+            'AW': 'Aruba',
+            'AX': 'Åland Islands',
+            'AZ': 'Azerbaijan',
+            'BA': 'Bosnia and Herzegovina',
+            'BB': 'Barbados',
+            'BD': 'Bangladesh',
+            'BE': 'Belgium',
+            'BF': 'Burkina Faso',
+            'BG': 'Bulgaria',
+            'BH': 'Bahrain',
+            'BI': 'Burundi',
+            'BJ': 'Benin',
+            'BL': 'Saint Barthélemy',
+            'BM': 'Bermuda',
+            'BN': 'Brunei',
+            'BO': 'Bolivia',
+            'BQ': 'Caribbean Netherlands',
+            'BR': 'Brazil',
+            'BS': 'Bahamas',
+            'BT': 'Bhutan',
+            'BV': 'Bouvet Island',
+            'BW': 'Botswana',
+            'BY': 'Belarus',
+            'BZ': 'Belize',
+            'CA': 'Canada',
+            'CC': 'Cocos Islands',
+            'CD': 'DR Congo',
+            'CF': 'Central African Republic',
+            'CG': 'Republic of the Congo',
+            'CH': 'Switzerland',
+            'CI': 'Ivory Coast',
+            'CK': 'Cook Islands',
+            'CL': 'Chile',
+            'CM': 'Cameroon',
+            'CN': 'China',
+            'CO': 'Colombia',
+            'CR': 'Costa Rica',
+            'CU': 'Cuba',
+            'CV': 'Cape Verde',
+            'CW': 'Curaçao',
+            'CX': 'Christmas Island',
+            'CY': 'Cyprus',
+            'CZ': 'Czech Republic',
+            'DE': 'Germany',
+            'DJ': 'Djibouti',
+            'DK': 'Denmark',
+            'DM': 'Dominica',
+            'DO': 'Dominican Republic',
+            'DZ': 'Algeria',
+            'EC': 'Ecuador',
+            'EE': 'Estonia',
+            'EG': 'Egypt',
+            'EH': 'Western Sahara',
+            'ER': 'Eritrea',
+            'ES': 'Spain',
+            'ET': 'Ethiopia',
+            'FI': 'Finland',
+            'FJ': 'Fiji',
+            'FK': 'Falkland Islands',
+            'FM': 'Micronesia',
+            'FO': 'Faroe Islands',
+            'FR': 'France',
+            'GA': 'Gabon',
+            'GB': 'United Kingdom',
+            'GD': 'Grenada',
+            'GE': 'Georgia',
+            'GF': 'French Guiana',
+            'GG': 'Guernsey',
+            'GH': 'Ghana',
+            'GI': 'Gibraltar',
+            'GL': 'Greenland',
+            'GM': 'Gambia',
+            'GN': 'Guinea',
+            'GP': 'Guadeloupe',
+            'GQ': 'Equatorial Guinea',
+            'GR': 'Greece',
+            'GS': 'South Georgia',
+            'GT': 'Guatemala',
+            'GU': 'Guam',
+            'GW': 'Guinea-Bissau',
+            'GY': 'Guyana',
+            'HK': 'Hong Kong',
+            'HM': 'Heard Island and McDonald Islands',
+            'HN': 'Honduras',
+            'HR': 'Croatia',
+            'HT': 'Haiti',
+            'HU': 'Hungary',
+            'ID': 'Indonesia',
+            'IE': 'Ireland',
+            'IL': 'Israel',
+            'IM': 'Isle of Man',
+            'IN': 'India',
+            'IO': 'British Indian Ocean Territory',
+            'IQ': 'Iraq',
+            'IR': 'Iran',
+            'IS': 'Iceland',
+            'IT': 'Italy',
+            'JE': 'Jersey',
+            'JM': 'Jamaica',
+            'JO': 'Jordan',
+            'JP': 'Japan',
+            'KE': 'Kenya',
+            'KG': 'Kyrgyzstan',
+            'KH': 'Cambodia',
+            'KI': 'Kiribati',
+            'KM': 'Comoros',
+            'KN': 'Saint Kitts and Nevis',
+            'KP': 'North Korea',
+            'KR': 'South Korea',
+            'KW': 'Kuwait',
+            'KY': 'Cayman Islands',
+            'KZ': 'Kazakhstan',
+            'LA': 'Laos',
+            'LB': 'Lebanon',
+            'LC': 'Saint Lucia',
+            'LI': 'Liechtenstein',
+            'LK': 'Sri Lanka',
+            'LR': 'Liberia',
+            'LS': 'Lesotho',
+            'LT': 'Lithuania',
+            'LU': 'Luxembourg',
+            'LV': 'Latvia',
+            'LY': 'Libya',
+            'MA': 'Morocco',
+            'MC': 'Monaco',
+            'MD': 'Moldova',
+            'ME': 'Montenegro',
+            'MF': 'Saint Martin',
+            'MG': 'Madagascar',
+            'MH': 'Marshall Islands',
+            'MK': 'North Macedonia',
+            'ML': 'Mali',
+            'MM': 'Myanmar',
+            'MN': 'Mongolia',
+            'MO': 'Macao',
+            'MP': 'Northern Mariana Islands',
+            'MQ': 'Martinique',
+            'MR': 'Mauritania',
+            'MS': 'Montserrat',
+            'MT': 'Malta',
+            'MU': 'Mauritius',
+            'MV': 'Maldives',
+            'MW': 'Malawi',
+            'MX': 'Mexico',
+            'MY': 'Malaysia',
+            'MZ': 'Mozambique',
+            'NA': 'Namibia',
+            'NC': 'New Caledonia',
+            'NE': 'Niger',
+            'NF': 'Norfolk Island',
+            'NG': 'Nigeria',
+            'NI': 'Nicaragua',
+            'NL': 'Netherlands',
+            'NO': 'Norway',
+            'NP': 'Nepal',
+            'NR': 'Nauru',
+            'NU': 'Niue',
+            'NZ': 'New Zealand',
+            'OM': 'Oman',
+            'PA': 'Panama',
+            'PE': 'Peru',
+            'PF': 'French Polynesia',
+            'PG': 'Papua New Guinea',
+            'PH': 'Philippines',
+            'PK': 'Pakistan',
+            'PL': 'Poland',
+            'PM': 'Saint Pierre and Miquelon',
+            'PN': 'Pitcairn Islands',
+            'PR': 'Puerto Rico',
+            'PS': 'Palestine',
+            'PT': 'Portugal',
+            'PW': 'Palau',
+            'PY': 'Paraguay',
+            'QA': 'Qatar',
+            'RE': 'Réunion',
+            'RO': 'Romania',
+            'RS': 'Serbia',
+            'RU': 'Russia',
+            'RW': 'Rwanda',
+            'SA': 'Saudi Arabia',
+            'SB': 'Solomon Islands',
+            'SC': 'Seychelles',
+            'SD': 'Sudan',
+            'SE': 'Sweden',
+            'SG': 'Singapore',
+            'SH': 'Saint Helena',
+            'SI': 'Slovenia',
+            'SJ': 'Svalbard and Jan Mayen',
+            'SK': 'Slovakia',
+            'SL': 'Sierra Leone',
+            'SM': 'San Marino',
+            'SN': 'Senegal',
+            'SO': 'Somalia',
+            'SR': 'Suriname',
+            'SS': 'South Sudan',
+            'ST': 'São Tomé and Príncipe',
+            'SV': 'El Salvador',
+            'SX': 'Sint Maarten',
+            'SY': 'Syria',
+            'SZ': 'Eswatini',
+            'TC': 'Turks and Caicos Islands',
+            'TD': 'Chad',
+            'TF': 'French Southern and Antarctic Lands',
+            'TG': 'Togo',
+            'TH': 'Thailand',
+            'TJ': 'Tajikistan',
+            'TK': 'Tokelau',
+            'TL': 'Timor-Leste',
+            'TM': 'Turkmenistan',
+            'TN': 'Tunisia',
+            'TO': 'Tonga',
+            'TR': 'Turkey',
+            'TT': 'Trinidad and Tobago',
+            'TV': 'Tuvalu',
+            'TW': 'Taiwan',
+            'TZ': 'Tanzania',
+            'UA': 'Ukraine',
+            'UG': 'Uganda',
+            'UM': 'United States Minor Outlying Islands',
+            'US': 'United States',
+            'UY': 'Uruguay',
+            'UZ': 'Uzbekistan',
+            'VA': 'Vatican City',
+            'VC': 'Saint Vincent and the Grenadines',
+            'VE': 'Venezuela',
+            'VG': 'British Virgin Islands',
+            'VI': 'United States Virgin Islands',
+            'VN': 'Vietnam',
+            'VU': 'Vanuatu',
+            'WF': 'Wallis and Futuna',
+            'WS': 'Samoa',
+            'XK': 'Kosovo',
+            'YE': 'Yemen',
+            'YT': 'Mayotte',
+            'ZA': 'South Africa',
+            'ZM': 'Zambia',
+            'ZW': 'Zimbabwe'
+        }
+        
+        return countryMapping[countryCode] || null
+    }
+
+    /**
+     * Obtiene el nombre del estado por su ID y código de país
+     */
+    getStateNameById(stateId, countryCode) {
+        const staticStates = this.getStaticStates(countryCode)
+        const state = staticStates.find(s => s.id === stateId || s.code === stateId)
+        return state ? state.name : null
+    }
+
+    /**
+     * Limpia el nombre del estado removiendo palabras innecesarias
+     * Solo para mostrar al usuario, mantiene el nombre original para las API
+     */
+    cleanStateName(stateName) {
+        if (!stateName) return stateName
+        
+        // Lista de palabras a remover (case insensitive)
+        const wordsToRemove = [
+            'Department',
+            'Departamento',
+            'Prefecture', 
+            'Prefectura',
+            'Region',
+            'Región',
+            'Province',
+            'Provincia',
+            'State of',
+            'Estado de'
+        ]
+        
+        let cleanName = stateName.trim()
+        
+        // Remover palabras específicas
+        wordsToRemove.forEach(word => {
+            // Remover al final del nombre
+            const endPattern = new RegExp(`\\s+${word}$`, 'gi')
+            cleanName = cleanName.replace(endPattern, '')
+            
+            // Remover al inicio del nombre
+            const startPattern = new RegExp(`^${word}\\s+`, 'gi')
+            cleanName = cleanName.replace(startPattern, '')
+        })
+        
+        return cleanName.trim()
+    }
+
+    /**
+     * Obtiene los datos estáticos de países (fallback)
+     */
+    getStaticCountries() {
+        return [
+            { code: 'US', name: 'Estados Unidos', iso3: 'USA' },
+            { code: 'CA', name: 'Canadá', iso3: 'CAN' },
+            { code: 'MX', name: 'México', iso3: 'MEX' },
+            { code: 'BR', name: 'Brasil', iso3: 'BRA' },
+            { code: 'AR', name: 'Argentina', iso3: 'ARG' },
+            { code: 'CO', name: 'Colombia', iso3: 'COL' },
+            { code: 'PE', name: 'Perú', iso3: 'PER' },
+            { code: 'CL', name: 'Chile', iso3: 'CHL' },
+            { code: 'ES', name: 'España', iso3: 'ESP' },
+            { code: 'FR', name: 'Francia', iso3: 'FRA' },
+            { code: 'DE', name: 'Alemania', iso3: 'DEU' },
+            { code: 'IT', name: 'Italia', iso3: 'ITA' },
+            { code: 'GB', name: 'Reino Unido', iso3: 'GBR' },
+            { code: 'CN', name: 'China', iso3: 'CHN' },
+            { code: 'JP', name: 'Japón', iso3: 'JPN' },
+            { code: 'IN', name: 'India', iso3: 'IND' },
+            { code: 'AU', name: 'Australia', iso3: 'AUS' }
+        ]
+    }
+
+    /**
      * Estados/regiones/departamentos correctos para países principales
      */
     getStaticStates(countryCode) {
         const statesData = {
             'US': [
-                { id: 'AL', name: 'Alabama', code: 'AL' },
-                { id: 'CA', name: 'California', code: 'CA' },
-                { id: 'FL', name: 'Florida', code: 'FL' },
-                { id: 'GA', name: 'Georgia', code: 'GA' },
-                { id: 'IL', name: 'Illinois', code: 'IL' },
-                { id: 'NY', name: 'New York', code: 'NY' },
-                { id: 'TX', name: 'Texas', code: 'TX' },
-                { id: 'WA', name: 'Washington', code: 'WA' }
+                { id: 'AL', name: 'Alabama', originalName: 'Alabama', code: 'AL' },
+                { id: 'CA', name: 'California', originalName: 'California', code: 'CA' },
+                { id: 'FL', name: 'Florida', originalName: 'Florida', code: 'FL' },
+                { id: 'GA', name: 'Georgia', originalName: 'Georgia', code: 'GA' },
+                { id: 'IL', name: 'Illinois', originalName: 'Illinois', code: 'IL' },
+                { id: 'NY', name: 'New York', originalName: 'New York', code: 'NY' },
+                { id: 'TX', name: 'Texas', originalName: 'Texas', code: 'TX' },
+                { id: 'WA', name: 'Washington', originalName: 'Washington', code: 'WA' }
             ],
             'MX': [
                 { id: 'AGU', name: 'Aguascalientes', code: 'AGU' },
@@ -435,7 +771,12 @@ class LocationService {
             ]
         }
         
-        return statesData[countryCode] || []
+        // Asegurar que cada estado tenga originalName
+        const states = statesData[countryCode] || []
+        return states.map(state => ({
+            ...state,
+            originalName: state.originalName || state.name
+        }))
     }
 
     /**
