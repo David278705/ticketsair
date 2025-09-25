@@ -8,7 +8,6 @@ class FlightStoreRequest extends FormRequest {
   public function authorize(): bool { return $this->user()->role?->name !== 'client'; }
   public function rules(): array {
     return [
-      'code'              => ['required','string','max:20','unique:flights,code'],
       'origin_id'         => ['required','exists:cities,id'],
       'destination_id'    => ['required','different:origin_id','exists:cities,id'],
       'scope'             => ['required','in:national,international'],

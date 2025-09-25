@@ -10,13 +10,6 @@
                     <span class="text-xl">✈️</span>
                     Nuevo vuelo
                 </button>
-                <button
-                    class="h-10 px-4 rounded-lg border bg-white hover:bg-slate-50 transition-colors flex items-center gap-2"
-                    @click="reload()"
-                >
-                    <span class="text-lg">🔄</span>
-                    Refrescar
-                </button>
             </div>
         </header>
 
@@ -169,70 +162,105 @@
             <template #title>{{
                 form.id ? "Editar Vuelo" : "✈️ Nuevo Vuelo"
             }}</template>
-            <div class="grid md:grid-cols-2 gap-4">
-                <input
-                    v-model="form.code"
-                    placeholder="Código"
-                    class="h-10 rounded-lg border px-3"
-                />
-                <select
-                    v-model="form.scope"
-                    class="h-10 rounded-lg border px-3"
-                >
-                    <option value="national">Nacional</option>
-                    <option value="international">Internacional</option>
-                </select>
-                <select
-                    v-model="form.origin_id"
-                    class="h-10 rounded-lg border px-3"
-                >
-                    <option value="">Origen</option>
-                    <option v-for="c in cities" :key="c.id" :value="c.id">
-                        {{ c.name }}
-                    </option>
-                </select>
-                <select
-                    v-model="form.destination_id"
-                    class="h-10 rounded-lg border px-3"
-                >
-                    <option value="">Destino</option>
-                    <option v-for="c in cities" :key="c.id" :value="c.id">
-                        {{ c.name }}
-                    </option>
-                </select>
-                <input
-                    v-model="form.departure_at"
-                    type="datetime-local"
-                    class="h-10 rounded-lg border px-3"
-                />
-                <input
-                    v-model.number="form.duration_minutes"
-                    type="number"
-                    min="10"
-                    class="h-10 rounded-lg border px-3"
-                    placeholder="Duración (min)"
-                />
-                <input
-                    v-model.number="form.price_per_seat"
-                    type="number"
-                    min="0"
-                    class="h-10 rounded-lg border px-3"
-                    placeholder="Precio por silla"
-                />
-                <input
-                    v-model.number="form.capacity_first"
-                    type="number"
-                    min="0"
-                    class="h-10 rounded-lg border px-3"
-                    placeholder="Capacidad First"
-                />
-                <input
-                    v-model.number="form.capacity_economy"
-                    type="number"
-                    min="1"
-                    class="h-10 rounded-lg border px-3"
-                    placeholder="Capacidad Economy"
-                />
+            <div class="grid gap-4">
+                <!-- Primera fila: Tipo de vuelo -->
+                <div>
+                    <select
+                        v-model="form.scope"
+                        class="h-10 rounded-lg border px-3 w-full"
+                    >
+                        <option value="national">Nacional</option>
+                        <option value="international">Internacional</option>
+                    </select>
+                    <p class="text-xs text-slate-500 mt-1">
+                        <span v-if="form.scope === 'national'">
+                            🇨🇴 Vuelos dentro de Colombia
+                        </span>
+                        <span v-else>
+                            ✈️ Vuelos desde Colombia al exterior
+                        </span>
+                    </p>
+                </div>
+                
+                <!-- Segunda fila: Origen y Destino -->
+                                <!-- Segunda fila: Origen y Destino -->
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <select
+                            v-model="form.origin_id"
+                            class="h-10 rounded-lg border px-3 w-full"
+                        >
+                            <option value="">Origen</option>
+                            <option v-for="c in availableOriginCities" :key="c.id" :value="c.id">
+                                {{ c.name }}
+                            </option>
+                        </select>
+                        <p class="text-xs text-slate-500 mt-1">
+                            <span v-if="form.scope === 'national'">
+                                Cualquier ciudad de Colombia
+                            </span>
+                            <span v-else>
+                                Solo: Pereira, Bogotá, Medellín, Cali, Cartagena
+                            </span>
+                        </p>
+                    </div>
+                    <div>
+                        <select
+                            v-model="form.destination_id"
+                            class="h-10 rounded-lg border px-3 w-full"
+                        >
+                            <option value="">Destino</option>
+                            <option v-for="c in availableDestinationCities" :key="c.id" :value="c.id">
+                                {{ c.name }}
+                            </option>
+                        </select>
+                        <p class="text-xs text-slate-500 mt-1">
+                            <span v-if="form.scope === 'national'">
+                                Cualquier ciudad de Colombia (diferente al origen)
+                            </span>
+                            <span v-else>
+                                Solo: Madrid, Londres, New York, Buenos Aires, Miami
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Tercera fila: Otros campos -->
+                <div class="grid md:grid-cols-2 gap-4">
+                    <input
+                        v-model="form.departure_at"
+                        type="datetime-local"
+                        class="h-10 rounded-lg border px-3"
+                    />
+                    <input
+                        v-model.number="form.duration_minutes"
+                        type="number"
+                        min="10"
+                        class="h-10 rounded-lg border px-3"
+                        placeholder="Duración (min)"
+                    />
+                    <input
+                        v-model.number="form.price_per_seat"
+                        type="number"
+                        min="0"
+                        class="h-10 rounded-lg border px-3"
+                        placeholder="Precio por silla"
+                    />
+                    <input
+                        v-model.number="form.capacity_first"
+                        type="number"
+                        min="0"
+                        class="h-10 rounded-lg border px-3"
+                        placeholder="Capacidad First"
+                    />
+                    <input
+                        v-model.number="form.capacity_economy"
+                        type="number"
+                        min="1"
+                        class="h-10 rounded-lg border px-3"
+                        placeholder="Capacidad Economy"
+                    />
+                </div>
             </div>
             <ul
                 v-if="formErrors.length"
@@ -361,7 +389,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted } from "vue";
+import { reactive, ref, onMounted, computed, watch } from "vue";
 import { api } from "../../lib/api";
 import { useAuth } from "../../stores/auth";
 import BaseModal from "../../components/ui/BaseModal.vue";
@@ -388,6 +416,35 @@ const list = ref({ data: [], meta: null });
 const cities = ref([]);
 const currentFlight = ref(null);
 
+// Ciudades filtradas según el alcance del vuelo
+const availableOriginCities = computed(() => {
+    if (form.scope === 'national') {
+        // Para vuelos nacionales: solo ciudades colombianas
+        return cities.value.filter(city => city.scope === 'national');
+    } else {
+        // Para vuelos internacionales: solo ciudades colombianas como origen
+        const allowedOrigins = ['Pereira', 'Bogotá', 'Medellín', 'Cali', 'Cartagena'];
+        return cities.value.filter(city => 
+            city.scope === 'national' && allowedOrigins.includes(city.name)
+        );
+    }
+});
+
+const availableDestinationCities = computed(() => {
+    if (form.scope === 'national') {
+        // Para vuelos nacionales: solo ciudades colombianas (excluyendo el origen)
+        return cities.value.filter(city => 
+            city.scope === 'national' && city.id !== form.origin_id
+        );
+    } else {
+        // Para vuelos internacionales: solo destinos internacionales específicos
+        const allowedDestinations = ['Madrid', 'Londres', 'New York', 'Buenos Aires', 'Miami'];
+        return cities.value.filter(city => 
+            city.scope === 'international' && allowedDestinations.includes(city.name)
+        );
+    }
+});
+
 const filters = reactive({
     code: "",
     status: "",
@@ -401,7 +458,6 @@ const saving = ref(false);
 const formErrors = ref([]);
 const form = reactive({
     id: null,
-    code: "",
     scope: "national",
     origin_id: "",
     destination_id: "",
@@ -427,6 +483,22 @@ const promo = reactive({
 const newsOpen = ref(false);
 const newsError = ref("");
 const news = reactive({ title: "", body: "", is_promotion: false, file: null });
+
+// --- Watchers ---
+// Limpiar origen y destino cuando cambie el tipo de vuelo
+watch(() => form.scope, (newScope, oldScope) => {
+    if (newScope !== oldScope) {
+        form.origin_id = "";
+        form.destination_id = "";
+    }
+});
+
+// Limpiar destino cuando cambie el origen (para evitar seleccionar la misma ciudad en vuelos nacionales)
+watch(() => form.origin_id, (newOrigin) => {
+    if (form.scope === 'national' && form.destination_id === newOrigin) {
+        form.destination_id = "";
+    }
+});
 
 // --- Ciclo de Vida ---
 onMounted(async () => {
@@ -481,7 +553,6 @@ function toLocalInput(dt) {
 // --- Lógica CRUD para Vuelos ---
 const VUELO_VACIO = {
     id: null,
-    code: "",
     scope: "national",
     origin_id: "",
     destination_id: "",
@@ -501,7 +572,6 @@ function openCreate() {
 function openEdit(f) {
     Object.assign(form, {
         id: f.id,
-        code: f.code,
         scope: f.scope,
         origin_id: f.origin_id,
         destination_id: f.destination_id,
@@ -525,7 +595,6 @@ async function save() {
             // --- CREAR ---
             // Se construye el payload explícitamente para no incluir `id: null`
             const payload = {
-                code: form.code,
                 scope: form.scope,
                 origin_id: form.origin_id,
                 destination_id: form.destination_id,

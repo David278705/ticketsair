@@ -28,8 +28,12 @@ class FlightAdminController extends Controller
   public function store(FlightStoreRequest $r) {
     return DB::transaction(function() use ($r) {
       $data = $r->validated();
+      
+      // Generar código único para el vuelo
+      $code = $this->generateFlightCode($data['scope']);
+      
       $flight = Flight::create([
-        'code'             => $data['code'],
+        'code'             => $code,
         'origin_id'        => $data['origin_id'],
         'destination_id'   => $data['destination_id'],
         'scope'            => $data['scope'],
@@ -134,5 +138,23 @@ class FlightAdminController extends Controller
 
       return ['ok'=>true];
     });
+  }
+
+  /**
+   * Genera un código único para el vuelo
+   */
+  private function generateFlightCode($scope)
+  {
+    $prefix = $scope === 'international' ? 'INT' : 'NAC';
+    
+    do {
+      $number = str_pad(rand(1000, 9999), 4, '0', STR_PAD_LEFT);
+      $code = $prefix . '-' . $number;
+      
+      // Verificar que no exista
+      $exists = Flight::where('code', $code)->exists();
+    } while ($exists);
+    
+    return $code;
   }
 }
