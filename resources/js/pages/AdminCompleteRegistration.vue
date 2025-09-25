@@ -71,6 +71,8 @@
               name="birth_date"
               type="date"
               required
+              :min="minBirthDate"
+              :max="maxBirthDate"
               v-model="form.birth_date"
               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
@@ -188,7 +190,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../stores/auth'
 import { api, getCsrfCookie } from '../lib/api'
@@ -219,6 +221,19 @@ const form = reactive({
     city_name: ''
   }
 })
+
+// Computed properties for birth date validation
+const minBirthDate = computed(() => {
+  const eightyYearsAgo = new Date();
+  eightyYearsAgo.setFullYear(eightyYearsAgo.getFullYear() - 80);
+  return eightyYearsAgo.toISOString().split('T')[0];
+});
+
+const maxBirthDate = computed(() => {
+  const eighteenYearsAgo = new Date();
+  eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
+  return eighteenYearsAgo.toISOString().split('T')[0];
+});
 
 // Handle location changes
 const onLocationChange = (locationData) => {

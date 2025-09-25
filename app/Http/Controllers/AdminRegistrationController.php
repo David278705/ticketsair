@@ -52,7 +52,7 @@ class AdminRegistrationController extends Controller
             'token' => 'required|string',
             'email' => 'required|email',
             'dni' => 'required|string|unique:users,dni',
-            'birth_date' => 'required|date|before:today',
+            'birth_date' => 'required|date|before:today|after_or_equal:' . now()->subYears(80)->format('Y-m-d') . '|before_or_equal:' . now()->subYears(18)->format('Y-m-d'),
             'gender' => 'nullable|in:M,F,X',
             'billing_address' => 'nullable|string|max:500',
             'username' => 'nullable|string|unique:users,username',
@@ -65,6 +65,11 @@ class AdminRegistrationController extends Controller
             'location.state_name' => 'nullable|string|max:100',
             'location.city' => 'nullable|string|max:20',
             'location.city_name' => 'nullable|string|max:100',
+        ], [
+            'birth_date.required' => 'La fecha de nacimiento es requerida.',
+            'birth_date.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
+            'birth_date.after_or_equal' => 'Debes tener máximo 80 años para completar el registro.',
+            'birth_date.before_or_equal' => 'Debes ser mayor de 18 años para completar el registro.',
         ]);
 
         $admin = User::where('email', $request->email)
@@ -127,7 +132,7 @@ class AdminRegistrationController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'dni' => 'required|string|unique:users,dni,' . $user->id,
-            'birth_date' => 'required|date|before:today',
+            'birth_date' => 'required|date|before:today|after_or_equal:' . now()->subYears(80)->format('Y-m-d') . '|before_or_equal:' . now()->subYears(18)->format('Y-m-d'),
             'gender' => 'nullable|in:M,F,X',
             'username' => 'nullable|string|unique:users,username,' . $user->id,
             'password' => ['required', 'confirmed', Password::min(8)],
@@ -139,6 +144,11 @@ class AdminRegistrationController extends Controller
             'location.state_name' => 'nullable|string|max:100',
             'location.city' => 'nullable|string|max:20',
             'location.city_name' => 'nullable|string|max:100',
+        ], [
+            'birth_date.required' => 'La fecha de nacimiento es requerida.',
+            'birth_date.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
+            'birth_date.after_or_equal' => 'Debes tener máximo 80 años para completar el registro.',
+            'birth_date.before_or_equal' => 'Debes ser mayor de 18 años para completar el registro.',
         ]);
 
         // Actualizar datos del usuario

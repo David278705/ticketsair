@@ -22,7 +22,7 @@ class ProfileController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'dni' => 'required|string|unique:users,dni,' . $user->id,
-            'birth_date' => 'required|date|before:today',
+            'birth_date' => 'required|date|before:today|after_or_equal:' . now()->subYears(80)->format('Y-m-d') . '|before_or_equal:' . now()->subYears(18)->format('Y-m-d'),
             'gender' => 'nullable|in:M,F,X',
             'username' => 'nullable|string|unique:users,username,' . $user->id,
             'billing_address' => 'nullable|string|max:500',
@@ -42,6 +42,8 @@ class ProfileController extends Controller
             'dni.unique' => 'Este documento ya está en uso por otro usuario.',
             'birth_date.required' => 'La fecha de nacimiento es requerida.',
             'birth_date.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
+            'birth_date.after_or_equal' => 'Debes tener máximo 80 años.',
+            'birth_date.before_or_equal' => 'Debes ser mayor de 18 años.',
             'gender.in' => 'El género seleccionado no es válido.',
             'username.unique' => 'Este nombre de usuario ya está en uso.',
             

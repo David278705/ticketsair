@@ -334,6 +334,8 @@
                                         v-model="reg.birth_date"
                                         type="date"
                                         title="Fecha de Nacimiento"
+                                        :min="minBirthDate"
+                                        :max="maxBirthDate"
                                         class="h-11 rounded-xl border px-3 bg-transparent"
                                     />
                                     <select
@@ -830,6 +832,19 @@ const regErrorsList = computed(() => {
     const e = auth.error;
     if (!e || !e.errors) return [];
     return Object.values(e.errors).flat();
+});
+
+// Computed properties for birth date validation
+const minBirthDate = computed(() => {
+    const eightyYearsAgo = new Date();
+    eightyYearsAgo.setFullYear(eightyYearsAgo.getFullYear() - 80);
+    return eightyYearsAgo.toISOString().split('T')[0];
+});
+
+const maxBirthDate = computed(() => {
+    const eighteenYearsAgo = new Date();
+    eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
+    return eighteenYearsAgo.toISOString().split('T')[0];
 });
 
 function friendlyError(e) {

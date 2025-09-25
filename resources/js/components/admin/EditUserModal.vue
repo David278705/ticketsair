@@ -145,6 +145,7 @@
                                     <input
                                         v-model="form.birth_date"
                                         type="date"
+                                        :min="minDate"
                                         :max="maxDate"
                                         class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         :class="{
@@ -289,6 +290,12 @@ const maxDate = computed(() => {
     const today = new Date();
     today.setFullYear(today.getFullYear() - 18);
     return today.toISOString().split("T")[0];
+});
+
+const minDate = computed(() => {
+    const eightyYearsAgo = new Date();
+    eightyYearsAgo.setFullYear(eightyYearsAgo.getFullYear() - 80);
+    return eightyYearsAgo.toISOString().split('T')[0];
 });
 
 const closeModal = () => {
