@@ -3,9 +3,10 @@
         <div class="container py-10 grid gap-8 md:grid-cols-4">
             <div class="space-y-2">
                 <div class="flex items-center gap-2 font-semibold">
-                    <span
-                        class="inline-flex size-8 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-400 text-white shadow-md"
-                        >✈️</span
+                    <img 
+                        :src="logoUrl" 
+                        alt="TicketsAir Logo" 
+                        class="h-8 w-auto"
                     >
                     <span>TicketsAir</span>
                 </div>
@@ -71,5 +72,6 @@
 </template>
 
 <script setup>
+const logoUrl = '/logo.png';
 const year = new Date().getFullYear();
 </script>
