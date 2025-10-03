@@ -13,7 +13,11 @@ class FlightUpdateRequest extends FormRequest {
       'origin_id'         => ['sometimes','exists:cities,id'],
       'destination_id'    => ['sometimes','different:origin_id','exists:cities,id'],
       'departure_at'      => ['sometimes','date','after:now'],
-      'duration_minutes'  => ['sometimes','integer','min:10','max:2000'],
+      'aircraft_id'       => ['sometimes','string', function ($attribute, $value, $fail) {
+        if (!\App\Models\Flight::isValidAircraftId($value)) {
+          $fail('El avión seleccionado no es válido.');
+        }
+      }],
       'price_per_seat'    => ['sometimes','numeric','min:0'],
       // no actualizamos capacidades si ya hay ventas (se valida en controller)
     ];

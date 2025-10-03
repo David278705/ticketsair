@@ -63,7 +63,7 @@ class AdminRegistrationController extends Controller
             'location.country_name' => 'required|string|max:100',
             'location.state' => 'nullable|string|max:10',
             'location.state_name' => 'nullable|string|max:100',
-            'location.city' => 'nullable|string|max:20',
+            'location.city' => 'nullable|string',
             'location.city_name' => 'nullable|string|max:100',
         ], [
             'birth_date.required' => 'La fecha de nacimiento es requerida.',
@@ -142,7 +142,7 @@ class AdminRegistrationController extends Controller
             'location.country_name' => 'required|string|max:100',
             'location.state' => 'nullable|string|max:10',
             'location.state_name' => 'nullable|string|max:100',
-            'location.city' => 'nullable|string|max:20',
+            'location.city' => 'nullable|string',
             'location.city_name' => 'nullable|string|max:100',
         ], [
             'birth_date.required' => 'La fecha de nacimiento es requerida.',

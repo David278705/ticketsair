@@ -32,36 +32,53 @@ class FlightAdminController extends Controller
       // Generar código único para el vuelo
       $code = $this->generateFlightCode($data['scope']);
       
+      // Crear vuelo temporal para calcular duración y hora de llegada
+      $tempFlight = new Flight([
+        'origin_id' => $data['origin_id'],
+        'destination_id' => $data['destination_id'],
+        'aircraft_id' => $data['aircraft_id']
+      ]);
+      
+      // Cargar relaciones necesarias para el cálculo
+      $tempFlight->setRelation('origin', \App\Models\City::find($data['origin_id']));
+      $tempFlight->setRelation('destination', \App\Models\City::find($data['destination_id']));
+      
+      // Calcular hora de llegada
+      $departureAt = \Carbon\Carbon::parse($data['departure_at']);
+      $durationMinutes = $tempFlight->duration_minutes;
+      $arrivalAt = $departureAt->copy()->addMinutes($durationMinutes);
+      
       $flight = Flight::create([
         'code'             => $code,
         'origin_id'        => $data['origin_id'],
         'destination_id'   => $data['destination_id'],
+        'aircraft_id'      => $data['aircraft_id'],
         'scope'            => $data['scope'],
         'departure_at'     => $data['departure_at'],
-        'arrival_at'       => now()->parse($data['departure_at'])->addMinutes($data['duration_minutes']), // puedes ajustar TZs luego
-        'duration_minutes' => $data['duration_minutes'],
+        'arrival_at'       => $arrivalAt,
         'status'           => 'scheduled',
         'price_per_seat'   => $data['price_per_seat'],
-        'capacity_first'   => $data['capacity_first'],
-        'capacity_economy' => $data['capacity_economy'],
       ]);
 
-      // Generar asientos
+      // Generar asientos basados en la capacidad del avión
       $seats = [];
-      for ($i=1; $i <= (int)$data['capacity_first']; $i++) {
+      $capacityPremium = $flight->capacity_premium;
+      $capacityEconomy = $flight->capacity_economy;
+
+      for ($i=1; $i <= $capacityPremium; $i++) {
           $seats[] = [
               'flight_id' => $flight->id,
-              'number'    => "F{$i}",         // <-- STRING
-              'class'     => 'first',
+              'number'    => "P{$i}",         // P = Premium
+              'class'     => 'premium',
               'status'    => 'available',
               'created_at'=> now(),
               'updated_at'=> now(),
           ];
       }
-      for ($i=1; $i <= (int)$data['capacity_economy']; $i++) {
+      for ($i=1; $i <= $capacityEconomy; $i++) {
           $seats[] = [
               'flight_id' => $flight->id,
-              'number'    => "E{$i}",         // <-- STRING
+              'number'    => "E{$i}",         // E = Economy
               'class'     => 'economy',
               'status'    => 'available',
               'created_at'=> now(),
@@ -73,7 +90,7 @@ class FlightAdminController extends Controller
       // (Opcional) crear noticia automática
       \App\Models\News::create([
         'title' => "Nuevo vuelo {$flight->code}: ".$flight->origin->name.' → '.$flight->destination->name,
-        'body'  => '¡Ya disponible para reservas y compras!',
+        'body'  => "¡Ya disponible para reservas y compras! Operado con {$flight->aircraft_data['name']}",
         'flight_id' => $flight->id,
       ]);
 
@@ -138,6 +155,37 @@ class FlightAdminController extends Controller
 
       return ['ok'=>true];
     });
+  }
+
+  // GET /admin/flights/aircraft
+  public function getAircraft() {
+    return Flight::getAvailableAircraft();
+  }
+
+  // POST /admin/flights/calculate-duration
+  public function calculateDuration(Request $r) {
+    $r->validate([
+      'origin_id' => 'required|exists:cities,id',
+      'destination_id' => 'required|exists:cities,id|different:origin_id',
+      'aircraft_id' => 'required|string'
+    ]);
+
+    // Crear vuelo temporal para calcular duración
+    $tempFlight = new Flight([
+      'origin_id' => $r->origin_id,
+      'destination_id' => $r->destination_id,
+      'aircraft_id' => $r->aircraft_id
+    ]);
+
+    // Cargar relaciones necesarias
+    $tempFlight->setRelation('origin', \App\Models\City::find($r->origin_id));
+    $tempFlight->setRelation('destination', \App\Models\City::find($r->destination_id));
+
+    return [
+      'duration_minutes' => $tempFlight->duration_minutes,
+      'distance_km' => $tempFlight->getDistanceKm(),
+      'aircraft_data' => $tempFlight->aircraft_data
+    ];
   }
 
   /**

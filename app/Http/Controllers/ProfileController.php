@@ -4,7 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
+use App\Http\Requests\ProfilePhotoRequest;
 
 class ProfileController extends Controller
 {
@@ -33,7 +37,7 @@ class ProfileController extends Controller
             'location.country_name' => 'required|string|max:100',
             'location.state' => 'nullable|string|max:10',
             'location.state_name' => 'nullable|string|max:100',
-            'location.city' => 'nullable|string|max:20',
+            'location.city' => 'nullable|string',
             'location.city_name' => 'nullable|string|max:100',
         ], [
             'first_name.required' => 'El nombre es requerido.',
@@ -76,7 +80,7 @@ class ProfileController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Perfil actualizado exitosamente.',
-            'data' => $user->load('role')
+            'data' => $user->load('role')->makeHidden(['password'])->append('profile_photo_url')
         ]);
     }
 
@@ -127,5 +131,96 @@ class ProfileController extends Controller
             'status' => 'success',
             'message' => 'Contraseña actualizada exitosamente.'
         ]);
+    }
+
+    /**
+     * Subir o actualizar foto de perfil
+     */
+    public function uploadProfilePhoto(ProfilePhotoRequest $request)
+    {
+        $user = $request->user();
+
+        try {
+            $photo = $request->file('profile_photo');
+            
+            // Eliminar foto anterior si existe
+            if ($user->avatar_path) {
+                Storage::disk('public')->delete($user->avatar_path);
+            }
+
+            // Generar nombre único para el archivo
+            $filename = 'profile_' . $user->id . '_' . time() . '.' . $photo->getClientOriginalExtension();
+            $path = 'profile-photos/' . $filename;
+
+            // Guardar la imagen original
+            $photo->storeAs('profile-photos', $filename, 'public');
+
+            // Opcional: redimensionar la imagen si es muy grande
+            $fullPath = storage_path('app/public/' . $path);
+            $manager = new ImageManager(new Driver());
+            $image = $manager->read($fullPath);
+            
+            // Redimensionar manteniendo aspecto si es mayor a 500px
+            if ($image->width() > 500 || $image->height() > 500) {
+                $image->scale(width: 500, height: 500);
+                $image->save($fullPath);
+            }
+
+            // Actualizar el usuario con la nueva ruta
+            $user->update(['avatar_path' => $path]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Foto de perfil actualizada exitosamente.',
+                'data' => [
+                    'avatar_path' => $user->avatar_path,
+                    'profile_photo_url' => $user->profile_photo_url
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error uploading profile photo: ' . $e->getMessage());
+            
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al subir la foto de perfil. Inténtalo de nuevo.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Eliminar foto de perfil
+     */
+    public function deleteProfilePhoto(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user->avatar_path) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No hay foto de perfil para eliminar.'
+            ], 404);
+        }
+
+        try {
+            // Eliminar archivo del storage
+            Storage::disk('public')->delete($user->avatar_path);
+
+            // Limpiar el campo en la base de datos
+            $user->update(['avatar_path' => null]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Foto de perfil eliminada exitosamente.'
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error deleting profile photo: ' . $e->getMessage());
+            
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al eliminar la foto de perfil. Inténtalo de nuevo.'
+            ], 500);
+        }
     }
 }

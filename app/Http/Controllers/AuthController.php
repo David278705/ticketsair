@@ -72,7 +72,7 @@ class AuthController extends Controller
   }
 
   public function me(Request $r){ 
-    return $r->user()->load('role'); 
+    return $r->user()->load('role')->makeHidden(['password'])->append('profile_photo_url'); 
   }
 
   public function logout(Request $r){

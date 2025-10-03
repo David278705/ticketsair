@@ -44,4 +44,12 @@ class User extends Authenticatable {
 
   // Accesor opcional para nombre completo (útil en front)
   public function getFullNameAttribute(){ return trim(($this->first_name ?? '').' '.($this->last_name ?? '')); }
+
+  // Accesor para URL de la foto de perfil
+  public function getProfilePhotoUrlAttribute() {
+    if ($this->avatar_path) {
+      return asset('storage/' . $this->avatar_path);
+    }
+    return null;
+  }
 }

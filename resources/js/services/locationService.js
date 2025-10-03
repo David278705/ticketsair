@@ -94,8 +94,9 @@ class LocationService {
                 )
                 
                 if (response.data && response.data.data) {
+                    const timestamp = Date.now().toString(36)
                     const cities = response.data.data.map((cityName, index) => ({
-                        id: `${countryName}_${stateName}_${index}`,
+                        id: `c_${timestamp}_${index}`,
                         name: cityName,
                         population: 0 // La API no devuelve población
                     }))
@@ -131,8 +132,9 @@ class LocationService {
             )
             
             if (response.data && response.data.geonames) {
-                return response.data.geonames.map(city => ({
-                    id: city.geonameId,
+                const timestamp = Date.now().toString(36)
+                return response.data.geonames.map((city, index) => ({
+                    id: `s_${timestamp}_${index}`,
                     name: city.name,
                     adminName: city.adminName1,
                     population: city.population || 0

@@ -47,6 +47,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Perfil de usuario
     Route::put('/profile', [ProfileController::class, 'updateProfile']);
     Route::put('/profile/password', [ProfileController::class, 'updatePassword']);
+    Route::post('/profile/photo', [ProfileController::class, 'uploadProfilePhoto']);
+    Route::delete('/profile/photo', [ProfileController::class, 'deleteProfilePhoto']);
     
     // Mensajería básica
     Route::get('/messages', [MessageController::class,'index']);
@@ -91,6 +93,8 @@ Route::middleware(['auth:sanctum','role:admin'])->group(function () {
     
     // Gestión de vuelos (solo admin)
     Route::get('/admin/flights', [FlightAdminController::class,'index']);
+    Route::get('/admin/flights/aircraft', [FlightAdminController::class,'getAircraft']);
+    Route::post('/admin/flights/calculate-duration', [FlightAdminController::class,'calculateDuration']);
     Route::post('/admin/flights', [FlightAdminController::class,'store']);
     Route::put('/admin/flights/{flight}', [FlightAdminController::class,'update']);
     Route::post('/admin/flights/{flight}/cancel', [FlightAdminController::class,'cancel']);

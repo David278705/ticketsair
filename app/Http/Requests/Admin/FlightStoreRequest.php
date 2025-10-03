@@ -12,10 +12,12 @@ class FlightStoreRequest extends FormRequest {
       'destination_id'    => ['required','different:origin_id','exists:cities,id'],
       'scope'             => ['required','in:national,international'],
       'departure_at'      => ['required','date','after:now'],
-      'duration_minutes'  => ['required','integer','min:10','max:2000'],
+      'aircraft_id'       => ['required','string', function ($attribute, $value, $fail) {
+        if (!\App\Models\Flight::isValidAircraftId($value)) {
+          $fail('El avión seleccionado no es válido.');
+        }
+      }],
       'price_per_seat'    => ['required','numeric','min:0'],
-      'capacity_first'    => ['required','integer','min:0','max:300'],
-      'capacity_economy'  => ['required','integer','min:1','max:400'],
     ];
   }
 }

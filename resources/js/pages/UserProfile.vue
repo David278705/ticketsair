@@ -13,22 +13,76 @@
         <!-- Sidebar -->
         <div class="lg:col-span-1">
           <div class="bg-white shadow rounded-lg p-6">
-            <div class="flex items-center space-x-3">
-              <div class="flex-shrink-0">
-                <div class="h-16 w-16 bg-indigo-100 rounded-full flex items-center justify-center">
-                  <svg class="h-8 w-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- Profile Photo Section -->
+            <div class="flex flex-col items-center space-y-4 mb-6">
+              <div class="relative">
+                <div class="h-24 w-24 rounded-full overflow-hidden bg-indigo-100 flex items-center justify-center">
+                  <img
+                    v-if="user?.profile_photo_url"
+                    :src="user.profile_photo_url"
+                    :alt="user?.name || 'Usuario'"
+                    class="h-24 w-24 rounded-full object-cover"
+                  />
+                  <svg v-else class="h-12 w-12 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
+                
+                <!-- Photo Upload Trigger -->
+                <button
+                  @click="$refs.photoInput.click()"
+                  class="absolute -bottom-2 -right-2 bg-indigo-600 text-white rounded-full p-2 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                  title="Cambiar foto de perfil"
+                >
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </button>
               </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-lg font-semibold text-gray-900 truncate">{{ user?.name || 'Usuario' }}</p>
-                <p class="text-sm text-gray-500 truncate">{{ user?.email }}</p>
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                      :class="roleClass">
-                  {{ roleLabel }}
-                </span>
+
+              <!-- Photo Actions -->
+              <div class="flex space-x-2">
+                <input
+                  ref="photoInput"
+                  type="file"
+                  accept="image/*"
+                  class="hidden"
+                  @change="handlePhotoUpload"
+                />
+                <button
+                  v-if="user?.profile_photo_url"
+                  @click="deleteProfilePhoto"
+                  :disabled="photoLoading"
+                  class="inline-flex items-center px-3 py-1.5 border border-red-300 text-xs font-medium rounded text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 transition-colors"
+                >
+                  <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Eliminar
+                </button>
               </div>
+
+              <!-- Upload Progress -->
+              <div v-if="photoLoading" class="w-full">
+                <div class="flex items-center space-x-2">
+                  <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
+                  <span class="text-xs text-gray-500">{{ uploadProgress }}%</span>
+                </div>
+                <div class="mt-1 w-full bg-gray-200 rounded-full h-1.5">
+                  <div class="bg-indigo-600 h-1.5 rounded-full transition-all duration-300" :style="{ width: uploadProgress + '%' }"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- User Info -->
+            <div class="text-center">
+              <p class="text-lg font-semibold text-gray-900 truncate">{{ user?.name || 'Usuario' }}</p>
+              <p class="text-sm text-gray-500 truncate">{{ user?.email }}</p>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-2"
+                    :class="roleClass">
+                {{ roleLabel }}
+              </span>
             </div>
           </div>
 
@@ -423,6 +477,10 @@ const locationErrors = ref({})
 const personalSuccess = ref('')
 const securitySuccess = ref('')
 
+// Photo upload variables
+const photoLoading = ref(false)
+const uploadProgress = ref(0)
+
 const user = computed(() => auth.user)
 
 // Reactive forms
@@ -646,5 +704,107 @@ function validateUsernameInput(event) {
   // Only allow letters, numbers, hyphens, and underscores
   const regex = /[^A-Za-z0-9_-]/g;
   event.target.value = event.target.value.replace(regex, '');
+}
+
+// Photo upload functions
+const handlePhotoUpload = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+  
+  // Validate file type
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+  if (!allowedTypes.includes(file.type)) {
+    alert('Por favor selecciona una imagen válida (JPEG, PNG, GIF o WebP)')
+    return
+  }
+  
+  // Validate file size (2MB)
+  if (file.size > 2 * 1024 * 1024) {
+    alert('La imagen no puede ser mayor a 2MB')
+    return
+  }
+  
+  photoLoading.value = true
+  uploadProgress.value = 0
+  
+  try {
+    await getCsrfCookie()
+    
+    const formData = new FormData()
+    formData.append('profile_photo', file)
+    
+    // Simulate upload progress
+    const progressInterval = setInterval(() => {
+      if (uploadProgress.value < 90) {
+        uploadProgress.value += 10
+      }
+    }, 100)
+    
+    const { data } = await api.post('/profile/photo', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    
+    clearInterval(progressInterval)
+    uploadProgress.value = 100
+    
+    // Update user data in store
+    await auth.me()
+    
+    // Show success briefly
+    setTimeout(() => {
+      photoLoading.value = false
+      uploadProgress.value = 0
+    }, 500)
+    
+  } catch (error) {
+    console.error('❌ Error al subir foto:', error.response?.data || error)
+    
+    let message = 'Error al subir la foto. Inténtalo de nuevo.'
+    if (error.response?.data?.errors?.profile_photo) {
+      message = error.response.data.errors.profile_photo[0]
+    } else if (error.response?.data?.message) {
+      message = error.response.data.message
+    }
+    
+    alert(message)
+    
+    photoLoading.value = false
+    uploadProgress.value = 0
+  }
+  
+  // Clear input
+  event.target.value = ''
+}
+
+const deleteProfilePhoto = async () => {
+  if (!confirm('¿Estás seguro de que quieres eliminar tu foto de perfil?')) {
+    return
+  }
+  
+  photoLoading.value = true
+  
+  try {
+    await getCsrfCookie()
+    
+    await api.delete('/profile/photo')
+    
+    // Update user data in store
+    await auth.me()
+    
+    photoLoading.value = false
+    
+  } catch (error) {
+    console.error('❌ Error al eliminar foto:', error.response?.data || error)
+    
+    let message = 'Error al eliminar la foto. Inténtalo de nuevo.'
+    if (error.response?.data?.message) {
+      message = error.response.data.message
+    }
+    
+    alert(message)
+    photoLoading.value = false
+  }
 }
 </script>

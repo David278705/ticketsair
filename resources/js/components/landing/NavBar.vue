@@ -134,8 +134,17 @@
                         <button
                             class="flex items-center gap-2 px-4 h-10 rounded-xl border border-slate-300/70 hover:bg-slate-100 transition-colors"
                         >
-                            <div class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center">
-                                <span class="text-xs text-indigo-600 font-medium">
+                            <div class="w-6 h-6 rounded-full overflow-hidden bg-indigo-100 flex items-center justify-center">
+                                <img
+                                    v-if="auth.user.profile_photo_url"
+                                    :src="auth.user.profile_photo_url"
+                                    :alt="auth.user.first_name || auth.user.name || 'Usuario'"
+                                    class="w-6 h-6 rounded-full object-cover"
+                                />
+                                <span 
+                                    v-else
+                                    class="text-xs text-indigo-600 font-medium"
+                                >
                                     {{ (auth.user.first_name || auth.user.name || 'U').charAt(0).toUpperCase() }}
                                 </span>
                             </div>
@@ -160,13 +169,33 @@
                                 v-if="userMenuOpen"
                                 class="absolute right-0 top-full mt-2 w-56 rounded-lg bg-white shadow-xl border border-slate-200/60 py-2 z-50"
                             >
-                                <div class="px-4 py-2 border-b border-slate-100">
-                                    <p class="text-sm font-medium text-slate-900">{{ auth.user.name }}</p>
-                                    <p class="text-xs text-slate-500">{{ auth.user.email }}</p>
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mt-1"
-                                          :class="getRoleBadgeClass(auth.user.role?.name)">
-                                        {{ getRoleDisplayName(auth.user.role?.name) }}
-                                    </span>
+                                <div class="px-4 py-3 border-b border-slate-100">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="flex-shrink-0">
+                                            <div class="w-10 h-10 rounded-full overflow-hidden bg-indigo-100 flex items-center justify-center">
+                                                <img
+                                                    v-if="auth.user.profile_photo_url"
+                                                    :src="auth.user.profile_photo_url"
+                                                    :alt="auth.user.name"
+                                                    class="w-10 h-10 rounded-full object-cover"
+                                                />
+                                                <span 
+                                                    v-else
+                                                    class="text-sm text-indigo-600 font-medium"
+                                                >
+                                                    {{ (auth.user.first_name || auth.user.name || 'U').charAt(0).toUpperCase() }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-medium text-slate-900 truncate">{{ auth.user.name }}</p>
+                                            <p class="text-xs text-slate-500 truncate">{{ auth.user.email }}</p>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mt-1"
+                                                  :class="getRoleBadgeClass(auth.user.role?.name)">
+                                                {{ getRoleDisplayName(auth.user.role?.name) }}
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
                                 
                                 <RouterLink
@@ -311,6 +340,26 @@
 
                     <!-- Perfil de usuario en móvil -->
                     <div v-if="auth.user" class="pt-2 border-t border-slate-200">
+                        <div class="flex items-center py-2 mb-2">
+                            <div class="w-10 h-10 rounded-full overflow-hidden bg-indigo-100 flex items-center justify-center mr-3">
+                                <img
+                                    v-if="auth.user.profile_photo_url"
+                                    :src="auth.user.profile_photo_url"
+                                    :alt="auth.user.name"
+                                    class="w-10 h-10 rounded-full object-cover"
+                                />
+                                <span 
+                                    v-else
+                                    class="text-sm text-indigo-600 font-medium"
+                                >
+                                    {{ (auth.user.first_name || auth.user.name || 'U').charAt(0).toUpperCase() }}
+                                </span>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-slate-900">{{ auth.user.name }}</p>
+                                <p class="text-xs text-slate-500">{{ auth.user.email }}</p>
+                            </div>
+                        </div>
                         <RouterLink
                             to="/profile"
                             @click="close()"
