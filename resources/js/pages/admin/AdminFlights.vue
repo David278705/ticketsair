@@ -96,7 +96,7 @@
                                 class="px-2 py-1 rounded-full border text-xs font-medium"
                                 :class="chip(f.status)"
                             >
-                                {{ f.status }}
+                                {{ translateStatus(f.status) }}
                             </span>
                         </td>
                         <td class="p-3 font-medium">
@@ -108,8 +108,10 @@
                         <td class="p-3">
                             <div class="flex flex-wrap gap-2">
                                 <button
-                                    class="h-9 px-3 rounded-lg border text-sm hover:bg-slate-100"
+                                    class="h-9 px-3 rounded-lg border text-sm hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
                                     @click="openEdit(f)"
+                                    :disabled="!canModifyFlight(f)"
+                                    :title="!canModifyFlight(f) ? 'No se puede editar un vuelo que ya se realizó o está completado' : ''"
                                 >
                                     Editar
                                 </button>
@@ -122,14 +124,17 @@
                                     Promo
                                 </button>
                                 <button
-                                    class="h-9 px-3 rounded-lg border text-sm hover:bg-slate-100"
+                                    class="h-9 px-3 rounded-lg border text-sm hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
                                     @click="openNews(f)"
+                                    :disabled="!canCreateNews(f)"
+                                    :title="!canCreateNews(f) ? 'No se pueden crear noticias para vuelos pasados' : ''"
                                 >
                                     Noticia
                                 </button>
                                 <button
                                     class="h-9 px-3 rounded-lg border border-rose-300 text-rose-600 text-sm hover:bg-rose-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    :disabled="f.status !== 'scheduled'"
+                                    :disabled="!canCancelFlight(f)"
+                                    :title="!canCancelFlight(f) ? 'Solo se pueden cancelar vuelos programados y futuros' : ''"
                                     @click="cancelFlight(f)"
                                 >
                                     Cancelar
@@ -657,6 +662,43 @@ function chip(status) {
     return styles[status] || "border-slate-300 text-slate-600";
 }
 
+// Traducir estados al español
+function translateStatus(status) {
+    const translations = {
+        scheduled: "Programado",
+        completed: "Completado",
+        cancelled: "Cancelado",
+    };
+    return translations[status] || status;
+}
+
+// Verificar si un vuelo ya pasó
+function isFlightPast(flight) {
+    const flightDate = new Date(flight.departure_at);
+    const now = new Date();
+    return flightDate < now;
+}
+
+// Verificar si se puede modificar un vuelo (editar)
+function canModifyFlight(flight) {
+    return flight.status === 'scheduled' && !isFlightPast(flight);
+}
+
+// Verificar si se pueden crear promociones
+function canCreatePromo(flight) {
+    return flight.status === 'scheduled' && !isFlightPast(flight);
+}
+
+// Verificar si se pueden crear noticias
+function canCreateNews(flight) {
+    return !isFlightPast(flight);
+}
+
+// Verificar si se puede cancelar un vuelo
+function canCancelFlight(flight) {
+    return flight.status === 'scheduled' && !isFlightPast(flight);
+}
+
 function toLocalInput(dt) {
     const d = new Date(dt);
     d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
@@ -838,13 +880,6 @@ async function savePromo() {
     }
 }
 
-// Añade esta función helper para deshabilitar el botón de promoción
-function canCreatePromo(flight) {
-    const flightDate = new Date(flight.departure_at);
-    const now = new Date();
-    return flight.status === 'scheduled' && flightDate > now;
-}
-
 // --- Lógica para Noticias ---
 function openNews(f) {
     currentFlight.value = f || null;
@@ -869,12 +904,21 @@ async function saveNews() {
         fd.append("is_promotion", news.is_promotion ? "1" : "0");
         if (news.file) fd.append("image", news.file);
         await api.post("/news", fd, {
-            headers: { Authorization: "Bearer " + auth.token },
+            headers: { 
+                Authorization: "Bearer " + auth.token,
+                'Content-Type': 'multipart/form-data'
+            },
         });
         newsOpen.value = false;
     } catch (e) {
-        newsError.value =
-            e.response?.data?.message || "Error al publicar noticia";
+        // Mostrar errores de validación específicos si existen
+        if (e.response?.data?.errors) {
+            const errors = e.response.data.errors;
+            const firstError = Object.values(errors)[0];
+            newsError.value = Array.isArray(firstError) ? firstError[0] : firstError;
+        } else {
+            newsError.value = e.response?.data?.message || "Error al publicar noticia";
+        }
     }
 }
 
