@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class Flight extends Model
 {
     protected $fillable = [
-        'code','origin_id','destination_id',
+        'code','origin_id','destination_id','aircraft_id',
         'departure_at','duration_minutes','arrival_at',
         'scope', // 'national'|'international'
         'capacity_first','capacity_economy',
-        'price_per_seat','status'
+        'price_per_seat','status','image_path'
     ];
 
     protected $casts = [
@@ -28,6 +28,7 @@ class Flight extends Model
     // Relaciones típicas
     public function origin(){ return $this->belongsTo(City::class,'origin_id'); }
     public function destination(){ return $this->belongsTo(City::class,'destination_id'); }
+    public function aircraft(){ return $this->belongsTo(Aircraft::class); }
 
     public function seats(){ return $this->hasMany(Seat::class); }
     public function bookings(){ return $this->hasMany(Booking::class); }

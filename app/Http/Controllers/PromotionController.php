@@ -20,11 +20,13 @@ class PromotionController extends Controller
       'is_active'        => $r->boolean('is_active', true),
     ]);
 
-    // noticia espejo
+    // Crear noticia de la promoción con la imagen del vuelo
     \App\Models\News::create([
       'title'        => $promo->title,
-      'body'         => $promo->description,
+      'body'         => $promo->description . ' - ¡' . $promo->discount_percent . '% de descuento! Vuelo ' . $flight->code . ': ' . $flight->origin->name . ' → ' . $flight->destination->name,
       'flight_id'    => $flight->id,
+      'promotion_id' => $promo->id,
+      'image_path'   => $flight->image_path,
       'is_promotion' => true,
     ]);
 

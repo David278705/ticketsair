@@ -11,7 +11,13 @@ class NewsController extends Controller
 {
   // GET /news (público)
   public function index(Request $r){
-    $q = News::query()->with('flight:id,code,origin_id,destination_id')
+    $q = News::query()
+      ->with([
+        'flight:id,code,origin_id,destination_id,price_per_seat',
+        'flight.origin:id,name',
+        'flight.destination:id,name',
+        'promotion:id,title,discount_percent,starts_at,ends_at'
+      ])
       ->when($r->filled('is_promotion'), fn($q)=>$q->where('is_promotion', (bool)$r->is_promotion))
       ->orderByDesc('created_at');
     return $q->paginate(12);

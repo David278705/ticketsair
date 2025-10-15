@@ -12,6 +12,7 @@ class News extends Model
         'body',
         'image_path',
         'flight_id',
+        'promotion_id',
         'is_promotion'
     ];
 
@@ -24,18 +25,8 @@ class News extends Model
         return $this->belongsTo(Flight::class);
     }
 
-    protected static function boot()
+    public function promotion(): BelongsTo
     {
-        parent::boot();
-        
-        // Create news automatically when a new flight is added
-        Flight::created(function ($flight) {
-            self::create([
-                'title' => 'Nuevo Vuelo Disponible',
-                'body' => "Se ha agregado un nuevo vuelo {$flight->code} desde {$flight->origin->name} hasta {$flight->destination->name}.",
-                'flight_id' => $flight->id,
-                'is_promotion' => false
-            ]);
-        });
+        return $this->belongsTo(Promotion::class);
     }
 }

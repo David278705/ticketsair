@@ -75,6 +75,23 @@
                             {{ item.title }}
                         </h5>
                     </a>
+                    
+                    <!-- Información del vuelo si existe -->
+                    <div v-if="item.flight" class="mb-3 p-2 bg-blue-50 rounded-lg border border-blue-200">
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="font-semibold text-blue-900">{{ item.flight.code }}</span>
+                            <span class="text-blue-700">
+                                {{ item.flight.origin?.name }} → {{ item.flight.destination?.name }}
+                            </span>
+                        </div>
+                        <div v-if="item.promotion" class="mt-1 text-xs text-blue-600 font-medium">
+                            🎉 {{ item.promotion.discount_percent }}% de descuento
+                        </div>
+                        <div v-else class="mt-1 text-xs text-blue-600">
+                            Desde ${{ formatPrice(item.flight.price_per_seat) }}
+                        </div>
+                    </div>
+                    
                     <p class="mb-3 font-normal text-gray-700 dark:text-gray-400">
                         {{ item.body || 'Sin descripción disponible' }}
                     </p>
@@ -108,6 +125,10 @@ const formatDate = (date) => {
         month: "long",
         day: "numeric",
     });
+};
+
+const formatPrice = (price) => {
+    return Number(price).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 };
 
 const getImageUrl = (imagePath) => {

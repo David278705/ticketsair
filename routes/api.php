@@ -30,6 +30,7 @@ Route::get('/flights', [FlightController::class, 'index']);    // búsqueda púb
 Route::get('/flights/{flight}', [FlightController::class,'show']);
 Route::get('/flights/{flight}/seats', [SeatController::class,'index']); // público
 Route::get('/cities', fn() => \App\Models\City::orderBy('name')->get());
+Route::get('/aircraft', fn() => \App\Models\Aircraft::where('is_active', true)->orderBy('name')->get());
 Route::get('/news', [NewsController::class, 'index']);
 Route::post('/checkin/fast', [CheckinController::class,'fast']); // por código o DNI
 

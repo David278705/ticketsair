@@ -32,18 +32,26 @@ class FlightAdminController extends Controller
       // Generar código único para el vuelo
       $code = $this->generateFlightCode($data['scope']);
       
+      // Manejar imagen si existe
+      $imagePath = null;
+      if ($r->hasFile('image')) {
+        $imagePath = $r->file('image')->store('flights', 'public');
+      }
+      
       $flight = Flight::create([
         'code'             => $code,
+        'aircraft_id'      => $data['aircraft_id'] ?? null,
         'origin_id'        => $data['origin_id'],
         'destination_id'   => $data['destination_id'],
         'scope'            => $data['scope'],
         'departure_at'     => $data['departure_at'],
-        'arrival_at'       => now()->parse($data['departure_at'])->addMinutes($data['duration_minutes']), // puedes ajustar TZs luego
-        'duration_minutes' => $data['duration_minutes'],
+        'arrival_at'       => now()->parse($data['departure_at'])->addMinutes((int)$data['duration_minutes']), // puedes ajustar TZs luego
+        'duration_minutes' => (int)$data['duration_minutes'],
         'status'           => 'scheduled',
         'price_per_seat'   => $data['price_per_seat'],
-        'capacity_first'   => $data['capacity_first'],
-        'capacity_economy' => $data['capacity_economy'],
+        'capacity_first'   => (int)$data['capacity_first'],
+        'capacity_economy' => (int)$data['capacity_economy'],
+        'image_path'       => $imagePath,
       ]);
 
       // Generar asientos
@@ -70,11 +78,13 @@ class FlightAdminController extends Controller
       }
       \App\Models\Seat::insert($seats);
 
-      // (Opcional) crear noticia automática
+      // Crear noticia automática con la imagen del vuelo
       \App\Models\News::create([
         'title' => "Nuevo vuelo {$flight->code}: ".$flight->origin->name.' → '.$flight->destination->name,
-        'body'  => '¡Ya disponible para reservas y compras!',
+        'body'  => '¡Ya disponible para reservas y compras! Precio desde $'.number_format($flight->price_per_seat, 0, ',', '.'),
         'flight_id' => $flight->id,
+        'image_path' => $imagePath,
+        'is_promotion' => false,
       ]);
 
       return $flight->load(['origin','destination']);
@@ -90,7 +100,11 @@ class FlightAdminController extends Controller
       $data = $r->safe()->only(['price_per_seat','departure_at']);
       if (isset($data['departure_at'])) {
         abort_if(now()->parse($data['departure_at'])->isPast(), 422, 'No puedes fijar una salida en el pasado.');
-        $data['arrival_at'] = now()->parse($data['departure_at'])->addMinutes($flight->duration_minutes);
+        $data['arrival_at'] = now()->parse($data['departure_at'])->addMinutes((int)$flight->duration_minutes);
+      }
+      // Manejar imagen si existe
+      if ($r->hasFile('image')) {
+        $data['image_path'] = $r->file('image')->store('flights', 'public');
       }
       $flight->update($data);
       return $flight->fresh()->load(['origin','destination']);
@@ -99,7 +113,20 @@ class FlightAdminController extends Controller
     // Caso editable completo
     $data = $r->validated();
     if (isset($data['departure_at'])) {
-      $data['arrival_at'] = now()->parse($data['departure_at'])->addMinutes($data['duration_minutes'] ?? $flight->duration_minutes);
+      $data['arrival_at'] = now()->parse($data['departure_at'])->addMinutes((int)($data['duration_minutes'] ?? $flight->duration_minutes));
+    }
+    if (isset($data['duration_minutes'])) {
+      $data['duration_minutes'] = (int)$data['duration_minutes'];
+    }
+    if (isset($data['capacity_first'])) {
+      $data['capacity_first'] = (int)$data['capacity_first'];
+    }
+    if (isset($data['capacity_economy'])) {
+      $data['capacity_economy'] = (int)$data['capacity_economy'];
+    }
+    // Manejar imagen si existe
+    if ($r->hasFile('image')) {
+      $data['image_path'] = $r->file('image')->store('flights', 'public');
     }
     $flight->update($data);
     return $flight->fresh()->load(['origin','destination']);

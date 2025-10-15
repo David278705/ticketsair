@@ -10,12 +10,14 @@ class FlightStoreRequest extends FormRequest {
     return [
       'origin_id'         => ['required','exists:cities,id'],
       'destination_id'    => ['required','different:origin_id','exists:cities,id'],
+      'aircraft_id'       => ['nullable','exists:aircraft,id'],
       'scope'             => ['required','in:national,international'],
       'departure_at'      => ['required','date','after:now'],
       'duration_minutes'  => ['required','integer','min:10','max:2000'],
       'price_per_seat'    => ['required','numeric','min:0'],
       'capacity_first'    => ['required','integer','min:0','max:300'],
       'capacity_economy'  => ['required','integer','min:1','max:400'],
+      'image'             => ['nullable','image','mimes:jpeg,png,jpg,gif,webp','max:2048'],
     ];
   }
 }
