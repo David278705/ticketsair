@@ -33,4 +33,10 @@ class NewsController extends Controller
     ]);
     return response()->json($news, 201);
   }
+
+  public function latestNews()
+  {
+    $news = News::latest()->take(5)->get();
+    return response()->json($news);
+  }
 }

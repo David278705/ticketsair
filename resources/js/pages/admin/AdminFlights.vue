@@ -114,8 +114,10 @@
                                     Editar
                                 </button>
                                 <button
-                                    class="h-9 px-3 rounded-lg border text-sm hover:bg-slate-100"
+                                    class="h-9 px-3 rounded-lg border text-sm hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
                                     @click="openPromo(f)"
+                                    :disabled="!canCreatePromo(f)"
+                                    :title="!canCreatePromo(f) ? 'No se pueden crear promociones para vuelos pasados o completados' : ''"
                                 >
                                     Promo
                                 </button>
@@ -385,7 +387,10 @@
                         id="promo_start"
                         v-model="promo.starts_at"
                         type="datetime-local"
+                        :min="toLocalInput(new Date())"
+                        :max="promo.ends_at"
                         class="h-10 rounded-lg border px-3 w-full"
+                        required
                     />
                 </div>
                 <div>
@@ -396,7 +401,10 @@
                         id="promo_end"
                         v-model="promo.ends_at"
                         type="datetime-local"
+                        :min="promo.starts_at"
+                        :max="toLocalInput(new Date(currentFlight?.departure_at))"
                         class="h-10 rounded-lg border px-3 w-full"
+                        required
                     />
                 </div>
                 <label class="inline-flex items-center gap-2 mt-1"
@@ -761,12 +769,21 @@ async function cancelFlight(f) {
 
 // --- Lógica para Promociones ---
 function openPromo(f) {
+    // Validar si el vuelo ya se realizó
+    const flightDate = new Date(f.departure_at);
+    const now = new Date();
+
+    if (f.status === 'completed' || flightDate < now) {
+        alert('No se pueden crear promociones para vuelos que ya se han realizado.');
+        return;
+    }
+
     currentFlight.value = f;
     Object.assign(promo, {
         title: `Promo ${f.code}`,
         discount_percent: 10,
-        starts_at: "",
-        ends_at: "",
+        starts_at: toLocalInput(new Date()),  // Fecha actual como inicio por defecto
+        ends_at: toLocalInput(flightDate),    // Fecha del vuelo como fin por defecto
         is_active: true,
     });
     promoError.value = "";
@@ -775,18 +792,38 @@ function openPromo(f) {
 
 async function savePromo() {
     try {
+        // Validar fechas
+        const startDate = new Date(promo.starts_at);
+        const endDate = new Date(promo.ends_at);
+        const flightDate = new Date(currentFlight.value.departure_at);
+        const now = new Date();
+
+        // Validaciones
+        const errors = [];
+        if (startDate >= endDate) {
+            errors.push("La fecha de inicio debe ser anterior a la fecha de fin");
+        }
+        if (endDate > flightDate) {
+            errors.push("La promoción debe terminar antes de la fecha del vuelo");
+        }
+        if (startDate < now) {
+            errors.push("La fecha de inicio no puede ser en el pasado");
+        }
+
+        if (errors.length > 0) {
+            promoError.value = errors.join(". ");
+            return;
+        }
+
         const payload = {
             title: promo.title,
             discount_percent: Number(promo.discount_percent),
-            starts_at: promo.starts_at
-                ? new Date(promo.starts_at).toISOString()
-                : null,
-            ends_at: promo.ends_at
-                ? new Date(promo.ends_at).toISOString()
-                : null,
+            starts_at: startDate.toISOString(),
+            ends_at: endDate.toISOString(),
             is_active: !!promo.is_active,
             description: "", // opcional
         };
+
         await api.post(
             `/flights/${currentFlight.value.id}/promotions`,
             payload,
@@ -795,9 +832,17 @@ async function savePromo() {
             }
         );
         promoOpen.value = false;
+        alert('Promoción creada exitosamente');
     } catch (e) {
         promoError.value = e.response?.data?.message || "Error al crear promo";
     }
+}
+
+// Añade esta función helper para deshabilitar el botón de promoción
+function canCreatePromo(flight) {
+    const flightDate = new Date(flight.departure_at);
+    const now = new Date();
+    return flight.status === 'scheduled' && flightDate > now;
 }
 
 // --- Lógica para Noticias ---
