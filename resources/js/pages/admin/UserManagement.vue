@@ -12,16 +12,6 @@
                     </p>
                 </div>
                 <div class="flex gap-2">
-                    <!-- Botón para cambiar contraseña propia (solo para root) -->
-                    <button
-                        v-if="auth.user?.role?.name === 'root'"
-                        @click="openChangeOwnPassword"
-                        class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-                    >
-                        <Key class="w-5 h-5" />
-                        Cambiar Mi Contraseña
-                    </button>
-                    
                     <!-- Botón crear admin -->
                     <button
                         @click="openCreateAdmin"
@@ -194,7 +184,11 @@
                                         class="flex items-center justify-end gap-2"
                                     >
                                         <!-- Solo mostrar opciones de edición si el usuario actual NO es root -->
-                                        <template v-if="auth.user?.role?.name !== 'root'">
+                                        <template
+                                            v-if="
+                                                auth.user?.role?.name !== 'root'
+                                            "
+                                        >
                                             <button
                                                 @click="editUser(user)"
                                                 class="text-blue-600 hover:text-blue-900"
@@ -203,7 +197,7 @@
                                                 <Edit class="w-4 h-4" />
                                             </button>
                                         </template>
-                                        
+
                                         <!-- Botón de activar/desactivar (disponible siempre, excepto para otros roots) -->
                                         <button
                                             v-if="user.role?.name !== 'root'"

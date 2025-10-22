@@ -9,15 +9,13 @@ class Message extends Model
     protected $fillable = [
         'from_user_id', 
         'to_user_id', 
-        'subject', 
+        'thread_id',
         'body', 
-        'is_read', 
-        'sent_at'
+        'is_read'
     ];
 
     protected $casts = [
-        'is_read' => 'boolean',
-        'sent_at' => 'datetime'
+        'is_read' => 'boolean'
     ];
 
     public function from() 
@@ -28,6 +26,11 @@ class Message extends Model
     public function to() 
     { 
         return $this->belongsTo(User::class, 'to_user_id'); 
+    }
+
+    public function thread()
+    {
+        return $this->belongsTo(Thread::class);
     }
 
     // Scopes útiles

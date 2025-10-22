@@ -8,6 +8,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\ForumController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminRegistrationController;
@@ -49,7 +50,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/profile', [ProfileController::class, 'updateProfile']);
     Route::put('/profile/password', [ProfileController::class, 'updatePassword']);
     
-    // Mensajería básica
+    // Sistema de Foros
+    Route::get('/forum/public', [ForumController::class, 'getPublicForum']);
+    Route::get('/forum/private', [ForumController::class, 'getPrivateThread']);
+    Route::post('/forum/private/create', [ForumController::class, 'createPrivateThread']);
+    Route::post('/forum/threads/{thread}/messages', [ForumController::class, 'postMessage']);
+    Route::get('/forum/threads/{thread}', [ForumController::class, 'getThread']);
+    Route::patch('/forum/threads/{thread}/read', [ForumController::class, 'markThreadAsRead']);
+    Route::get('/forum/unread-count', [ForumController::class, 'getUnreadCount']);
+    
+    // Mensajería básica (legacy - mantener compatibilidad)
     Route::get('/messages', [MessageController::class,'index']);
     Route::get('/messages/{message}', [MessageController::class,'show']);
     Route::post('/messages', [MessageController::class,'store']);
@@ -100,7 +110,11 @@ Route::middleware(['auth:sanctum','role:admin'])->group(function () {
     Route::post('/flights/{flight}/promotions', [PromotionController::class,'store']);
     Route::post('/news', [NewsController::class,'store']);
     
-    // Mensajería administrativa (solo admin)
+    // Panel de foros para administradores
+    Route::get('/admin/forum/private-threads', [ForumController::class, 'getPrivateThreadsForAdmin']);
+    Route::patch('/admin/forum/threads/{thread}/close', [ForumController::class, 'closeThread']);
+    
+    // Mensajería administrativa (solo admin - legacy)
     Route::get('/admin/messages', [MessageController::class,'adminMessages']);
     Route::post('/messages/{message}/reply', [MessageController::class,'reply']);
 });

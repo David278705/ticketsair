@@ -29,10 +29,10 @@
                     >Mis viajes</RouterLink
                 >
                 <RouterLink
-                    v-if="auth.user?.role?.name === 'client'"
-                    to="/mensajes"
+                    v-if="auth.user"
+                    to="/forum"
                     class="hover:text-blue-600"
-                    >Mensajes</RouterLink
+                    >Foro</RouterLink
                 >
 
                 <!-- Menú de administración -->
@@ -97,11 +97,11 @@
                             <!-- Solo para administradores, no para root -->
                             <RouterLink
                                 v-if="auth.user?.role?.name === 'admin'"
-                                to="/admin/messages"
+                                to="/admin/forum"
                                 class="block px-4 py-2 text-sm hover:bg-slate-100 transition-colors"
                                 @click="adminMenuOpen = false"
                             >
-                                Mensajes
+                                Gestión de Foro
                             </RouterLink>
                         </div>
                     </Transition>
@@ -262,10 +262,10 @@
                         >Mis viajes</RouterLink
                     >
                     <RouterLink
-                        v-if="auth.user?.role?.name === 'client'"
-                        to="/mensajes"
+                        v-if="auth.user"
+                        to="/forum"
                         @click="close()"
-                        >Mensajes</RouterLink
+                        >Foro</RouterLink
                     >
 
                     <!-- Opciones de admin en móvil -->
@@ -300,11 +300,11 @@
                             <!-- Solo para administradores, no para root -->
                             <RouterLink
                                 v-if="auth.user?.role?.name === 'admin'"
-                                to="/admin/messages"
+                                to="/admin/forum"
                                 @click="close()"
                                 class="block py-1"
                             >
-                                Mensajes
+                                Gestión de Foro
                             </RouterLink>
                         </div>
                     </template>

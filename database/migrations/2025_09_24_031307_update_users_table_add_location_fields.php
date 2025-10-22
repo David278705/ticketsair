@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('country_name', 100)->nullable()->after('country_code');
             $table->string('state_code', 10)->nullable()->after('country_name');
             $table->string('state_name', 100)->nullable()->after('state_code');
-            $table->string('city_id', 20)->nullable()->after('state_name');
+            $table->string('city_id', 100)->nullable()->after('state_name');
             $table->string('city_name', 100)->nullable()->after('city_id');
             
             // Agregar índices para búsquedas

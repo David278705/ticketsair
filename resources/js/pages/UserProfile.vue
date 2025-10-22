@@ -5,7 +5,10 @@
       <div class="bg-white shadow rounded-lg mb-6">
         <div class="px-6 py-4 border-b border-gray-200">
           <h1 class="text-2xl font-bold text-gray-900">Mi Perfil</h1>
-          <p class="mt-1 text-sm text-gray-600">Administra tu información personal y configuraciones de cuenta</p>
+          <p class="mt-1 text-sm text-gray-600">
+            <span v-if="isRootUser">Como administrador root, solo puedes gestionar la seguridad de tu cuenta</span>
+            <span v-else>Administra tu información personal y configuraciones de cuenta</span>
+          </p>
         </div>
       </div>
 
@@ -36,6 +39,7 @@
           <div class="mt-6 bg-white shadow rounded-lg">
             <nav class="space-y-1">
               <button
+                v-if="!isRootUser"
                 @click="activeTab = 'personal'"
                 :class="activeTab === 'personal' ? 'bg-indigo-50 border-indigo-500 text-indigo-700' : 'border-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
                 class="w-full flex items-center px-3 py-2 text-sm font-medium border-l-4 transition-colors text-left"
@@ -62,7 +66,7 @@
         <!-- Main Content -->
         <div class="lg:col-span-2">
           <!-- Personal Information Tab -->
-          <div v-if="activeTab === 'personal'" class="bg-white shadow rounded-lg">
+          <div v-if="activeTab === 'personal' && !isRootUser" class="bg-white shadow rounded-lg">
             <div class="px-6 py-4 border-b border-gray-200">
               <h2 class="text-lg font-semibold text-gray-900">Información Personal</h2>
               <p class="mt-1 text-sm text-gray-600">Actualiza tu información personal y de contacto</p>
@@ -452,6 +456,10 @@ const securityForm = reactive({
 })
 
 // Computed properties for user info
+const isRootUser = computed(() => {
+  return user.value?.role?.name === 'root'
+})
+
 const roleLabel = computed(() => {
   const role = user.value?.role?.name
   switch (role) {
@@ -618,6 +626,10 @@ watch(activeTab, clearMessages)
 watch(user, (newUser) => {
   if (newUser) {
     loadUserData()
+    // Si el usuario es root y está en la pestaña personal, cambiar a seguridad
+    if (newUser.role?.name === 'root' && activeTab.value === 'personal') {
+      activeTab.value = 'security'
+    }
   }
 }, { immediate: true })
 
@@ -627,6 +639,11 @@ onMounted(async () => {
     await auth.me()
   }
   loadUserData()
+  
+  // Si el usuario es root, establecer la pestaña de seguridad como activa
+  if (user.value?.role?.name === 'root') {
+    activeTab.value = 'security'
+  }
 })
 
 // Validation functions
