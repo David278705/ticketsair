@@ -24,7 +24,12 @@ const ui = useUi();
 
 // Detectar si estamos en páginas que no necesitan header/footer
 const isFullscreenPage = computed(() => {
-    return route.path === '/google' || route.path === '/admin/complete-registration'
+    return (
+        route.path === "/google" ||
+        route.path === "/admin/complete-registration" ||
+        route.path === "/forum" ||
+        route.path === "/admin/forum"
+    );
 });
 
 onMounted(async () => {
