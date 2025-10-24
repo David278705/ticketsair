@@ -107,6 +107,20 @@ class FlightAdminController extends Controller
         $data['image_path'] = $r->file('image')->store('flights', 'public');
       }
       $flight->update($data);
+
+      // Actualizar la noticia existente del vuelo (si existe)
+      $news = \App\Models\News::where('flight_id', $flight->id)
+        ->where('is_promotion', false)
+        ->first();
+
+      if ($news) {
+        $news->update([
+          'title' => "Nuevo vuelo {$flight->code}: ".$flight->origin->name.' → '.$flight->destination->name,
+          'body'  => '¡Ya disponible para reservas y compras! Precio desde $'.number_format($flight->price_per_seat, 0, ',', '.'),
+          'image_path' => $data['image_path'] ?? $flight->image_path,
+        ]);
+      }
+
       return $flight->fresh()->load(['origin','destination']);
     }
 
@@ -129,7 +143,22 @@ class FlightAdminController extends Controller
       $data['image_path'] = $r->file('image')->store('flights', 'public');
     }
     $flight->update($data);
-    return $flight->fresh()->load(['origin','destination']);
+
+    // Actualizar la noticia existente del vuelo (si existe)
+    $updatedFlight = $flight->fresh()->load(['origin','destination']);
+    $news = \App\Models\News::where('flight_id', $updatedFlight->id)
+      ->where('is_promotion', false)
+      ->first();
+
+    if ($news) {
+      $news->update([
+        'title' => "Nuevo vuelo {$updatedFlight->code}: ".$updatedFlight->origin->name.' → '.$updatedFlight->destination->name,
+        'body'  => '¡Ya disponible para reservas y compras! Precio desde $'.number_format($updatedFlight->price_per_seat, 0, ',', '.'),
+        'image_path' => $data['image_path'] ?? $updatedFlight->image_path,
+      ]);
+    }
+
+    return $updatedFlight;
   }
 
   // POST /admin/flights/{flight}/cancel

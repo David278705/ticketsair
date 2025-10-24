@@ -17,7 +17,7 @@ class FlightStoreRequest extends FormRequest {
       'price_per_seat'    => ['required','numeric','min:0'],
       'capacity_first'    => ['required','integer','min:0','max:300'],
       'capacity_economy'  => ['required','integer','min:1','max:400'],
-      'image'             => ['nullable','image','mimes:jpeg,png,jpg,gif,webp','max:2048'],
+      'image'             => ['required','image','mimes:jpeg,png,jpg,gif,webp','max:2048'],
     ];
   }
 }
