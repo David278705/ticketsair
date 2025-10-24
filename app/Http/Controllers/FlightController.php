@@ -19,8 +19,10 @@ class FlightController extends Controller
 
   public function index(Request $r)
 {
-  $q = \App\Models\Flight::query()->with(['origin','destination'])
-        ->where('status','scheduled');
+  // Usar el scope available para solo mostrar vuelos programados y no finalizados
+  $q = \App\Models\Flight::query()
+        ->with(['origin','destination'])
+        ->available(); // Solo vuelos disponibles (no completados ni pasados)
 
   if ($r->filled('origin_id'))      $q->where('origin_id',$r->origin_id);
   if ($r->filled('destination_id')) $q->where('destination_id',$r->destination_id);

@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             // RootUserSeeder::class,
             // CitySeeder::class,
             AircraftSeeder::class,
+            CityDistancesSeeder::class,
             ForumSeeder::class,
         ]);
     }
