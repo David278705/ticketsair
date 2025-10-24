@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 
@@ -24,24 +26,76 @@ class CheckinController extends Controller
 
     if ($ticket->status === 'checked_in') return response()->json(['error'=>'already_checked_in'],422);
 
+    // Validar tiempo de check-in según tipo de vuelo
+    $booking = $ticket->booking;
+    $flight = $booking->flight;
+    $now = now();
+    $hoursBeforeFlight = $now->diffInHours($flight->departure_at, false);
+    
+    // Nacional: 24 horas antes, Internacional: 48 horas antes
+    $requiredHours = $flight->is_international ? 48 : 24;
+    
+    if ($hoursBeforeFlight > $requiredHours) {
+        return response()->json([
+            'error' => 'too_early',
+            'message' => "El check-in estará disponible {$requiredHours} horas antes del vuelo (" . $flight->departure_at->subHours($requiredHours)->format('d/m/Y H:i') . ")"
+        ], 422);
+    }
+    
+    if ($hoursBeforeFlight < 0) {
+        return response()->json([
+            'error' => 'flight_departed',
+            'message' => 'El vuelo ya ha partido'
+        ], 422);
+    }
+
     $ticket->update(['status'=>'checked_in']);
     $check = \App\Models\Checkin::create([
         'ticket_id'=>$ticket->id,
         'checked_in_at'=>now(),
-        // TODO: generar y adjuntar PDF pasabordo
     ]);
 
-     $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.boarding-pass', [
-        'ticket'=>$ticket->load('passenger','booking.flight.origin','booking.flight.destination'),
-        ]);
+    // Generar PDF del pasabordo
+    try {
+        $ticketData = $ticket->load('passenger.seat', 'booking.flight.origin', 'booking.flight.destination', 'booking.flight.aircraft');
+        
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.boarding-pass', [
+            'ticket' => $ticketData,
+        ])->setPaper('a4', 'portrait');
+        
         $path = 'boarding-passes/'. Str::uuid().'.pdf';
         Storage::disk('public')->put($path, $pdf->output());
-        $check->update(['boarding_pass_pdf_path'=>$path]);
+        
+        // Guardar path en checkin Y en ticket
+        $check->update(['boarding_pass_pdf_path' => $path]);
+        $ticket->update(['boarding_pass_pdf_path' => $path]);
+        
+        // Enviar email con el PDF adjunto
+        $passenger = $ticket->passenger;
+        if ($passenger->email) {
+            Mail::to($passenger->email)->send(
+                new \App\Mail\BoardingPassMail($ticketData, $path)
+            );
+        }
+        
+        // También enviar al usuario propietario de la reserva
+        $user = $ticket->booking->user;
+        if ($user && $user->email && $user->email !== $passenger->email) {
+            Mail::to($user->email)->send(
+                new \App\Mail\BoardingPassMail($ticketData, $path)
+            );
+        }
+        
+    } catch (\Exception $e) {
+        Log::error('Error generando PDF de pasabordo: ' . $e->getMessage());
+        Log::error($e->getTraceAsString());
+    }
 
-    // Equipaje adicional (si lo decides aquí)
-    // \App\Models\Luggage::create([...]);
-
-    return response()->json(['ok'=>true, 'boarding_pass'=>$check->boarding_pass_pdf_path]);
+    return response()->json([
+        'ok' => true, 
+        'boarding_pass' => $check->boarding_pass_pdf_path ?? null,
+        'ticket' => $ticket->fresh()
+    ]);
 }
 
 }

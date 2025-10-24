@@ -378,6 +378,13 @@
             v-model:open="passengersOpen"
             @submit="onPassengersSubmit"
         />
+
+        <!-- Modal de Pago -->
+        <PaymentModal
+            v-model:open="paymentOpen"
+            :total-amount="pendingBooking?.total_amount || 0"
+            @payment-success="onPaymentSuccess"
+        />
     </section>
 </template>
 
@@ -407,6 +414,7 @@ import { api } from "../../lib/api";
 import { useAuth } from "../../stores/auth";
 import { useUi } from "../../stores/ui";
 import PassengersModal from "../booking/PassengersModal.vue";
+import PaymentModal from "../booking/PaymentModal.vue";
 
 const isDark = useDark();
 const auth = useAuth();
@@ -506,8 +514,11 @@ const actionLoading = ref(false);
 
 // Estado de compra/reserva
 const passengersOpen = ref(false);
+const paymentOpen = ref(false);
 const pendingAction = ref(null); // 'reservation' | 'purchase'
 const currentFlight = ref(null);
+const pendingPassengers = ref([]);
+const pendingBooking = ref(null);
 
 onMounted(async () => {
     const { data } = await api.get("/cities");
@@ -566,29 +577,63 @@ function tryBuy(f) {
 
 async function onPassengersSubmit(passengers) {
     if (!currentFlight.value || !pendingAction.value) return;
+
+    pendingPassengers.value = passengers;
+
+    // SIEMPRE abrir modal de pago (tanto para reserva como para compra)
+    const total = passengers.length * currentFlight.value.price_per_seat;
+    pendingBooking.value = {
+        total_amount: total,
+        passengers_count: passengers.length,
+    };
+    paymentOpen.value = true;
+}
+
+async function onPaymentSuccess(paymentData) {
+    await processBooking(pendingPassengers.value, paymentData);
+}
+
+async function processBooking(passengers, paymentData) {
+    if (!currentFlight.value || !pendingAction.value) return;
     actionLoading.value = true;
+
     try {
-        await api.post(
-            "/bookings",
-            {
-                flight_id: currentFlight.value.id,
-                type: pendingAction.value,
-                class: selectedClass.value.id,
-                passengers,
-            },
-            { headers: { Authorization: "Bearer " + auth.token } }
-        );
-        alert(
-            pendingAction.value === "purchase"
-                ? "Compra realizada. Revisa tu correo."
-                : "Reserva creada (24h)"
-        );
+        const payload = {
+            flight_id: currentFlight.value.id,
+            type: pendingAction.value,
+            class: selectedClass.value.id,
+            passengers,
+        };
+
+        // Si hay datos de pago, incluirlos
+        if (paymentData) {
+            payload.payment = paymentData;
+        }
+
+        const response = await api.post("/bookings", payload, {
+            headers: { Authorization: "Bearer " + auth.token },
+        });
+
+        const booking = response.data;
+        const isPurchase = pendingAction.value === "purchase";
+
+        // Mostrar mensaje de éxito con código de reserva
+        const message = isPurchase
+            ? `✅ ¡Compra realizada exitosamente!\n\nCódigo de Reserva: ${booking.reservation_code}\n\nRevisa tu correo para más detalles. Redirigiendo a Mis Viajes...`
+            : `✅ ¡Reserva creada exitosamente!\n\nCódigo de Reserva: ${booking.reservation_code}\n\nTienes 24 horas para completar tu compra. Recibirás un recordatorio por correo.\n\nRedirigiendo a Mis Viajes...`;
+
+        alert(message);
+
+        // Redirigir a Mis Viajes después de 2 segundos
+        setTimeout(() => {
+            window.location.href = "/mis-viajes";
+        }, 2000);
     } catch (e) {
-        alert(
+        const errorMessage =
             e.response?.data?.message ||
-                e.response?.data?.error ||
-                "No se pudo procesar la solicitud."
-        );
+            e.response?.data?.error ||
+            "No se pudo procesar la solicitud.";
+        alert(`❌ Error: ${errorMessage}`);
     } finally {
         actionLoading.value = false;
     }

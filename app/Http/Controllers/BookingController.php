@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 
@@ -65,7 +66,7 @@ class BookingController extends Controller
   public function store(BookingStoreRequest $request)
 {
     $data = $request->validated();
-    $flight = \App\Models\Flight::findOrFail($data['flight_id']);
+    $flight = \App\Models\Flight::available()->findOrFail($data['flight_id']); // Solo vuelos disponibles
 
     if ($flight->status !== 'scheduled' || $flight->departure_at->isPast()) {
         return response()->json(['error'=>'flight_unavailable'],422);
@@ -103,12 +104,15 @@ class BookingController extends Controller
         $expires = $data['type'] === 'reservation' ? now()->addDay() : null; // 24h
         $total = $passengers->count() * $flight->price_per_seat;
 
+        // GENERAR CÓDIGO ÚNICO PARA AMBOS TIPOS (purchase Y reservation)
+        $reservationCode = Str::upper(Str::random(8));
+
         $booking = \App\Models\Booking::create([
             'user_id'=>$request->user()->id,
             'flight_id'=>$flight->id,
             'type'   =>$data['type'],
             'status' =>$data['type']==='purchase' ? 'confirmed' : 'pending',
-            'reservation_code'=> $data['type']==='purchase' ? Str::upper(Str::random(8)) : null,
+            'reservation_code'=> $reservationCode, // Código para ambos tipos
             'travel_type'=>$data['travel_type'] ?? 'one_way',
             'expires_at'=>$expires,
             'seats_count'=>$passengers->count(),
@@ -145,20 +149,82 @@ class BookingController extends Controller
             }
         }
 
-        // Simular pago inmediato en compra (opcional)
+        // Simular pago inmediato en compra
         if ($data['type']==='purchase') {
+            $paymentMeta = ['method'=>'wallet/demo'];
+            
+            // Si hay datos de pago (tarjeta), guardarlos
+            if (isset($data['payment'])) {
+                $paymentData = $data['payment'];
+                $paymentMeta = [
+                    'method' => 'credit_card',
+                    'card_type' => $paymentData['card_type'] ?? 'unknown',
+                    'last_four' => $paymentData['last_four'] ?? 'XXXX',
+                    'transaction_id' => $paymentData['transaction_id'] ?? Str::random(16),
+                    'card_holder' => $paymentData['card_holder'] ?? 'N/A',
+                ];
+                
+                // Si el usuario quiere guardar la tarjeta
+                if (isset($paymentData['save_card']) && $paymentData['save_card']) {
+                    $expiryParts = explode('/', $paymentData['expiry_date'] ?? '');
+                    \App\Models\Card::create([
+                        'user_id' => $request->user()->id,
+                        'brand' => $paymentData['card_type'] ?? 'unknown',
+                        'holder_name' => $paymentData['card_holder'] ?? '',
+                        'last4' => $paymentData['last_four'] ?? 'XXXX',
+                        'exp_month' => $expiryParts[0] ?? '01',
+                        'exp_year' => isset($expiryParts[1]) ? '20' . $expiryParts[1] : date('Y'),
+                        'token' => null,
+                    ]);
+                }
+            }
+            
             \App\Models\Payment::create([
                 'payable_type'=>\App\Models\Booking::class,
                 'payable_id'=>$booking->id,
                 'user_id'=>$request->user()->id,
                 'status'=>'paid',
                 'amount'=>$total,
-                'meta'=>['method'=>'wallet/demo'],
+                'meta'=>$paymentMeta,
             ]);
 
-            // TODO: enviar correo con código de reserva a cada viajero
-            foreach ($booking->passengers as $p) {
-              if ($p->email) Mail::to($p->email)->queue(new \App\Mail\PurchaseMail($booking->load('flight.origin','flight.destination','passengers')));
+            // Cargar relaciones una sola vez
+            $bookingWithData = $booking->load('flight.origin', 'flight.destination', 'passengers.seat');
+            
+            // Enviar correo de compra a cada pasajero con email
+            foreach ($bookingWithData->passengers as $p) {
+                if ($p->email) {
+                    try {
+                        Mail::to($p->email)->send(new \App\Mail\PurchaseMail($bookingWithData));
+                        Log::info("Email de compra enviado a: {$p->email}");
+                    } catch (\Exception $e) {
+                        Log::error("Error enviando email de compra a {$p->email}: " . $e->getMessage());
+                    }
+                }
+            }
+        } else {
+            // RESERVA: Enviar correo de confirmación de reserva
+            $bookingWithData = $booking->load('flight.origin', 'flight.destination', 'passengers.seat');
+            
+            foreach ($bookingWithData->passengers as $p) {
+                if ($p->email) {
+                    try {
+                        Mail::to($p->email)->send(new \App\Mail\ReservationConfirmationMail($bookingWithData));
+                        Log::info("Email de reserva enviado a: {$p->email}");
+                    } catch (\Exception $e) {
+                        Log::error("Error enviando email de reserva a {$p->email}: " . $e->getMessage());
+                    }
+                }
+            }
+            
+            // También al usuario propietario
+            if ($request->user()->email) {
+                try {
+                    Mail::to($request->user()->email)->send(new \App\Mail\ReservationConfirmationMail($bookingWithData));
+                    Log::info("Email de reserva enviado al usuario: {$request->user()->email}");
+                } catch (\Exception $e) {
+                    Log::error("Error enviando email al usuario: " . $e->getMessage());
+                }
             }
         }
 
@@ -166,6 +232,79 @@ class BookingController extends Controller
     });
 
     return response()->json($booking, 201);
+}
+
+
+  public function convertToPurchase(Request $request, \App\Models\Booking $booking)
+{
+    // Validar que el usuario sea el dueño de la reserva
+    if ($booking->user_id !== $request->user()->id) {
+        return response()->json(['error'=>'unauthorized'], 403);
+    }
+
+    // Solo reservas pendientes pueden convertirse
+    if ($booking->type !== 'reservation' || $booking->status !== 'pending') {
+        return response()->json(['error'=>'cannot_convert_booking'], 422);
+    }
+
+    // Verificar que no haya expirado
+    if ($booking->expires_at && $booking->expires_at->isPast()) {
+        return response()->json(['error'=>'reservation_expired'], 422);
+    }
+
+    // Verificar que el vuelo siga disponible
+    if ($booking->flight->status !== 'scheduled' || $booking->flight->isPast()) {
+        return response()->json(['error'=>'flight_unavailable'], 422);
+    }
+
+    return DB::transaction(function() use ($booking, $request) {
+        // Cambiar tipo y estado
+        $booking->update([
+            'type' => 'purchase',
+            'status' => 'confirmed',
+            'expires_at' => null, // Ya no expira
+        ]);
+
+        // Cambiar estado de asientos de 'reserved' a 'assigned'
+        foreach ($booking->passengers as $passenger) {
+            if ($passenger->seat && $passenger->seat->status === 'reserved') {
+                $passenger->seat->update(['status' => 'assigned']);
+            }
+
+            // Crear ticket para cada pasajero
+            if (!$passenger->ticket) {
+                \App\Models\Ticket::create([
+                    'booking_id' => $booking->id,
+                    'booking_passenger_id' => $passenger->id,
+                    'ticket_code' => Str::upper(Str::random(10)),
+                    'status' => 'issued',
+                ]);
+            }
+        }
+
+        // Crear pago
+        \App\Models\Payment::create([
+            'payable_type' => \App\Models\Booking::class,
+            'payable_id' => $booking->id,
+            'user_id' => $request->user()->id,
+            'status' => 'paid',
+            'amount' => $booking->total_amount,
+            'meta' => ['method' => 'wallet/demo', 'converted_from_reservation' => true],
+        ]);
+
+        // Enviar correo de confirmación de compra
+        foreach ($booking->passengers as $p) {
+            if ($p->email) {
+                Mail::to($p->email)->queue(new \App\Mail\PurchaseMail($booking->load('flight.origin','flight.destination','passengers')));
+            }
+        }
+
+        return response()->json([
+            'ok' => true,
+            'message' => 'Reserva convertida a compra exitosamente',
+            'booking' => $booking->fresh()->load('passengers.seat', 'tickets', 'payments')
+        ]);
+    });
 }
 
 }

@@ -127,6 +127,7 @@ Route::middleware(['auth:sanctum','role:client'])->group(function () {
     Route::get('/me/bookings', [BookingController::class,'myBookings']);
     Route::post('/bookings', [BookingController::class,'store']);     // reserva/compra
     Route::post('/bookings/{booking}/cancel', [BookingController::class,'cancel']); // ver reglas tiempo
+    Route::post('/bookings/{booking}/convert-to-purchase', [BookingController::class,'convertToPurchase']); // convertir reserva a compra
     Route::post('/seat-change', [SeatController::class,'change']);
     
     // Mensaje a administradores

@@ -23,6 +23,16 @@ public function rules(): array
         'passengers.*.email'      => ['nullable','email'],
         'passengers.*.emergency_contact_name'  => ['nullable','string'],
         'passengers.*.emergency_contact_phone' => ['nullable','string'],
+        // Datos de pago (opcionales, solo para compras)
+        'payment' => ['nullable','array'],
+        'payment.card_number' => ['nullable','string'],
+        'payment.card_holder' => ['nullable','string'],
+        'payment.expiry_date' => ['nullable','string'],
+        'payment.cvv' => ['nullable','string'],
+        'payment.card_type' => ['nullable','string'],
+        'payment.save_card' => ['nullable','boolean'],
+        'payment.last_four' => ['nullable','string'],
+        'payment.transaction_id' => ['nullable','string'],
     ];
 }
 public function authorize(): bool

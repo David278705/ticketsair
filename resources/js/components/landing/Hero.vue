@@ -46,9 +46,13 @@
             </div>
 
             <div class="relative">
-                <div
-                    class="aspect-[4/3] w-full rounded-3xl bg-gradient-to-tr from-blue-600/15 to-cyan-400/15 border border-slate-200 shadow-xl"
-                ></div>
+                <div class="w-full"></div>
+                <img
+                    style="object-fit: cover"
+                    src="https://plus.unsplash.com/premium_photo-1679830513886-e09cd6dc3137?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8c2t5JTIwcGxhbmV8ZW58MHx8MHx8fDA%3D&fm=jpg&q=60&w=3000"
+                    class="rounded-3xl aspect-[4/3]"
+                    alt=" "
+                />
                 <div
                     class="absolute inset-0 -z-10 blur-2xl bg-gradient-to-tr from-blue-600/10 to-cyan-400/10 rounded-3xl"
                 ></div>

@@ -114,10 +114,18 @@
                     </div>
 
                     <footer
-                        v-if="canCancel(b)"
-                        class="p-4 sm:p-6 border-t border-slate-200 bg-slate-50"
+                        v-if="canCancel(b) || canConvertToPurchase(b)"
+                        class="p-4 sm:p-6 border-t border-slate-200 bg-slate-50 flex flex-wrap gap-3"
                     >
                         <button
+                            v-if="canConvertToPurchase(b)"
+                            @click="convertToPurchase(b)"
+                            class="h-10 px-4 text-sm rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+                        >
+                            💳 Completar Compra
+                        </button>
+                        <button
+                            v-if="canCancel(b)"
                             @click="cancelBooking(b)"
                             class="h-10 px-4 text-sm rounded-xl border border-rose-300 text-rose-600 hover:bg-rose-50"
                         >
@@ -249,7 +257,40 @@ function getBoardingPassUrl(passenger) {
         : null;
 }
 
+function canConvertToPurchase(booking) {
+    // Solo reservas pendientes que no hayan expirado
+    if (booking.type !== "reservation" || booking.status !== "pending")
+        return false;
+    if (!booking.expires_at) return false;
+    return new Date(booking.expires_at) > new Date();
+}
+
 // --- Acciones del Usuario ---
+
+async function convertToPurchase(booking) {
+    if (
+        confirm(
+            `¿Deseas completar la compra de esta reserva por $${(+booking.total_amount).toLocaleString()}?`
+        )
+    ) {
+        try {
+            await api.post(
+                `/bookings/${booking.id}/convert-to-purchase`,
+                {},
+                { headers: { Authorization: "Bearer " + auth.token } }
+            );
+            alert(
+                "✅ ¡Compra completada exitosamente! Recibirás un correo de confirmación."
+            );
+            fetchBookings();
+        } catch (e) {
+            alert(
+                "Error al completar la compra: " +
+                    (e.response?.data?.message || e.message)
+            );
+        }
+    }
+}
 
 async function cancelBooking(booking) {
     if (

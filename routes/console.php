@@ -10,3 +10,9 @@ Artisan::command('inspire', function () {
 
 // Actualizar estados de vuelos automáticamente cada hora
 Schedule::command('flights:update-statuses')->hourly();
+
+// Expirar reservas vencidas cada 30 minutos
+Schedule::command('reservations:expire')->everyThirtyMinutes();
+
+// Enviar recordatorios de reservas cada hora
+Schedule::command('reservations:send-reminders')->hourly();
