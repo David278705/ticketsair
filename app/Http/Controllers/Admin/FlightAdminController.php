@@ -21,7 +21,16 @@ class FlightAdminController extends Controller
       ->when($r->filled('origin_id'), fn($q)=>$q->where('origin_id',$r->origin_id))
       ->when($r->filled('destination_id'), fn($q)=>$q->where('destination_id',$r->destination_id))
       ->orderByDesc('departure_at');
-    return $q->paginate(12);
+
+    $flights = $q->paginate(12);
+
+    // Agregar información sobre si tiene ventas
+    $flights->getCollection()->transform(function($flight) {
+      $flight->has_sales = $flight->tickets()->exists() || $flight->bookings()->where('type','purchase')->exists();
+      return $flight;
+    });
+
+    return $flights;
   }
 
   // POST /admin/flights
@@ -159,6 +168,37 @@ class FlightAdminController extends Controller
     }
 
     return $updatedFlight;
+  }
+
+  // DELETE /admin/flights/{flight}
+  public function destroy(Flight $flight) {
+    // Verificar si el vuelo tiene tiquetes vendidos
+    $hasSales = $flight->tickets()->exists() || $flight->bookings()->where('type','purchase')->exists();
+
+    if ($hasSales) {
+      return response()->json([
+        'error' => 'No se puede eliminar el vuelo porque ya tiene tiquetes vendidos.'
+      ], 422);
+    }
+
+    return DB::transaction(function() use ($flight) {
+      // Eliminar asientos asociados
+      $flight->seats()->delete();
+
+      // Eliminar reservas (si no son compras)
+      $flight->bookings()->where('type', 'reservation')->delete();
+
+      // Eliminar noticias asociadas al vuelo
+      \App\Models\News::where('flight_id', $flight->id)->delete();
+
+      // Eliminar promociones asociadas
+      \App\Models\Promotion::where('flight_id', $flight->id)->delete();
+
+      // Finalmente eliminar el vuelo
+      $flight->delete();
+
+      return ['ok' => true, 'message' => 'Vuelo eliminado correctamente'];
+    });
   }
 
   // POST /admin/flights/{flight}/cancel

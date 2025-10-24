@@ -124,12 +124,22 @@
                                     Promo
                                 </button>
                                 <button
+                                    v-if="f.has_sales"
                                     class="h-9 px-3 rounded-lg border border-rose-300 text-rose-600 text-sm hover:bg-rose-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                     :disabled="!canCancelFlight(f)"
-                                    :title="!canCancelFlight(f) ? 'Solo se pueden cancelar vuelos programados y futuros' : ''"
+                                    :title="!canCancelFlight(f) ? 'Solo se pueden cancelar vuelos programados y futuros' : 'Este vuelo tiene ventas, se cancelará y reembolsará a los clientes'"
                                     @click="cancelFlight(f)"
                                 >
                                     Cancelar
+                                </button>
+                                <button
+                                    v-else
+                                    class="h-9 px-3 rounded-lg border border-red-500 bg-red-500 text-white text-sm hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    :disabled="!canDeleteFlight(f)"
+                                    :title="'Este vuelo no tiene ventas, se eliminará permanentemente'"
+                                    @click="deleteFlight(f)"
+                                >
+                                    Eliminar
                                 </button>
                             </div>
                         </td>
@@ -677,6 +687,13 @@ function canCancelFlight(flight) {
     return flight.status === 'scheduled' && !isFlightPast(flight);
 }
 
+// Verificar si se puede eliminar un vuelo (solo si no tiene ventas)
+function canDeleteFlight(flight) {
+    // Por ahora permitimos intentar eliminar cualquier vuelo
+    // El backend verificará si tiene ventas
+    return true;
+}
+
 function toLocalInput(dt) {
     const d = new Date(dt);
     d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
@@ -807,6 +824,28 @@ async function cancelFlight(f) {
         await reload();
     } catch (error) {
         alert("Error al cancelar el vuelo.");
+        console.error(error);
+    }
+}
+
+async function deleteFlight(f) {
+    if (
+        !confirm(
+            `¿Seguro que quieres ELIMINAR PERMANENTEMENTE el vuelo ${f.code}? Esta acción no se puede deshacer y eliminará todos los datos asociados (asientos, noticias, promociones).`
+        )
+    )
+        return;
+
+    try {
+        await api.delete(
+            `/admin/flights/${f.id}`,
+            { headers: { Authorization: "Bearer " + auth.token } }
+        );
+        await reload();
+        alert('Vuelo eliminado correctamente');
+    } catch (error) {
+        const errorMsg = error.response?.data?.error || "Error al eliminar el vuelo.";
+        alert(errorMsg);
         console.error(error);
     }
 }
