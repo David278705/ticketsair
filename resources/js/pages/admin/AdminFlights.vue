@@ -708,6 +708,7 @@ function openEdit(f) {
     Object.assign(form, {
         id: f.id,
         scope: f.scope,
+        aircraft_id: f.aircraft_id,
         origin_id: f.origin_id,
         destination_id: f.destination_id,
         departure_at: toLocalInput(f.departure_at),

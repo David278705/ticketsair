@@ -12,7 +12,7 @@ class NewsStoreRequest extends FormRequest {
       'body'         => ['nullable','string'],
       'flight_id'    => ['nullable','exists:flights,id'],
       'is_promotion' => ['boolean'],
-      'image'        => ['nullable','image','mimes:jpg,jpeg,png,webp','max:2048'], // 2MB
+      'image'        => ['required','image','mimes:jpg,jpeg,png,webp','max:2048'], // 2MB
     ];
   }
 }

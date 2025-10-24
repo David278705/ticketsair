@@ -20,9 +20,9 @@ class DatabaseSeeder extends Seeder
             // RoleSeeder::class,
             // RootUserSeeder::class,
             // CitySeeder::class,
-            AircraftSeeder::class,
+            // AircraftSeeder::class,
             CityDistancesSeeder::class,
-            ForumSeeder::class,
+            // ForumSeeder::class,
         ]);
     }
 }
