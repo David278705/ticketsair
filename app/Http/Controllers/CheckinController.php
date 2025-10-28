@@ -55,12 +55,13 @@ class CheckinController extends Controller
         'checked_in_at'=>now(),
     ]);
 
-    // Generar PDF del pasabordo
+    // Generar PDF del pasabordo INDIVIDUAL para este pasajero
     try {
-        $ticketData = $ticket->load('passenger.seat', 'booking.flight.origin', 'booking.flight.destination', 'booking.flight.aircraft');
+        $ticketData = $ticket->load('passenger.seat', 'booking.flight.origin', 'booking.flight.destination', 'booking.flight.aircraft', 'booking.passengers.seat');
         
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.boarding-pass', [
             'ticket' => $ticketData,
+            'booking' => $ticketData->booking, // Incluir booking para mostrar todos los pasajeros
         ])->setPaper('a4', 'portrait');
         
         $path = 'boarding-passes/'. Str::uuid().'.pdf';
@@ -70,20 +71,17 @@ class CheckinController extends Controller
         $check->update(['boarding_pass_pdf_path' => $path]);
         $ticket->update(['boarding_pass_pdf_path' => $path]);
         
-        // Enviar email con el PDF adjunto
+        // Enviar email SOLO al pasajero de este ticket
         $passenger = $ticket->passenger;
         if ($passenger->email) {
-            Mail::to($passenger->email)->send(
-                new \App\Mail\BoardingPassMail($ticketData, $path)
-            );
-        }
-        
-        // También enviar al usuario propietario de la reserva
-        $user = $ticket->booking->user;
-        if ($user && $user->email && $user->email !== $passenger->email) {
-            Mail::to($user->email)->send(
-                new \App\Mail\BoardingPassMail($ticketData, $path)
-            );
+            try {
+                Mail::to($passenger->email)->send(
+                    new \App\Mail\BoardingPassMail($ticketData, $path)
+                );
+                Log::info("Pasabordo enviado a: {$passenger->email} para ticket {$ticket->ticket_code}");
+            } catch (\Exception $e) {
+                Log::error("Error enviando pasabordo a {$passenger->email}: " . $e->getMessage());
+            }
         }
         
     } catch (\Exception $e) {

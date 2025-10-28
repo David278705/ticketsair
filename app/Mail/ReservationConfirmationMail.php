@@ -13,13 +13,17 @@ class ReservationConfirmationMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public \App\Models\Booking $booking)
-    {
-    }
+    public function __construct(
+        public \App\Models\Booking $booking,
+        public \App\Models\BookingPassenger $passenger
+    ) {}
 
     public function build()
     {
         return $this->subject('Confirmación de Reserva - TicketsAir')
-            ->markdown('mail.reservation-confirmation', ['booking' => $this->booking]);
+            ->markdown('mail.reservation-confirmation', [
+                'booking' => $this->booking,
+                'passenger' => $this->passenger
+            ]);
     }
 }

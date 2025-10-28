@@ -245,9 +245,12 @@
             
             <!-- Passenger Info -->
             <div class="passenger-info">
+                <div style="text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0;">
+                    <div class="detail-label">PASAJERO PRINCIPAL</div>
+                </div>
                 <div class="passenger-grid">
                     <div class="passenger-item">
-                        <div class="detail-label">Pasajero</div>
+                        <div class="detail-label">Nombre Completo</div>
                         <div class="detail-value" style="font-size: 16px;">
                             {{ strtoupper($ticket->passenger->first_name . ' ' . $ticket->passenger->last_name) }}
                         </div>
@@ -272,6 +275,25 @@
                     </div>
                 </div>
             </div>
+            
+            @if($booking->passengers->count() > 1)
+            <!-- Otros Pasajeros en la Reserva -->
+            <div style="margin-top: 20px; padding: 15px; background: #fffbeb; border-left: 4px solid #f59e0b; border-radius: 8px;">
+                <div style="font-size: 11px; font-weight: bold; color: #92400e; margin-bottom: 10px;">
+                    📋 OTROS PASAJEROS EN ESTA RESERVA
+                </div>
+                <div style="font-size: 10px; color: #78350f; line-height: 1.8;">
+                    @foreach($booking->passengers as $p)
+                        @if($p->id !== $ticket->passenger->id)
+                            <div style="margin-bottom: 5px;">
+                                <strong>•</strong> {{ strtoupper($p->first_name . ' ' . $p->last_name) }} 
+                                ({{ $p->dni }}) - Asiento: {{ $p->seat ? $p->seat->number : 'Por asignar' }}
+                            </div>
+                        @endif
+                    @endforeach
+                </div>
+            </div>
+            @endif
             
             <!-- Barcode -->
             <div class="barcode">

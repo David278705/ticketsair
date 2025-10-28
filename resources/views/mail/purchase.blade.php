@@ -1,16 +1,24 @@
 @component('mail::message')
 # ✅ ¡Compra Confirmada!
 
-Hola {{ $booking->passengers->first()->first_name }},
+Hola {{ $passenger->first_name }},
 
 Tu compra ha sido procesada exitosamente. A continuación los detalles de tu vuelo:
+
+---
+
+## Tu Información Personal
+
+**Pasajero:** {{ $passenger->first_name }} {{ $passenger->last_name }}  
+**DNI:** {{ $passenger->dni }}  
+**Asiento:** {{ $passenger->seat ? $passenger->seat->number : 'Por asignar' }}  
+**Clase:** {{ ucfirst($booking->class) }}
 
 ---
 
 ## Información de Pago
 
 **Estado:** ✅ Pagado  
-**Monto Total:** ${{ number_format($booking->total_amount, 0, ',', '.') }} COP  
 **Código de Reserva:** {{ $booking->reservation_code }}
 
 ---
@@ -22,24 +30,21 @@ Tu compra ha sido procesada exitosamente. A continuación los detalles de tu vue
 
 **Fecha de Salida:** {{ $booking->flight->departure_at->format('d/m/Y H:i') }}  
 **Fecha de Llegada:** {{ $booking->flight->arrival_at ? $booking->flight->arrival_at->format('d/m/Y H:i') : 'Por confirmar' }}  
-**Duración:** {{ $booking->flight->duration_minutes }} minutos  
-**Clase:** {{ ucfirst($booking->class) }}
+**Duración:** {{ $booking->flight->duration_minutes }} minutos
 
 ---
 
-## Pasajeros
+@if($booking->passengers->count() > 1)
+## Otros Pasajeros en esta Reserva
 
 @foreach($booking->passengers as $p)
-**{{ $loop->iteration }}.** {{ $p->first_name }} {{ $p->last_name }}  
-- DNI: {{ $p->dni }}  
-- Asiento: {{ $p->seat ? $p->seat->number : 'Por asignar' }}  
-@if($p->luggage_count > 0)
-- Equipaje: {{ $p->luggage_count }} pieza(s)
+@if($p->id !== $passenger->id)
+**•** {{ $p->first_name }} {{ $p->last_name }} ({{ $p->dni }}) - Asiento: {{ $p->seat ? $p->seat->number : 'Por asignar' }}  
 @endif
-
 @endforeach
 
 ---
+@endif
 
 ## Próximos Pasos
 

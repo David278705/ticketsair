@@ -191,39 +191,25 @@ class BookingController extends Controller
             // Cargar relaciones una sola vez
             $bookingWithData = $booking->load('flight.origin', 'flight.destination', 'passengers.seat');
             
-            // Enviar correo de compra a cada pasajero con email
+            // Enviar correo de compra a cada pasajero INDIVIDUALMENTE
             foreach ($bookingWithData->passengers as $p) {
-                if ($p->email) {
-                    try {
-                        Mail::to($p->email)->send(new \App\Mail\PurchaseMail($bookingWithData));
-                        Log::info("Email de compra enviado a: {$p->email}");
-                    } catch (\Exception $e) {
-                        Log::error("Error enviando email de compra a {$p->email}: " . $e->getMessage());
-                    }
+                try {
+                    Mail::to($p->email)->send(new \App\Mail\PurchaseMail($bookingWithData, $p));
+                    Log::info("Email de compra enviado a: {$p->email} ({$p->first_name} {$p->last_name})");
+                } catch (\Exception $e) {
+                    Log::error("Error enviando email de compra a {$p->email}: " . $e->getMessage());
                 }
             }
         } else {
-            // RESERVA: Enviar correo de confirmación de reserva
+            // RESERVA: Enviar correo de confirmación de reserva a cada pasajero INDIVIDUALMENTE
             $bookingWithData = $booking->load('flight.origin', 'flight.destination', 'passengers.seat');
             
             foreach ($bookingWithData->passengers as $p) {
-                if ($p->email) {
-                    try {
-                        Mail::to($p->email)->send(new \App\Mail\ReservationConfirmationMail($bookingWithData));
-                        Log::info("Email de reserva enviado a: {$p->email}");
-                    } catch (\Exception $e) {
-                        Log::error("Error enviando email de reserva a {$p->email}: " . $e->getMessage());
-                    }
-                }
-            }
-            
-            // También al usuario propietario
-            if ($request->user()->email) {
                 try {
-                    Mail::to($request->user()->email)->send(new \App\Mail\ReservationConfirmationMail($bookingWithData));
-                    Log::info("Email de reserva enviado al usuario: {$request->user()->email}");
+                    Mail::to($p->email)->send(new \App\Mail\ReservationConfirmationMail($bookingWithData, $p));
+                    Log::info("Email de reserva enviado a: {$p->email} ({$p->first_name} {$p->last_name})");
                 } catch (\Exception $e) {
-                    Log::error("Error enviando email al usuario: " . $e->getMessage());
+                    Log::error("Error enviando email de reserva a {$p->email}: " . $e->getMessage());
                 }
             }
         }
@@ -295,7 +281,13 @@ class BookingController extends Controller
         // Enviar correo de confirmación de compra
         foreach ($booking->passengers as $p) {
             if ($p->email) {
-                Mail::to($p->email)->queue(new \App\Mail\PurchaseMail($booking->load('flight.origin','flight.destination','passengers')));
+                $bookingData = $booking->load('flight.origin','flight.destination','passengers.seat');
+                try {
+                    Mail::to($p->email)->queue(new \App\Mail\PurchaseMail($bookingData, $p));
+                    Log::info("Email de conversión a compra enviado a: {$p->email}");
+                } catch (\Exception $e) {
+                    Log::error("Error enviando email de conversión a {$p->email}: " . $e->getMessage());
+                }
             }
         }
 

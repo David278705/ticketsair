@@ -20,7 +20,7 @@ public function rules(): array
         'passengers.*.birth_date' => ['required','date'],
         'passengers.*.gender'     => ['required','in:M,F,X'],
         'passengers.*.phone'      => ['nullable','string'],
-        'passengers.*.email'      => ['nullable','email'],
+        'passengers.*.email'      => ['required','email'], // OBLIGATORIO para recibir confirmación y pasabordo
         'passengers.*.emergency_contact_name'  => ['nullable','string'],
         'passengers.*.emergency_contact_phone' => ['nullable','string'],
         // Datos de pago (opcionales, solo para compras)
