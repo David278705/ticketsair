@@ -13,13 +13,36 @@ class NewsController extends Controller
   public function index(Request $r){
     $q = News::query()
       ->with([
-        'flight:id,code,origin_id,destination_id,price_per_seat',
+        'flight' => function($query) {
+          // Solo vuelos disponibles (scheduled y futuros)
+          $query->where('status', 'scheduled')
+                ->where('departure_at', '>', now())
+                ->select('id','origin_id','destination_id','price_per_seat','first_class_price','departure_at','duration_minutes','capacity_first','capacity_economy');
+        },
         'flight.origin:id,name',
         'flight.destination:id,name',
-        'promotion:id,title,discount_percent,starts_at,ends_at'
+        'promotion' => function($query) {
+          // Solo promociones activas
+          $query->where('is_active', true)
+                ->where(function($q) {
+                  $q->whereNull('starts_at')->orWhere('starts_at', '<=', now());
+                })
+                ->where(function($q) {
+                  $q->whereNull('ends_at')->orWhere('ends_at', '>=', now());
+                })
+                ->select('id','flight_id','title','discount_percent','starts_at','ends_at','is_active');
+        }
       ])
+      // Filtrar solo noticias con vuelos válidos o sin vuelo asociado
+      ->where(function($query) {
+        $query->whereHas('flight', function($q) {
+          $q->where('status', 'scheduled')
+            ->where('departure_at', '>', now());
+        })->orWhereNull('flight_id');
+      })
       ->when($r->filled('is_promotion'), fn($q)=>$q->where('is_promotion', (bool)$r->is_promotion))
       ->orderByDesc('created_at');
+    
     return $q->paginate(12);
   }
 

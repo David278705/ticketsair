@@ -16,6 +16,7 @@ class FlightUpdateRequest extends FormRequest {
       'departure_at'      => ['sometimes','date','after:now'],
       'duration_minutes'  => ['sometimes','integer','min:10','max:2000'],
       'price_per_seat'    => ['sometimes','numeric','min:0'],
+      'first_class_price' => ['sometimes','numeric','min:0'],
       'image'             => ['nullable','image','mimes:jpeg,png,jpg,gif,webp','max:2048'],
       // no actualizamos capacidades si ya hay ventas (se valida en controller)
     ];

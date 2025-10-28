@@ -12,18 +12,17 @@ public function rules(): array
         'flight_id'      => ['required','exists:flights,id'],
         'type'           => ['required','in:reservation,purchase'],
         'travel_type'    => ['nullable','in:one_way,round_trip'],
-        'class'          => ['required','in:first,economy'],
-        'passengers'     => ['required','array','min:1','max:5'], // máx 5 por vuelo/cliente
+        'passengers'     => ['required','array','min:1','max:5'],
         'passengers.*.dni'  => ['required','string'],
         'passengers.*.first_name' => ['required','string'],
         'passengers.*.last_name'  => ['required','string'],
         'passengers.*.birth_date' => ['required','date'],
         'passengers.*.gender'     => ['required','in:M,F,X'],
+        'passengers.*.class'      => ['required','in:first,economy'],
         'passengers.*.phone'      => ['nullable','string'],
-        'passengers.*.email'      => ['required','email'], // OBLIGATORIO para recibir confirmación y pasabordo
+        'passengers.*.email'      => ['required','email'],
         'passengers.*.emergency_contact_name'  => ['nullable','string'],
         'passengers.*.emergency_contact_phone' => ['nullable','string'],
-        // Datos de pago (opcionales, solo para compras)
         'payment' => ['nullable','array'],
         'payment.card_number' => ['nullable','string'],
         'payment.card_holder' => ['nullable','string'],

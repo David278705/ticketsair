@@ -285,7 +285,7 @@
                     </div>
                     <div>
                         <label for="flight_price" class="block text-sm font-medium text-gray-700 mb-1">
-                            Precio por Asiento *
+                            💺 Precio Clase Económica *
                         </label>
                         <input
                             id="flight_price"
@@ -299,6 +299,29 @@
                             placeholder="ej: 150000"
                             @input="validateNumericInput($event)"
                         />
+                        <p class="text-xs text-gray-500 mt-1">
+                            Precio base por asiento en clase económica
+                        </p>
+                    </div>
+                    <div>
+                        <label for="flight_price_first" class="block text-sm font-medium text-gray-700 mb-1">
+                            ⭐ Precio Primera Clase *
+                        </label>
+                        <input
+                            id="flight_price_first"
+                            v-model.number="form.first_class_price"
+                            type="number"
+                            min="0"
+                            max="9999999"
+                            pattern="[0-9]+"
+                            title="Solo se permiten números"
+                            class="h-10 rounded-lg border px-3 w-full"
+                            placeholder="ej: 300000"
+                            @input="validateNumericInput($event)"
+                        />
+                        <p class="text-xs text-gray-500 mt-1">
+                            Precio por asiento en primera clase (generalmente 2x económica)
+                        </p>
                     </div>
                     <div v-if="form.aircraft_id">
                         <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -530,6 +553,7 @@ const form = reactive({
     departure_at: "",
     duration_minutes: 90,
     price_per_seat: 0,
+    first_class_price: 0,
     capacity_first: 0,
     capacity_economy: 100,
     image: null,
@@ -693,6 +717,7 @@ const VUELO_VACIO = {
     departure_at: "",
     duration_minutes: 90,
     price_per_seat: 0,
+    first_class_price: 0,
     capacity_first: 0,
     capacity_economy: 100,
     image: null,
@@ -714,6 +739,7 @@ function openEdit(f) {
         departure_at: toLocalInput(f.departure_at),
         duration_minutes: f.duration_minutes,
         price_per_seat: f.price_per_seat,
+        first_class_price: f.first_class_price || (f.price_per_seat * 2),
         capacity_first: f.capacity_first,
         capacity_economy: f.capacity_economy,
         image: null,
@@ -743,6 +769,7 @@ async function save() {
             fd.append('departure_at', new Date(form.departure_at).toISOString());
             fd.append('duration_minutes', form.duration_minutes);
             fd.append('price_per_seat', form.price_per_seat);
+            fd.append('first_class_price', form.first_class_price || (form.price_per_seat * 2));
             fd.append('capacity_first', form.capacity_first);
             fd.append('capacity_economy', form.capacity_economy);
             if (form.image) {
@@ -759,6 +786,7 @@ async function save() {
             // --- ACTUALIZAR ---
             const fd = new FormData();
             fd.append('price_per_seat', form.price_per_seat);
+            fd.append('first_class_price', form.first_class_price || (form.price_per_seat * 2));
             fd.append('departure_at', new Date(form.departure_at).toISOString());
             fd.append('origin_id', form.origin_id);
             fd.append('destination_id', form.destination_id);

@@ -373,9 +373,20 @@
             />
         </div>
 
+        <!-- Modal de Información de Vuelo (seleccionar cantidad de pasajeros) -->
+        <FlightInfoModal
+            v-model:open="flightInfoOpen"
+            :flight="currentFlight"
+            :action-type="pendingAction"
+            @submit="onFlightInfoSubmit"
+        />
+
         <!-- Modal de Pasajeros -->
         <PassengersModal
             v-model:open="passengersOpen"
+            :passengers-count="passengersCount"
+            :base-price-per-seat="parseFloat(currentFlight?.price_per_seat) || 0"
+            :first-class-price="parseFloat(currentFlight?.first_class_price) || 0"
             @submit="onPassengersSubmit"
         />
 
@@ -383,6 +394,7 @@
         <PaymentModal
             v-model:open="paymentOpen"
             :total-amount="pendingBooking?.total_amount || 0"
+            :booking-info="pendingBooking"
             @payment-success="onPaymentSuccess"
         />
     </section>
@@ -413,6 +425,7 @@ import { useDark } from "@vueuse/core";
 import { api } from "../../lib/api";
 import { useAuth } from "../../stores/auth";
 import { useUi } from "../../stores/ui";
+import FlightInfoModal from "../booking/FlightInfoModal.vue";
 import PassengersModal from "../booking/PassengersModal.vue";
 import PaymentModal from "../booking/PaymentModal.vue";
 
@@ -513,10 +526,12 @@ const results = ref({ data: [], meta: null });
 const actionLoading = ref(false);
 
 // Estado de compra/reserva
+const flightInfoOpen = ref(false);
 const passengersOpen = ref(false);
 const paymentOpen = ref(false);
 const pendingAction = ref(null); // 'reservation' | 'purchase'
 const currentFlight = ref(null);
+const passengersCount = ref(1);
 const pendingPassengers = ref([]);
 const pendingBooking = ref(null);
 
@@ -565,13 +580,19 @@ function tryReserve(f) {
     ensureClass();
     currentFlight.value = f;
     pendingAction.value = "reservation";
-    passengersOpen.value = true;
+    flightInfoOpen.value = true;
 }
 function tryBuy(f) {
     if (!ensureAuth()) return;
     ensureClass();
     currentFlight.value = f;
     pendingAction.value = "purchase";
+    flightInfoOpen.value = true;
+}
+
+function onFlightInfoSubmit({ passengersCount: count }) {
+    passengersCount.value = count;
+    flightInfoOpen.value = false;
     passengersOpen.value = true;
 }
 
@@ -580,29 +601,48 @@ async function onPassengersSubmit(passengers) {
 
     pendingPassengers.value = passengers;
 
-    // SIEMPRE abrir modal de pago (tanto para reserva como para compra)
-    const total = passengers.length * currentFlight.value.price_per_seat;
+    // Calcular precio total basado en las clases individuales de cada pasajero
+    const total = passengers.reduce((sum, p) => {
+        const economyPrice = parseFloat(currentFlight.value.price_per_seat);
+        const firstPrice = parseFloat(currentFlight.value.first_class_price);
+        const pricePerSeat = p.flight_class === "first" ? firstPrice : economyPrice;
+        return sum + pricePerSeat;
+    }, 0);
+
     pendingBooking.value = {
         total_amount: total,
         passengers_count: passengers.length,
     };
-    paymentOpen.value = true;
+
+    // Si es reserva, NO abrir modal de pago
+    if (pendingAction.value === "reservation") {
+        // Procesar la reserva directamente sin pago
+        await processBooking(null);
+    } else {
+        // Si es compra, abrir modal de pago
+        paymentOpen.value = true;
+    }
 }
 
 async function onPaymentSuccess(paymentData) {
-    await processBooking(pendingPassengers.value, paymentData);
+    await processBooking(paymentData);
 }
 
-async function processBooking(passengers, paymentData) {
+async function processBooking(paymentData) {
     if (!currentFlight.value || !pendingAction.value) return;
     actionLoading.value = true;
 
     try {
+        // Preparar los datos de pasajeros con sus clases individuales
+        const passengersWithClass = pendingPassengers.value.map((p) => ({
+            ...p,
+            class: p.flight_class, // Agregar clase individual
+        }));
+
         const payload = {
             flight_id: currentFlight.value.id,
             type: pendingAction.value,
-            class: selectedClass.value.id,
-            passengers,
+            passengers: passengersWithClass,
         };
 
         // Si hay datos de pago, incluirlos

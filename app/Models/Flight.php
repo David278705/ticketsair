@@ -12,13 +12,14 @@ class Flight extends Model
         'departure_at','duration_minutes','arrival_at',
         'scope', // 'national'|'international'
         'capacity_first','capacity_economy',
-        'price_per_seat','status','image_path'
+        'price_per_seat','first_class_price','status','image_path'
     ];
 
     protected $casts = [
         'departure_at' => 'datetime',
         'arrival_at'   => 'datetime',
         'price_per_seat' => 'decimal:2',
+        'first_class_price' => 'decimal:2',
     ];
 
     // Scopes para filtrar vuelos

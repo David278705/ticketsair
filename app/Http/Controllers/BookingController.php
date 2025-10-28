@@ -87,24 +87,35 @@ class BookingController extends Controller
     })->whereIn('dni', $dniList)->exists();
     if ($dup) return response()->json(['error'=>'passenger_already_in_flight'],422);
 
-    // Tomar asientos disponibles por clase
-    $needed = $passengers->count();
-    $seats = \App\Models\Seat::where('flight_id',$flight->id)
-        ->where('class',$data['class'])
-        ->where('status','available')
-        ->inRandomOrder()
-        ->lockForUpdate()
-        ->limit($needed)->get();
+    // Verificar disponibilidad de asientos por clase
+    $firstClassCount = $passengers->where('class', 'first')->count();
+    $economyCount = $passengers->where('class', 'economy')->count();
 
-    if ($seats->count() < $needed) {
+    $availableFirst = \App\Models\Seat::where('flight_id',$flight->id)
+        ->where('class','first')
+        ->where('status','available')
+        ->count();
+
+    $availableEconomy = \App\Models\Seat::where('flight_id',$flight->id)
+        ->where('class','economy')
+        ->where('status','available')
+        ->count();
+
+    if ($firstClassCount > $availableFirst || $economyCount > $availableEconomy) {
         return response()->json(['error'=>'not_enough_seats'],422);
     }
 
-    $booking = DB::transaction(function () use ($request, $flight, $data, $seats, $passengers) {
-        $expires = $data['type'] === 'reservation' ? now()->addDay() : null; // 24h
-        $total = $passengers->count() * $flight->price_per_seat;
+    $booking = DB::transaction(function () use ($request, $flight, $data, $passengers) {
+        $expires = $data['type'] === 'reservation' ? now()->addDay() : null;
+        
+        // Calcular total basado en clase de cada pasajero
+        $total = $passengers->reduce(function($sum, $p) use ($flight) {
+            $price = $p['class'] === 'first' 
+                ? ($flight->first_class_price ?? $flight->price_per_seat * 2)
+                : $flight->price_per_seat;
+            return $sum + $price;
+        }, 0);
 
-        // GENERAR CÓDIGO ÚNICO PARA AMBOS TIPOS (purchase Y reservation)
         $reservationCode = Str::upper(Str::random(8));
 
         $booking = \App\Models\Booking::create([
@@ -112,7 +123,7 @@ class BookingController extends Controller
             'flight_id'=>$flight->id,
             'type'   =>$data['type'],
             'status' =>$data['type']==='purchase' ? 'confirmed' : 'pending',
-            'reservation_code'=> $reservationCode, // Código para ambos tipos
+            'reservation_code'=> $reservationCode,
             'travel_type'=>$data['travel_type'] ?? 'one_way',
             'expires_at'=>$expires,
             'seats_count'=>$passengers->count(),
@@ -120,7 +131,18 @@ class BookingController extends Controller
         ]);
 
         foreach ($passengers->values() as $i => $p) {
-            $seat = $seats[$i];
+            // Obtener asiento disponible de la clase del pasajero
+            $seat = \App\Models\Seat::where('flight_id',$flight->id)
+                ->where('class', $p['class'])
+                ->where('status','available')
+                ->inRandomOrder()
+                ->lockForUpdate()
+                ->first();
+
+            if (!$seat) {
+                throw new \Exception("No seat available for class {$p['class']}");
+            }
+
             $seat->update(['status' => $data['type']==='purchase' ? 'assigned' : 'reserved']);
 
             $bp = \App\Models\BookingPassenger::create([
@@ -135,10 +157,10 @@ class BookingController extends Controller
                 'emergency_contact_name'=>$p['emergency_contact_name'] ?? null,
                 'emergency_contact_phone'=>$p['emergency_contact_phone'] ?? null,
                 'seat_id'=>$seat->id,
-                'class'=>$data['class'],
+                'class'=>$p['class'],
             ]);
 
-            // Tickets SOLO en compra (el PDF usa código de reserva tras compra para check-in rápido)
+            // Tickets SOLO en compra
             if ($data['type']==='purchase') {
                 \App\Models\Ticket::create([
                     'booking_id'=>$booking->id,

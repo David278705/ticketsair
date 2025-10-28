@@ -15,6 +15,7 @@ class FlightStoreRequest extends FormRequest {
       'departure_at'      => ['required','date','after:now'],
       'duration_minutes'  => ['required','integer','min:10','max:2000'],
       'price_per_seat'    => ['required','numeric','min:0'],
+      'first_class_price' => ['nullable','numeric','min:0'],
       'capacity_first'    => ['required','integer','min:0','max:300'],
       'capacity_economy'  => ['required','integer','min:1','max:400'],
       'image'             => ['required','image','mimes:jpeg,png,jpg,gif,webp','max:2048'],

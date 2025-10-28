@@ -49,6 +49,7 @@ class FlightAdminController extends Controller
         'duration_minutes' => (int)$data['duration_minutes'],
         'status'           => 'scheduled',
         'price_per_seat'   => $data['price_per_seat'],
+        'first_class_price'=> $data['first_class_price'] ?? ($data['price_per_seat'] * 2),
         'capacity_first'   => (int)$data['capacity_first'],
         'capacity_economy' => (int)$data['capacity_economy'],
         'image_path'       => $imagePath,
@@ -96,8 +97,8 @@ class FlightAdminController extends Controller
     // Regla: si el vuelo no está scheduled o ya tiene ventas, no permitimos cambios críticos
     $hasSales = $flight->tickets()->exists() || $flight->bookings()->where('type','purchase')->exists();
     if ($flight->status !== 'scheduled' || $hasSales) {
-      // permitimos cambiar solo precio_per_seat y departure_at (siempre que sea futuro)
-      $data = $r->safe()->only(['price_per_seat','departure_at']);
+      // permitimos cambiar solo precio_per_seat, first_class_price y departure_at (siempre que sea futuro)
+      $data = $r->safe()->only(['price_per_seat','first_class_price','departure_at']);
       if (isset($data['departure_at'])) {
         abort_if(now()->parse($data['departure_at'])->isPast(), 422, 'No puedes fijar una salida en el pasado.');
         $data['arrival_at'] = now()->parse($data['departure_at'])->addMinutes((int)$flight->duration_minutes);
