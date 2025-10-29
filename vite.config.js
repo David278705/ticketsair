@@ -17,5 +17,11 @@ export default defineConfig({
         strictPort: true,
         cors: true,
         hmr: { host: "127.0.0.1" },
+        proxy: {
+            '/storage': {
+                target: 'http://127.0.0.1:8000',
+                changeOrigin: true,
+            }
+        }
     },
 });

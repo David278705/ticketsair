@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ProfileController extends Controller
 {
@@ -89,12 +90,13 @@ class ProfileController extends Controller
 
         $request->validate([
             'current_password' => 'required|string',
-            'new_password' => ['required', 'confirmed', Password::min(8)],
+            'new_password' => ['required', 'confirmed', 'min:8', 'regex:/[a-z]/', 'regex:/[A-Z]/', 'regex:/[0-9]/'],
         ], [
             'current_password.required' => 'La contraseña actual es requerida.',
             'new_password.required' => 'La nueva contraseña es requerida.',
             'new_password.confirmed' => 'La confirmación de contraseña no coincide.',
             'new_password.min' => 'La nueva contraseña debe tener al menos 8 caracteres.',
+            'new_password.regex' => 'La nueva contraseña debe contener al menos una letra minúscula, una mayúscula y un número.',
         ]);
 
         // Verificar que la contraseña actual sea correcta
@@ -127,5 +129,86 @@ class ProfileController extends Controller
             'status' => 'success',
             'message' => 'Contraseña actualizada exitosamente.'
         ]);
+    }
+
+    /**
+     * Subir foto de perfil del usuario
+     */
+    public function uploadAvatar(Request $request)
+    {
+        $user = $request->user();
+
+        $request->validate([
+            'avatar' => 'required|image|mimes:jpeg,jpg,png,gif|max:2048', // Max 2MB
+        ], [
+            'avatar.required' => 'Debes seleccionar una imagen.',
+            'avatar.image' => 'El archivo debe ser una imagen.',
+            'avatar.mimes' => 'La imagen debe ser de tipo: jpeg, jpg, png o gif.',
+            'avatar.max' => 'La imagen no debe superar los 2MB.',
+        ]);
+
+        try {
+            // Eliminar foto anterior si existe
+            if ($user->avatar_path && Storage::disk('public')->exists($user->avatar_path)) {
+                Storage::disk('public')->delete($user->avatar_path);
+            }
+
+            // Guardar nueva foto
+            $file = $request->file('avatar');
+            $filename = 'avatars/' . $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('avatars', $user->id . '_' . time() . '.' . $file->getClientOriginalExtension(), 'public');
+
+            // Actualizar ruta en base de datos
+            $user->update([
+                'avatar_path' => $path
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Foto de perfil actualizada exitosamente.',
+                'data' => [
+                    'avatar_url' => '/storage/' . $path
+                ]
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error al subir avatar: ' . $e->getMessage());
+            
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al subir la foto de perfil. Por favor, inténtalo de nuevo.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Eliminar foto de perfil del usuario
+     */
+    public function deleteAvatar(Request $request)
+    {
+        $user = $request->user();
+
+        try {
+            // Eliminar foto si existe
+            if ($user->avatar_path && Storage::disk('public')->exists($user->avatar_path)) {
+                Storage::disk('public')->delete($user->avatar_path);
+            }
+
+            // Actualizar base de datos
+            $user->update([
+                'avatar_path' => null
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Foto de perfil eliminada exitosamente.'
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error al eliminar avatar: ' . $e->getMessage());
+            
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al eliminar la foto de perfil. Por favor, inténtalo de nuevo.'
+            ], 500);
+        }
     }
 }

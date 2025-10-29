@@ -49,6 +49,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Perfil de usuario
     Route::put('/profile', [ProfileController::class, 'updateProfile']);
     Route::put('/profile/password', [ProfileController::class, 'updatePassword']);
+    Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar']);
+    Route::delete('/profile/avatar', [ProfileController::class, 'deleteAvatar']);
     
     // Sistema de Foros
     Route::get('/forum/public', [ForumController::class, 'getPublicForum']);

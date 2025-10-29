@@ -16,18 +16,63 @@
         <!-- Sidebar -->
         <div class="lg:col-span-1">
           <div class="bg-white shadow rounded-lg p-6">
-            <div class="flex items-center space-x-3">
-              <div class="flex-shrink-0">
-                <div class="h-16 w-16 bg-indigo-100 rounded-full flex items-center justify-center">
-                  <svg class="h-8 w-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="flex flex-col items-center space-y-4">
+              <!-- Avatar -->
+              <div class="relative">
+                <div v-if="user?.avatar_url" class="h-24 w-24 rounded-full overflow-hidden ring-4 ring-indigo-100">
+                  <img :src="user.avatar_url" :alt="user?.name" class="h-full w-full object-cover" />
+                </div>
+                <div v-else class="h-24 w-24 bg-indigo-100 rounded-full flex items-center justify-center ring-4 ring-indigo-50">
+                  <svg class="h-12 w-12 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
+                
+                <!-- Upload button -->
+                <label v-if="!isRootUser" for="avatar-upload" class="absolute bottom-0 right-0 bg-indigo-600 rounded-full p-2 cursor-pointer hover:bg-indigo-700 transition-colors shadow-lg">
+                  <svg class="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <input 
+                    id="avatar-upload" 
+                    type="file" 
+                    accept="image/jpeg,image/jpg,image/png,image/gif" 
+                    class="hidden" 
+                    @change="handleAvatarUpload"
+                  />
+                </label>
               </div>
-              <div class="flex-1 min-w-0">
+              
+              <!-- Delete avatar button -->
+              <button 
+                v-if="user?.avatar_url && !isRootUser" 
+                @click="deleteAvatar"
+                :disabled="avatarLoading"
+                class="text-sm text-red-600 hover:text-red-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Eliminar foto
+              </button>
+              
+              <!-- Avatar upload status -->
+              <div v-if="avatarLoading" class="text-sm text-gray-600 flex items-center">
+                <svg class="animate-spin h-4 w-4 mr-2 text-indigo-600" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Subiendo...
+              </div>
+              <div v-if="avatarError" class="text-sm text-red-600 text-center">
+                {{ avatarError }}
+              </div>
+              <div v-if="avatarSuccess" class="text-sm text-green-600 text-center">
+                {{ avatarSuccess }}
+              </div>
+              
+              <div class="flex-1 min-w-0 text-center">
                 <p class="text-lg font-semibold text-gray-900 truncate">{{ user?.name || 'Usuario' }}</p>
                 <p class="text-sm text-gray-500 truncate">{{ user?.email }}</p>
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-2"
                       :class="roleClass">
                   {{ roleLabel }}
                 </span>
@@ -421,11 +466,14 @@ const auth = useAuth()
 const activeTab = ref('personal')
 const personalLoading = ref(false)
 const securityLoading = ref(false)
+const avatarLoading = ref(false)
 const personalErrors = ref([])
 const securityErrors = ref([])
 const locationErrors = ref({})
 const personalSuccess = ref('')
 const securitySuccess = ref('')
+const avatarError = ref('')
+const avatarSuccess = ref('')
 
 const user = computed(() => auth.user)
 
@@ -611,12 +659,127 @@ const updatePassword = async () => {
   }
 }
 
+// Handle avatar upload
+const handleAvatarUpload = async (event) => {
+  const file = event.target.files[0]
+  
+  if (!file) return
+  
+  // Validate file size (max 2MB)
+  if (file.size > 2 * 1024 * 1024) {
+    avatarError.value = 'La imagen no debe superar los 2MB.'
+    setTimeout(() => {
+      avatarError.value = ''
+    }, 5000)
+    return
+  }
+  
+  // Validate file type
+  const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+  if (!validTypes.includes(file.type)) {
+    avatarError.value = 'Solo se permiten imágenes JPG, PNG o GIF.'
+    setTimeout(() => {
+      avatarError.value = ''
+    }, 5000)
+    return
+  }
+  
+  avatarLoading.value = true
+  avatarError.value = ''
+  avatarSuccess.value = ''
+  
+  try {
+    await getCsrfCookie()
+    
+    const formData = new FormData()
+    formData.append('avatar', file)
+    
+    const { data } = await api.post('/profile/avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    
+    // Update user data in store
+    await auth.me()
+    
+    avatarSuccess.value = 'Foto de perfil actualizada exitosamente.'
+    
+    // Clear success message after 5 seconds
+    setTimeout(() => {
+      avatarSuccess.value = ''
+    }, 5000)
+    
+    // Clear file input
+    event.target.value = ''
+  } catch (error) {
+    console.error('❌ Error al subir avatar:', error.response?.data || error)
+    
+    if (error.response?.data?.errors) {
+      avatarError.value = Object.values(error.response.data.errors).flat()[0]
+    } else if (error.response?.data?.message) {
+      avatarError.value = error.response.data.message
+    } else {
+      avatarError.value = 'Error al subir la foto. Por favor, inténtalo de nuevo.'
+    }
+    
+    setTimeout(() => {
+      avatarError.value = ''
+    }, 5000)
+  } finally {
+    avatarLoading.value = false
+  }
+}
+
+// Delete avatar
+const deleteAvatar = async () => {
+  if (!confirm('¿Estás seguro de que deseas eliminar tu foto de perfil?')) {
+    return
+  }
+  
+  avatarLoading.value = true
+  avatarError.value = ''
+  avatarSuccess.value = ''
+  
+  try {
+    await getCsrfCookie()
+    
+    await api.delete('/profile/avatar')
+    
+    // Update user data in store
+    await auth.me()
+    
+    avatarSuccess.value = 'Foto de perfil eliminada exitosamente.'
+    
+    // Clear success message after 5 seconds
+    setTimeout(() => {
+      avatarSuccess.value = ''
+    }, 5000)
+  } catch (error) {
+    console.error('❌ Error al eliminar avatar:', error.response?.data || error)
+    
+    if (error.response?.data?.message) {
+      avatarError.value = error.response.data.message
+    } else {
+      avatarError.value = 'Error al eliminar la foto. Por favor, inténtalo de nuevo.'
+    }
+    
+    setTimeout(() => {
+      avatarError.value = ''
+    }, 5000)
+  } finally {
+    avatarLoading.value = false
+  }
+}
+
 // Clear messages when switching tabs
 const clearMessages = () => {
   personalErrors.value = []
   securityErrors.value = []
   personalSuccess.value = ''
   securitySuccess.value = ''
+  avatarError.value = ''
+  avatarSuccess.value = ''
 }
 
 // Watch for tab changes

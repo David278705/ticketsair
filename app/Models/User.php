@@ -35,6 +35,8 @@ class User extends Authenticatable {
     'registration_completed' => 'boolean',
   ];
 
+  protected $appends = ['avatar_url'];
+
   // Relaciones (ya ok)
   public function role(){ return $this->belongsTo(Role::class); }
   public function bookings(){ return $this->hasMany(Booking::class); }
@@ -44,4 +46,13 @@ class User extends Authenticatable {
 
   // Accesor opcional para nombre completo (útil en front)
   public function getFullNameAttribute(){ return trim(($this->first_name ?? '').' '.($this->last_name ?? '')); }
+  
+  // Accesor para URL del avatar
+  public function getAvatarUrlAttribute() {
+    if ($this->avatar_path) {
+      // Usar URL relativa en lugar de absoluta para evitar problemas de CORS y puertos
+      return '/storage/' . $this->avatar_path;
+    }
+    return null;
+  }
 }

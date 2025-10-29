@@ -51,7 +51,17 @@ class NewsController extends Controller
     $data = $r->validated();
     $imgPath = null;
     if ($r->hasFile('image')) {
-      $imgPath = $r->file('image')->store('news','public');
+      try {
+        $imgPath = $r->file('image')->store('news','public');
+        if (!$imgPath) {
+          throw new \Exception('No se pudo guardar la imagen.');
+        }
+      } catch (\Exception $e) {
+        return response()->json([
+          'message' => 'Error al cargar la imagen. Por favor, intenta de nuevo con una imagen más pequeña.',
+          'errors' => ['image' => ['Error al cargar la imagen. Por favor, intenta de nuevo con una imagen más pequeña.']]
+        ], 422);
+      }
     }
     $news = News::create([
       'title' => $data['title'],
