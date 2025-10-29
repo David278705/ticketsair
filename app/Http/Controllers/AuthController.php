@@ -51,9 +51,17 @@ class AuthController extends Controller
   }
 
   public function login(Request $r){
-    $r->validate(['email'=>'required|email','password'=>'required']);
+    $r->validate([
+      'email'=>'required|email',
+      'password'=>'required'
+    ], [
+      'email.required' => 'El correo electrónico es requerido.',
+      'email.email' => 'Ingresa un correo electrónico válido.',
+      'password.required' => 'La contraseña es requerida.'
+    ]);
+    
     if(!Auth::attempt($r->only('email','password')))
-      return response()->json(['error'=>'invalid_credentials'],422);
+      return response()->json(['error'=>'Credenciales incorrectas. Verifica tu correo y contraseña.'],422);
     
     $user = $r->user()->load('role');
     
@@ -137,11 +145,12 @@ class AuthController extends Controller
     $request->validate([
       'token' => 'required',
       'email' => 'required|email|exists:users,email',
-      'password' => 'required|min:8|confirmed',
+      'password' => ['required', 'min:8', 'confirmed', 'regex:/[a-z]/', 'regex:/[A-Z]/', 'regex:/[0-9]/'],
     ], [
       'email.exists' => 'No encontramos una cuenta con este email.',
       'password.confirmed' => 'Las contraseñas no coinciden.',
-      'password.min' => 'La contraseña debe tener al menos 8 caracteres.'
+      'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+      'password.regex' => 'La contraseña debe contener al menos una letra minúscula, una mayúscula y un número.',
     ]);
 
     // Verificar token

@@ -317,6 +317,7 @@
                             id="flight_departure"
                             v-model="form.departure_at"
                             type="datetime-local"
+                            required
                             class="h-10 rounded-lg border px-3 w-full"
                         />
                     </div>
@@ -909,6 +910,60 @@ async function save() {
     formErrors.value = [];
 
     try {
+        // Validaciones del frontend
+        const errors = [];
+        
+        if (!form.origin_id) {
+            errors.push('La ciudad de origen es requerida.');
+        }
+        
+        if (!form.destination_id) {
+            errors.push('La ciudad de destino es requerida.');
+        }
+        
+        if (form.origin_id && form.destination_id && form.origin_id === form.destination_id) {
+            errors.push('La ciudad de destino debe ser diferente al origen.');
+        }
+        
+        if (!form.departure_at) {
+            errors.push('La fecha y hora de salida es requerida.');
+        } else {
+            // Validar que sea una fecha válida
+            const departureDate = new Date(form.departure_at);
+            if (isNaN(departureDate.getTime())) {
+                errors.push('La fecha de salida no es válida.');
+            } else if (departureDate <= new Date()) {
+                errors.push('La fecha de salida debe ser posterior a la fecha actual.');
+            }
+        }
+        
+        if (!form.price_per_seat || form.price_per_seat <= 0) {
+            errors.push('El precio por asiento es requerido y debe ser mayor a 0.');
+        }
+        
+        if (!form.first_class_price || form.first_class_price <= 0) {
+            errors.push('El precio de primera clase es requerido y debe ser mayor a 0.');
+        }
+        
+        if (!form.duration_minutes || form.duration_minutes < 10) {
+            errors.push('La duración del vuelo debe ser de al menos 10 minutos.');
+        }
+        
+        if (!form.capacity_economy || form.capacity_economy < 1) {
+            errors.push('La capacidad de clase económica debe ser al menos 1.');
+        }
+        
+        if (!form.id && !form.image) {
+            errors.push('La imagen del vuelo es requerida.');
+        }
+        
+        // Si hay errores, mostrarlos y detener el envío
+        if (errors.length > 0) {
+            formErrors.value = errors;
+            saving.value = false;
+            return;
+        }
+        
         if (!form.id) {
             // --- CREAR ---
             const fd = new FormData();

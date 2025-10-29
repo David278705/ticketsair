@@ -17,12 +17,12 @@ class DatabaseSeeder extends Seeder
 
 
         $this->call([
-            // RoleSeeder::class,
-            // RootUserSeeder::class,
-            // CitySeeder::class,
-            // AircraftSeeder::class,
+            RoleSeeder::class,
+            RootUserSeeder::class,
+            CitySeeder::class,
+            AircraftSeeder::class,
             CityDistancesSeeder::class,
-            // ForumSeeder::class,
+            ForumSeeder::class,
         ]);
     }
 }

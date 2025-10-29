@@ -966,7 +966,19 @@ const maxBirthDate = computed(() => {
 function friendlyError(e) {
     if (!e) return "";
     if (typeof e === "string") return e;
-    return e.error || e.message || "Error desconocido";
+    
+    // Si hay un mensaje de error directo
+    if (e.error) return e.error;
+    if (e.message) return e.message;
+    
+    // Si hay errores de validación
+    if (e.errors) {
+        const firstError = Object.values(e.errors)[0];
+        if (Array.isArray(firstError)) return firstError[0];
+        return firstError;
+    }
+    
+    return "Error desconocido. Por favor, intenta de nuevo.";
 }
 
 // Validation functions

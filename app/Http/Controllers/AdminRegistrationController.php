@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
 
 class AdminRegistrationController extends Controller
 {
@@ -56,7 +55,7 @@ class AdminRegistrationController extends Controller
             'gender' => 'nullable|in:M,F,X',
             'billing_address' => 'nullable|string|max:500',
             'username' => 'nullable|string|unique:users,username',
-            'new_password' => ['required', 'confirmed', Password::min(8)],
+            'new_password' => ['required', 'confirmed', 'min:8', 'regex:/[a-z]/', 'regex:/[A-Z]/', 'regex:/[0-9]/'],
             
             // Campos de ubicación
             'location.country' => 'required|string|max:3',
@@ -66,10 +65,56 @@ class AdminRegistrationController extends Controller
             'location.city' => 'nullable|string|max:20',
             'location.city_name' => 'nullable|string|max:100',
         ], [
+            // Token y Email
+            'token.required' => 'El token es requerido.',
+            'token.string' => 'El token debe ser texto.',
+            'email.required' => 'El correo electrónico es requerido.',
+            'email.email' => 'El correo electrónico debe ser válido.',
+            
+            // DNI
+            'dni.required' => 'El documento de identidad es requerido.',
+            'dni.string' => 'El documento de identidad debe ser texto.',
+            'dni.unique' => 'Este documento de identidad ya está registrado.',
+            
+            // Birth Date
             'birth_date.required' => 'La fecha de nacimiento es requerida.',
+            'birth_date.date' => 'La fecha de nacimiento debe ser una fecha válida.',
             'birth_date.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
             'birth_date.after_or_equal' => 'Debes tener máximo 80 años para completar el registro.',
             'birth_date.before_or_equal' => 'Debes ser mayor de 18 años para completar el registro.',
+            
+            // Gender
+            'gender.in' => 'El género seleccionado no es válido.',
+            
+            // Billing Address
+            'billing_address.string' => 'La dirección de facturación debe ser texto.',
+            'billing_address.max' => 'La dirección de facturación no puede tener más de 500 caracteres.',
+            
+            // Username
+            'username.string' => 'El nombre de usuario debe ser texto.',
+            'username.unique' => 'Este nombre de usuario ya está en uso.',
+            
+            // Password
+            'new_password.required' => 'La contraseña es requerida.',
+            'new_password.confirmed' => 'Las contraseñas no coinciden.',
+            'new_password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+            'new_password.regex' => 'La contraseña debe contener al menos una letra minúscula, una mayúscula y un número.',
+            
+            // Location
+            'location.country.required' => 'El país es requerido.',
+            'location.country.string' => 'El país debe ser texto.',
+            'location.country.max' => 'El código de país no puede tener más de 3 caracteres.',
+            'location.country_name.required' => 'El nombre del país es requerido.',
+            'location.country_name.string' => 'El nombre del país debe ser texto.',
+            'location.country_name.max' => 'El nombre del país no puede tener más de 100 caracteres.',
+            'location.state.string' => 'El estado debe ser texto.',
+            'location.state.max' => 'El código de estado no puede tener más de 10 caracteres.',
+            'location.state_name.string' => 'El nombre del estado debe ser texto.',
+            'location.state_name.max' => 'El nombre del estado no puede tener más de 100 caracteres.',
+            'location.city.string' => 'La ciudad debe ser texto.',
+            'location.city.max' => 'El código de ciudad no puede tener más de 20 caracteres.',
+            'location.city_name.string' => 'El nombre de la ciudad debe ser texto.',
+            'location.city_name.max' => 'El nombre de la ciudad no puede tener más de 100 caracteres.',
         ]);
 
         $admin = User::where('email', $request->email)
@@ -135,7 +180,7 @@ class AdminRegistrationController extends Controller
             'birth_date' => 'required|date|before:today|after_or_equal:' . now()->subYears(80)->format('Y-m-d') . '|before_or_equal:' . now()->subYears(18)->format('Y-m-d'),
             'gender' => 'nullable|in:M,F,X',
             'username' => 'nullable|string|unique:users,username,' . $user->id,
-            'password' => ['required', 'confirmed', Password::min(8)],
+            'password' => ['required', 'confirmed', 'min:8', 'regex:/[a-z]/', 'regex:/[A-Z]/', 'regex:/[0-9]/'],
             
             // Campos de ubicación
             'location.country' => 'required|string|max:3',
@@ -145,10 +190,56 @@ class AdminRegistrationController extends Controller
             'location.city' => 'nullable|string|max:20',
             'location.city_name' => 'nullable|string|max:100',
         ], [
+            // First Name
+            'first_name.required' => 'El nombre es requerido.',
+            'first_name.string' => 'El nombre debe ser texto.',
+            'first_name.max' => 'El nombre no puede tener más de 255 caracteres.',
+            
+            // Last Name
+            'last_name.required' => 'El apellido es requerido.',
+            'last_name.string' => 'El apellido debe ser texto.',
+            'last_name.max' => 'El apellido no puede tener más de 255 caracteres.',
+            
+            // DNI
+            'dni.required' => 'El documento de identidad es requerido.',
+            'dni.string' => 'El documento de identidad debe ser texto.',
+            'dni.unique' => 'Este documento de identidad ya está registrado.',
+            
+            // Birth Date
             'birth_date.required' => 'La fecha de nacimiento es requerida.',
+            'birth_date.date' => 'La fecha de nacimiento debe ser una fecha válida.',
             'birth_date.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
             'birth_date.after_or_equal' => 'Debes tener máximo 80 años para completar el registro.',
             'birth_date.before_or_equal' => 'Debes ser mayor de 18 años para completar el registro.',
+            
+            // Gender
+            'gender.in' => 'El género seleccionado no es válido.',
+            
+            // Username
+            'username.string' => 'El nombre de usuario debe ser texto.',
+            'username.unique' => 'Este nombre de usuario ya está en uso.',
+            
+            // Password
+            'password.required' => 'La contraseña es requerida.',
+            'password.confirmed' => 'Las contraseñas no coinciden.',
+            'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+            'password.regex' => 'La contraseña debe contener al menos una letra minúscula, una mayúscula y un número.',
+            
+            // Location
+            'location.country.required' => 'El país es requerido.',
+            'location.country.string' => 'El país debe ser texto.',
+            'location.country.max' => 'El código de país no puede tener más de 3 caracteres.',
+            'location.country_name.required' => 'El nombre del país es requerido.',
+            'location.country_name.string' => 'El nombre del país debe ser texto.',
+            'location.country_name.max' => 'El nombre del país no puede tener más de 100 caracteres.',
+            'location.state.string' => 'El estado debe ser texto.',
+            'location.state.max' => 'El código de estado no puede tener más de 10 caracteres.',
+            'location.state_name.string' => 'El nombre del estado debe ser texto.',
+            'location.state_name.max' => 'El nombre del estado no puede tener más de 100 caracteres.',
+            'location.city.string' => 'La ciudad debe ser texto.',
+            'location.city.max' => 'El código de ciudad no puede tener más de 20 caracteres.',
+            'location.city_name.string' => 'El nombre de la ciudad debe ser texto.',
+            'location.city_name.max' => 'El nombre de la ciudad no puede tener más de 100 caracteres.',
         ]);
 
         // Actualizar datos del usuario

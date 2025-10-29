@@ -35,17 +35,25 @@ class FlightAdminController extends Controller
 
   // POST /admin/flights
   public function store(FlightStoreRequest $r) {
-    return DB::transaction(function() use ($r) {
-      $data = $r->validated();
-      
-      // Generar código único para el vuelo
-      $code = $this->generateFlightCode($data['scope']);
-      
-      // Manejar imagen si existe
-      $imagePath = null;
-      if ($r->hasFile('image')) {
-        $imagePath = $r->file('image')->store('flights', 'public');
-      }
+    try {
+      return DB::transaction(function() use ($r) {
+        $data = $r->validated();
+        
+        // Generar código único para el vuelo
+        $code = $this->generateFlightCode($data['scope']);
+        
+        // Manejar imagen si existe
+        $imagePath = null;
+        if ($r->hasFile('image')) {
+          try {
+            $imagePath = $r->file('image')->store('flights', 'public');
+            if (!$imagePath) {
+              throw new \Exception('No se pudo guardar la imagen.');
+            }
+          } catch (\Exception $e) {
+            throw new \Exception('Error al cargar la imagen. Por favor, intenta de nuevo con una imagen más pequeña.');
+          }
+        }
       
       $flight = Flight::create([
         'code'             => $code,
@@ -98,7 +106,13 @@ class FlightAdminController extends Controller
       ]);
 
       return $flight->load(['origin','destination']);
-    });
+      });
+    } catch (\Exception $e) {
+      return response()->json([
+        'message' => $e->getMessage(),
+        'errors' => ['image' => [$e->getMessage()]]
+      ], 422);
+    }
   }
 
   // PUT /admin/flights/{flight}
@@ -149,7 +163,18 @@ class FlightAdminController extends Controller
       
       // Manejar imagen si existe
       if ($r->hasFile('image')) {
-        $data['image_path'] = $r->file('image')->store('flights', 'public');
+        try {
+          $imagePath = $r->file('image')->store('flights', 'public');
+          if (!$imagePath) {
+            throw new \Exception('No se pudo guardar la imagen.');
+          }
+          $data['image_path'] = $imagePath;
+        } catch (\Exception $e) {
+          return response()->json([
+            'message' => 'Error al cargar la imagen. Por favor, intenta de nuevo con una imagen más pequeña.',
+            'errors' => ['image' => ['Error al cargar la imagen. Por favor, intenta de nuevo con una imagen más pequeña.']]
+          ], 422);
+        }
       }
       
       $flight->update($data);
@@ -186,7 +211,18 @@ class FlightAdminController extends Controller
     }
     // Manejar imagen si existe
     if ($r->hasFile('image')) {
-      $data['image_path'] = $r->file('image')->store('flights', 'public');
+      try {
+        $imagePath = $r->file('image')->store('flights', 'public');
+        if (!$imagePath) {
+          throw new \Exception('No se pudo guardar la imagen.');
+        }
+        $data['image_path'] = $imagePath;
+      } catch (\Exception $e) {
+        return response()->json([
+          'message' => 'Error al cargar la imagen. Por favor, intenta de nuevo con una imagen más pequeña.',
+          'errors' => ['image' => ['Error al cargar la imagen. Por favor, intenta de nuevo con una imagen más pequeña.']]
+        ], 422);
+      }
     }
     $flight->update($data);
 
