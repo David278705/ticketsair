@@ -104,6 +104,7 @@ Route::middleware(['auth:sanctum','role:admin'])->group(function () {
     Route::get('/admin/flights', [FlightAdminController::class,'index']);
     Route::post('/admin/flights', [FlightAdminController::class,'store']);
     Route::put('/admin/flights/{flight}', [FlightAdminController::class,'update']);
+    Route::delete('/admin/flights/{flight}', [FlightAdminController::class,'destroy']);
     Route::post('/admin/flights/{flight}/cancel', [FlightAdminController::class,'cancel']);
     
     // Promociones y noticias (solo admin)
