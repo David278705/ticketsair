@@ -539,6 +539,9 @@ import {
     TransitionRoot,
     TransitionChild,
 } from "@headlessui/vue";
+import { useCurrency } from "../../composables/useCurrency";
+
+const { formatPrice: formatPriceCurrency } = useCurrency();
 
 const props = defineProps({
     open: Boolean,
@@ -638,12 +641,9 @@ function getCardIcon() {
     });
 }
 
-// Formatear precio
+// Formatear precio usando el composable de monedas
 function formatPrice(price) {
-    return Number(price).toLocaleString("es-CO", {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-    });
+    return formatPriceCurrency(Number(price));
 }
 
 // Obtener precio por persona según clase

@@ -110,6 +110,62 @@
 
             <!-- Zona derecha -->
             <div class="hidden md:flex items-center gap-2">
+                <!-- Selector de Moneda -->
+                <div 
+                    class="relative"
+                    @mouseenter="currencyMenuOpen = true"
+                    @mouseleave="currencyMenuOpen = false"
+                >
+                    <button
+                        class="flex items-center gap-2 px-3 h-10 rounded-xl border border-slate-300/70 hover:bg-slate-100 transition-colors"
+                        title="Cambiar moneda"
+                    >
+                        <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span class="text-sm font-medium">{{ currentCurrency }}</span>
+                        <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    <!-- Dropdown de monedas -->
+                    <Transition
+                        enter-active-class="transition ease-out duration-100"
+                        enter-from-class="transform opacity-0 scale-95"
+                        enter-to-class="transform opacity-100 scale-100"
+                        leave-active-class="transition ease-in duration-75"
+                        leave-from-class="transform opacity-100 scale-100"
+                        leave-to-class="transform opacity-0 scale-95"
+                    >
+                        <div
+                            v-if="currencyMenuOpen"
+                            class="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50"
+                        >
+                            <button
+                                v-for="currency in availableCurrencies"
+                                :key="currency.code"
+                                @click="changeCurrency(currency.code)"
+                                class="w-full flex items-center justify-between px-4 py-2 text-sm hover:bg-slate-100 transition-colors"
+                                :class="{ 'bg-blue-50 text-blue-600': currentCurrency === currency.code }"
+                            >
+                                <span class="flex items-center gap-2">
+                                    <span class="font-medium">{{ currency.code }}</span>
+                                    <span class="text-xs text-slate-500">{{ currency.symbol }}</span>
+                                </span>
+                                <svg 
+                                    v-if="currentCurrency === currency.code"
+                                    class="w-4 h-4 text-blue-600" 
+                                    fill="currentColor" 
+                                    viewBox="0 0 20 20"
+                                >
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                    </Transition>
+                </div>
+
                 <template v-if="!auth.user">
                     <button
                         class="px-4 h-10 rounded-xl border border-slate-300/70 hover:bg-slate-100 transition-colors"
@@ -323,6 +379,24 @@
                         </RouterLink>
                     </div>
 
+                    <!-- Selector de moneda en móvil -->
+                    <div class="pt-2 border-t border-slate-200">
+                        <p class="text-xs font-medium text-slate-500 mb-2">Moneda</p>
+                        <div class="flex gap-2">
+                            <button
+                                v-for="currency in availableCurrencies"
+                                :key="currency.code"
+                                @click="changeCurrency(currency.code)"
+                                class="flex-1 px-3 py-2 rounded-lg border text-sm font-medium transition-colors"
+                                :class="currentCurrency === currency.code 
+                                    ? 'bg-blue-50 border-blue-500 text-blue-600' 
+                                    : 'border-slate-300 text-slate-700 hover:bg-slate-50'"
+                            >
+                                {{ currency.code }}
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="pt-2 flex gap-2">
                         <template v-if="!auth.user">
                             <button
@@ -357,16 +431,24 @@
 import { ref, onMounted, onUnmounted, watch } from "vue";
 import { useAuth } from "../../stores/auth";
 import { useUi } from "../../stores/ui";
+import { useCurrency } from "../../composables/useCurrency";
 
 const auth = useAuth();
 const ui = useUi();
+const { currentCurrency, setCurrency, availableCurrencies } = useCurrency();
 
 const logoUrl = '/logo.png';
 const open = ref(false);
 const adminMenuOpen = ref(false);
 const userMenuOpen = ref(false);
+const currencyMenuOpen = ref(false);
 const isDark = ref(false);
 const scrolled = ref(false);
+
+function changeCurrency(code) {
+    setCurrency(code);
+    currencyMenuOpen.value = false;
+}
 
 function openLogin() {
     ui.openAuth("login");

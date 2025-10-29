@@ -331,7 +331,7 @@
                 </header>
                 <p class="mt-2 text-sm">
                     Precio por silla:
-                    <b>${{ (+f.price_per_seat).toLocaleString() }}</b>
+                    <b>{{ formatPrice(+f.price_per_seat) }}</b>
                 </p>
                 <div class="mt-3 flex gap-2">
                     <button
@@ -385,8 +385,12 @@
         <PassengersModal
             v-model:open="passengersOpen"
             :passengers-count="passengersCount"
-            :base-price-per-seat="parseFloat(currentFlight?.price_per_seat) || 0"
-            :first-class-price="parseFloat(currentFlight?.first_class_price) || 0"
+            :base-price-per-seat="
+                parseFloat(currentFlight?.price_per_seat) || 0
+            "
+            :first-class-price="
+                parseFloat(currentFlight?.first_class_price) || 0
+            "
             @submit="onPassengersSubmit"
         />
 
@@ -425,6 +429,7 @@ import { useDark } from "@vueuse/core";
 import { api } from "../../lib/api";
 import { useAuth } from "../../stores/auth";
 import { useUi } from "../../stores/ui";
+import { useCurrency } from "../../composables/useCurrency";
 import FlightInfoModal from "../booking/FlightInfoModal.vue";
 import PassengersModal from "../booking/PassengersModal.vue";
 import PaymentModal from "../booking/PaymentModal.vue";
@@ -432,6 +437,7 @@ import PaymentModal from "../booking/PaymentModal.vue";
 const isDark = useDark();
 const auth = useAuth();
 const ui = useUi();
+const { formatPrice } = useCurrency();
 
 // Ciudades
 const cities = ref([]);
@@ -605,7 +611,8 @@ async function onPassengersSubmit(passengers) {
     const total = passengers.reduce((sum, p) => {
         const economyPrice = parseFloat(currentFlight.value.price_per_seat);
         const firstPrice = parseFloat(currentFlight.value.first_class_price);
-        const pricePerSeat = p.flight_class === "first" ? firstPrice : economyPrice;
+        const pricePerSeat =
+            p.flight_class === "first" ? firstPrice : economyPrice;
         return sum + pricePerSeat;
     }, 0);
 

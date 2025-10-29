@@ -41,11 +41,7 @@
                                 </span>
                                 <div class="text-sm mt-1">
                                     Total:
-                                    <b
-                                        >${{
-                                            (+b.total_amount).toLocaleString()
-                                        }}</b
-                                    >
+                                    <b>{{ formatPrice(+b.total_amount) }}</b>
                                 </div>
                             </div>
                         </div>
@@ -151,9 +147,11 @@
 import { ref, onMounted, reactive } from "vue";
 import { api } from "../lib/api";
 import { useAuth } from "../stores/auth";
+import { useCurrency } from "../composables/useCurrency";
 import SeatChangeModal from "../components/booking/SeatChangeModal.vue";
 
 const auth = useAuth();
+const { formatPrice } = useCurrency();
 const bookings = ref({ data: [] });
 const loading = ref(true);
 
@@ -267,10 +265,10 @@ function canConvertToPurchase(booking) {
 
 // --- Acciones del Usuario ---
 
-async function convertToPurchase(booking) {
+async function buyNow(booking) {
     if (
         confirm(
-            `¿Deseas completar la compra de esta reserva por $${(+booking.total_amount).toLocaleString()}?`
+            `¿Deseas completar la compra de esta reserva por ${formatPrice(+booking.total_amount)}?`
         )
     ) {
         try {
