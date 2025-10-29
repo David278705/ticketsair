@@ -111,7 +111,11 @@
                                     class="h-9 px-3 rounded-lg border text-sm hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
                                     @click="openEdit(f)"
                                     :disabled="!canModifyFlight(f)"
-                                    :title="!canModifyFlight(f) ? 'No se puede editar un vuelo que ya se realizó o está completado' : ''"
+                                    :title="
+                                        !canModifyFlight(f)
+                                            ? 'No se puede editar un vuelo que ya se realizó o está completado'
+                                            : ''
+                                    "
                                 >
                                     Editar
                                 </button>
@@ -119,14 +123,22 @@
                                     class="h-9 px-3 rounded-lg border text-sm hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
                                     @click="openPromo(f)"
                                     :disabled="!canCreatePromo(f)"
-                                    :title="!canCreatePromo(f) ? 'No se pueden crear promociones para vuelos pasados o completados' : ''"
+                                    :title="
+                                        !canCreatePromo(f)
+                                            ? 'No se pueden crear promociones para vuelos pasados o completados'
+                                            : ''
+                                    "
                                 >
                                     Promo
                                 </button>
                                 <button
                                     class="h-9 px-3 rounded-lg border border-rose-300 text-rose-600 text-sm hover:bg-rose-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                     :disabled="!canCancelFlight(f)"
-                                    :title="!canCancelFlight(f) ? 'Solo se pueden cancelar vuelos programados y futuros' : ''"
+                                    :title="
+                                        !canCancelFlight(f)
+                                            ? 'Solo se pueden cancelar vuelos programados y futuros'
+                                            : ''
+                                    "
                                     @click="cancelFlight(f)"
                                 >
                                     Cancelar
@@ -164,7 +176,10 @@
             <div class="grid gap-4">
                 <!-- Primera fila: Tipo de vuelo -->
                 <div>
-                    <label for="flight_scope" class="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                        for="flight_scope"
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                    >
                         Tipo de Vuelo *
                     </label>
                     <select
@@ -184,10 +199,13 @@
                         </span>
                     </p>
                 </div>
-                
+
                 <!-- Selector de Avión -->
                 <div>
-                    <label for="flight_aircraft" class="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                        for="flight_aircraft"
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                    >
                         Avión *
                     </label>
                     <select
@@ -197,19 +215,26 @@
                     >
                         <option value="">Selecciona un avión</option>
                         <option v-for="a in aircraft" :key="a.id" :value="a.id">
-                            {{ a.name }} - {{ a.brand }} ({{ a.capacity_first }}F + {{ a.capacity_economy }}E = {{ a.capacity_first + a.capacity_economy }} asientos)
+                            {{ a.name }} - {{ a.brand }} ({{
+                                a.capacity_first
+                            }}F + {{ a.capacity_economy }}E =
+                            {{ a.capacity_first + a.capacity_economy }}
+                            asientos)
                         </option>
                     </select>
                     <p class="text-xs text-slate-500 mt-1">
                         La duración y capacidades se calcularán automáticamente
                     </p>
                 </div>
-                
+
                 <!-- Segunda fila: Origen y Destino -->
-                                <!-- Segunda fila: Origen y Destino -->
+                <!-- Segunda fila: Origen y Destino -->
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
-                        <label for="flight_origin" class="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                            for="flight_origin"
+                            class="block text-sm font-medium text-gray-700 mb-1"
+                        >
                             Ciudad de Origen *
                         </label>
                         <select
@@ -218,7 +243,11 @@
                             class="h-10 rounded-lg border px-3 w-full"
                         >
                             <option value="">Selecciona origen</option>
-                            <option v-for="c in availableOriginCities" :key="c.id" :value="c.id">
+                            <option
+                                v-for="c in availableOriginCities"
+                                :key="c.id"
+                                :value="c.id"
+                            >
                                 {{ c.name }}
                             </option>
                         </select>
@@ -232,7 +261,10 @@
                         </p>
                     </div>
                     <div>
-                        <label for="flight_destination" class="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                            for="flight_destination"
+                            class="block text-sm font-medium text-gray-700 mb-1"
+                        >
                             Ciudad de Destino *
                         </label>
                         <select
@@ -241,25 +273,34 @@
                             class="h-10 rounded-lg border px-3 w-full"
                         >
                             <option value="">Selecciona destino</option>
-                            <option v-for="c in availableDestinationCities" :key="c.id" :value="c.id">
+                            <option
+                                v-for="c in availableDestinationCities"
+                                :key="c.id"
+                                :value="c.id"
+                            >
                                 {{ c.name }}
                             </option>
                         </select>
                         <p class="text-xs text-slate-500 mt-1">
                             <span v-if="form.scope === 'national'">
-                                Cualquier ciudad de Colombia (diferente al origen)
+                                Cualquier ciudad de Colombia (diferente al
+                                origen)
                             </span>
                             <span v-else>
-                                Solo: Madrid, Londres, New York, Buenos Aires, Miami
+                                Solo: Madrid, Londres, New York, Buenos Aires,
+                                Miami
                             </span>
                         </p>
                     </div>
                 </div>
-                
+
                 <!-- Tercera fila: Otros campos -->
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
-                        <label for="flight_departure" class="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                            for="flight_departure"
+                            class="block text-sm font-medium text-gray-700 mb-1"
+                        >
                             Fecha y Hora de Salida *
                         </label>
                         <input
@@ -270,21 +311,30 @@
                         />
                     </div>
                     <div v-if="form.aircraft_id">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                            class="block text-sm font-medium text-gray-700 mb-1"
+                        >
                             Duración Calculada
                         </label>
-                        <div class="h-10 rounded-lg border border-blue-200 bg-blue-50 px-3 flex items-center text-blue-900 font-semibold">
+                        <div
+                            class="h-10 rounded-lg border border-blue-200 bg-blue-50 px-3 flex items-center text-blue-900 font-semibold"
+                        >
                             {{ form.duration_minutes }} minutos
                             <span class="ml-2 text-xs text-blue-600">
-                                (≈ {{ Math.floor(form.duration_minutes / 60) }}h {{ form.duration_minutes % 60 }}min)
+                                (≈ {{ Math.floor(form.duration_minutes / 60) }}h
+                                {{ form.duration_minutes % 60 }}min)
                             </span>
                         </div>
                         <p class="text-xs text-blue-600 mt-1">
-                            ✓ Calculado automáticamente según distancia y velocidad del avión
+                            ✓ Calculado automáticamente según distancia y
+                            velocidad del avión
                         </p>
                     </div>
                     <div>
-                        <label for="flight_price" class="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                            for="flight_price"
+                            class="block text-sm font-medium text-gray-700 mb-1"
+                        >
                             💺 Precio Clase Económica *
                         </label>
                         <input
@@ -304,7 +354,10 @@
                         </p>
                     </div>
                     <div>
-                        <label for="flight_price_first" class="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                            for="flight_price_first"
+                            class="block text-sm font-medium text-gray-700 mb-1"
+                        >
                             ⭐ Precio Primera Clase *
                         </label>
                         <input
@@ -320,14 +373,19 @@
                             @input="validateNumericInput($event)"
                         />
                         <p class="text-xs text-gray-500 mt-1">
-                            Precio por asiento en primera clase (generalmente 2x económica)
+                            Precio por asiento en primera clase (generalmente 2x
+                            económica)
                         </p>
                     </div>
                     <div v-if="form.aircraft_id">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                            class="block text-sm font-medium text-gray-700 mb-1"
+                        >
                             Capacidad Primera Clase
                         </label>
-                        <div class="h-10 rounded-lg border border-blue-200 bg-blue-50 px-3 flex items-center text-blue-900 font-semibold">
+                        <div
+                            class="h-10 rounded-lg border border-blue-200 bg-blue-50 px-3 flex items-center text-blue-900 font-semibold"
+                        >
                             {{ form.capacity_first }} asientos
                         </div>
                         <p class="text-xs text-blue-600 mt-1">
@@ -335,10 +393,14 @@
                         </p>
                     </div>
                     <div v-if="form.aircraft_id">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                            class="block text-sm font-medium text-gray-700 mb-1"
+                        >
                             Capacidad Clase Económica
                         </label>
-                        <div class="h-10 rounded-lg border border-blue-200 bg-blue-50 px-3 flex items-center text-blue-900 font-semibold">
+                        <div
+                            class="h-10 rounded-lg border border-blue-200 bg-blue-50 px-3 flex items-center text-blue-900 font-semibold"
+                        >
                             {{ form.capacity_economy }} asientos
                         </div>
                         <p class="text-xs text-blue-600 mt-1">
@@ -346,10 +408,13 @@
                         </p>
                     </div>
                 </div>
-                
+
                 <!-- Campo de imagen -->
                 <div>
-                    <label for="flight_image" class="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                        for="flight_image"
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                    >
                         Imagen del Vuelo
                     </label>
                     <input
@@ -360,7 +425,8 @@
                         class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                     />
                     <p class="text-xs text-slate-500 mt-1">
-                        Imagen representativa del vuelo (se usará para crear la noticia automáticamente)
+                        Imagen representativa del vuelo (se usará para crear la
+                        noticia automáticamente)
                     </p>
                 </div>
             </div>
@@ -394,7 +460,10 @@
             >
             <div class="grid md:grid-cols-2 gap-3">
                 <div>
-                    <label for="promo_title" class="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                        for="promo_title"
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                    >
                         Título de la Promoción *
                     </label>
                     <input
@@ -405,7 +474,10 @@
                     />
                 </div>
                 <div>
-                    <label for="promo_discount" class="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                        for="promo_discount"
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                    >
                         Porcentaje de Descuento *
                     </label>
                     <input
@@ -422,7 +494,10 @@
                     />
                 </div>
                 <div>
-                    <label for="promo_start" class="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                        for="promo_start"
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                    >
                         Fecha de Inicio *
                     </label>
                     <input
@@ -436,7 +511,10 @@
                     />
                 </div>
                 <div>
-                    <label for="promo_end" class="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                        for="promo_end"
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                    >
                         Fecha de Fin *
                     </label>
                     <input
@@ -444,7 +522,9 @@
                         v-model="promo.ends_at"
                         type="datetime-local"
                         :min="promo.starts_at"
-                        :max="toLocalInput(new Date(currentFlight?.departure_at))"
+                        :max="
+                            toLocalInput(new Date(currentFlight?.departure_at))
+                        "
                         class="h-10 rounded-lg border px-3 w-full"
                         required
                     />
@@ -476,7 +556,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted, computed, watch } from "vue";
+import { reactive, ref, onMounted, computed, watch, nextTick } from "vue";
 import { api } from "../../lib/api";
 import { useAuth } from "../../stores/auth";
 import BaseModal from "../../components/ui/BaseModal.vue";
@@ -506,29 +586,44 @@ const currentFlight = ref(null);
 
 // Ciudades filtradas según el alcance del vuelo
 const availableOriginCities = computed(() => {
-    if (form.scope === 'national') {
+    if (form.scope === "national") {
         // Para vuelos nacionales: solo ciudades colombianas
-        return cities.value.filter(city => city.scope === 'national');
+        return cities.value.filter((city) => city.scope === "national");
     } else {
         // Para vuelos internacionales: solo ciudades colombianas como origen
-        const allowedOrigins = ['Pereira', 'Bogotá', 'Medellín', 'Cali', 'Cartagena'];
-        return cities.value.filter(city => 
-            city.scope === 'national' && allowedOrigins.includes(city.name)
+        const allowedOrigins = [
+            "Pereira",
+            "Bogotá",
+            "Medellín",
+            "Cali",
+            "Cartagena",
+        ];
+        return cities.value.filter(
+            (city) =>
+                city.scope === "national" && allowedOrigins.includes(city.name)
         );
     }
 });
 
 const availableDestinationCities = computed(() => {
-    if (form.scope === 'national') {
+    if (form.scope === "national") {
         // Para vuelos nacionales: solo ciudades colombianas (excluyendo el origen)
-        return cities.value.filter(city => 
-            city.scope === 'national' && city.id !== form.origin_id
+        return cities.value.filter(
+            (city) => city.scope === "national" && city.id !== form.origin_id
         );
     } else {
         // Para vuelos internacionales: solo destinos internacionales específicos
-        const allowedDestinations = ['Madrid', 'Londres', 'New York', 'Buenos Aires', 'Miami'];
-        return cities.value.filter(city => 
-            city.scope === 'international' && allowedDestinations.includes(city.name)
+        const allowedDestinations = [
+            "Madrid",
+            "Londres",
+            "New York",
+            "Buenos Aires",
+            "Miami",
+        ];
+        return cities.value.filter(
+            (city) =>
+                city.scope === "international" &&
+                allowedDestinations.includes(city.name)
         );
     }
 });
@@ -571,44 +666,67 @@ const promo = reactive({
 });
 
 // --- Watchers ---
-// Limpiar origen y destino cuando cambie el tipo de vuelo
-watch(() => form.scope, (newScope, oldScope) => {
-    if (newScope !== oldScope) {
+// Variable para controlar si estamos editando
+const isEditingFlight = ref(false);
+
+// Limpiar origen y destino cuando cambie el tipo de vuelo (SOLO si no estamos editando)
+watch(
+    () => form.scope,
+    (newScope, oldScope) => {
+        // No limpiar si estamos en modo edición O si no hay cambio real
+        if (isEditingFlight.value || newScope === oldScope || !oldScope) return;
+
         form.origin_id = "";
         form.destination_id = "";
     }
-});
+);
 
-// Limpiar destino cuando cambie el origen (para evitar seleccionar la misma ciudad en vuelos nacionales)
-watch(() => form.origin_id, (newOrigin) => {
-    if (form.scope === 'national' && form.destination_id === newOrigin) {
-        form.destination_id = "";
-    }
-});
+// Limpiar destino cuando cambie el origen (SOLO si no estamos editando y para vuelos nacionales)
+watch(
+    () => form.origin_id,
+    (newOrigin, oldOrigin) => {
+        // No limpiar si estamos en modo edición O si es la primera asignación
+        if (isEditingFlight.value || !oldOrigin) return;
 
-// Calcular duración automáticamente cuando se selecciona avión, origen y destino
-watch([() => form.origin_id, () => form.destination_id, () => form.aircraft_id], () => {
-    calculateFlightDuration();
-});
-
-// Actualizar capacidades cuando se selecciona un avión
-watch(() => form.aircraft_id, (newAircraftId) => {
-    if (newAircraftId) {
-        const selectedAircraft = aircraft.value.find(a => a.id === newAircraftId);
-        if (selectedAircraft) {
-            form.capacity_first = selectedAircraft.capacity_first;
-            form.capacity_economy = selectedAircraft.capacity_economy;
+        if (form.scope === "national" && form.destination_id === newOrigin) {
+            form.destination_id = "";
         }
     }
-});
+);
+
+// Calcular duración automáticamente cuando se selecciona avión, origen y destino
+watch(
+    [() => form.origin_id, () => form.destination_id, () => form.aircraft_id],
+    () => {
+        calculateFlightDuration();
+    }
+);
+
+// Actualizar capacidades cuando se selecciona un avión
+watch(
+    () => form.aircraft_id,
+    (newAircraftId) => {
+        if (newAircraftId) {
+            const selectedAircraft = aircraft.value.find(
+                (a) => a.id === newAircraftId
+            );
+            if (selectedAircraft) {
+                form.capacity_first = selectedAircraft.capacity_first;
+                form.capacity_economy = selectedAircraft.capacity_economy;
+            }
+        }
+    }
+);
 
 // Función para calcular la duración del vuelo
 function calculateFlightDuration() {
     if (!form.origin_id || !form.destination_id || !form.aircraft_id) return;
-    
-    const originCity = cities.value.find(c => c.id === form.origin_id);
-    const selectedAircraft = aircraft.value.find(a => a.id === form.aircraft_id);
-    
+
+    const originCity = cities.value.find((c) => c.id === form.origin_id);
+    const selectedAircraft = aircraft.value.find(
+        (a) => a.id === form.aircraft_id
+    );
+
     if (originCity && originCity.distances && selectedAircraft) {
         const distanceKm = originCity.distances[form.destination_id];
         if (distanceKm && selectedAircraft.speed_kmh) {
@@ -625,10 +743,10 @@ function calculateFlightDuration() {
 onMounted(async () => {
     const citiesResponse = await api.get("/cities");
     cities.value = citiesResponse.data;
-    
+
     const aircraftResponse = await api.get("/aircraft");
     aircraft.value = aircraftResponse.data;
-    
+
     await reload();
 });
 
@@ -688,17 +806,17 @@ function isFlightPast(flight) {
 
 // Verificar si se puede modificar un vuelo (editar)
 function canModifyFlight(flight) {
-    return flight.status === 'scheduled' && !isFlightPast(flight);
+    return flight.status === "scheduled" && !isFlightPast(flight);
 }
 
 // Verificar si se pueden crear promociones
 function canCreatePromo(flight) {
-    return flight.status === 'scheduled' && !isFlightPast(flight);
+    return flight.status === "scheduled" && !isFlightPast(flight);
 }
 
 // Verificar si se puede cancelar un vuelo
 function canCancelFlight(flight) {
-    return flight.status === 'scheduled' && !isFlightPast(flight);
+    return flight.status === "scheduled" && !isFlightPast(flight);
 }
 
 function toLocalInput(dt) {
@@ -724,12 +842,23 @@ const VUELO_VACIO = {
 };
 
 function openCreate() {
+    isEditingFlight.value = false;
     Object.assign(form, VUELO_VACIO);
     formErrors.value = [];
     editOpen.value = true;
 }
 
-function openEdit(f) {
+async function openEdit(f) {
+    // Activar flag ANTES de cualquier cambio
+    isEditingFlight.value = true;
+
+    formErrors.value = [];
+    editOpen.value = true;
+
+    // Esperar a que el modal esté montado
+    await nextTick();
+
+    // Ahora asignar los valores
     Object.assign(form, {
         id: f.id,
         scope: f.scope,
@@ -739,13 +868,19 @@ function openEdit(f) {
         departure_at: toLocalInput(f.departure_at),
         duration_minutes: f.duration_minutes,
         price_per_seat: f.price_per_seat,
-        first_class_price: f.first_class_price || (f.price_per_seat * 2),
+        first_class_price: f.first_class_price || f.price_per_seat * 2,
         capacity_first: f.capacity_first,
         capacity_economy: f.capacity_economy,
         image: null,
     });
-    formErrors.value = [];
-    editOpen.value = true;
+
+    // Esperar otro ciclo para que Vue procese todos los cambios
+    await nextTick();
+
+    // Mantener el flag activo un poco más para asegurar que los watchers no interfieran
+    setTimeout(() => {
+        isEditingFlight.value = false;
+    }, 100);
 }
 
 function onFlightImageChange(event) {
@@ -760,49 +895,61 @@ async function save() {
         if (!form.id) {
             // --- CREAR ---
             const fd = new FormData();
-            fd.append('scope', form.scope);
-            fd.append('origin_id', form.origin_id);
-            fd.append('destination_id', form.destination_id);
+            fd.append("scope", form.scope);
+            fd.append("origin_id", form.origin_id);
+            fd.append("destination_id", form.destination_id);
             if (form.aircraft_id) {
-                fd.append('aircraft_id', form.aircraft_id);
+                fd.append("aircraft_id", form.aircraft_id);
             }
-            fd.append('departure_at', new Date(form.departure_at).toISOString());
-            fd.append('duration_minutes', form.duration_minutes);
-            fd.append('price_per_seat', form.price_per_seat);
-            fd.append('first_class_price', form.first_class_price || (form.price_per_seat * 2));
-            fd.append('capacity_first', form.capacity_first);
-            fd.append('capacity_economy', form.capacity_economy);
+            fd.append(
+                "departure_at",
+                new Date(form.departure_at).toISOString()
+            );
+            fd.append("duration_minutes", form.duration_minutes);
+            fd.append("price_per_seat", form.price_per_seat);
+            fd.append(
+                "first_class_price",
+                form.first_class_price || form.price_per_seat * 2
+            );
+            fd.append("capacity_first", form.capacity_first);
+            fd.append("capacity_economy", form.capacity_economy);
             if (form.image) {
-                fd.append('image', form.image);
+                fd.append("image", form.image);
             }
-            
+
             await api.post("/admin/flights", fd, {
-                headers: { 
+                headers: {
                     Authorization: "Bearer " + auth.token,
-                    'Content-Type': 'multipart/form-data'
+                    "Content-Type": "multipart/form-data",
                 },
             });
         } else {
             // --- ACTUALIZAR ---
             const fd = new FormData();
-            fd.append('price_per_seat', form.price_per_seat);
-            fd.append('first_class_price', form.first_class_price || (form.price_per_seat * 2));
-            fd.append('departure_at', new Date(form.departure_at).toISOString());
-            fd.append('origin_id', form.origin_id);
-            fd.append('destination_id', form.destination_id);
-            fd.append('duration_minutes', form.duration_minutes);
+            fd.append("price_per_seat", form.price_per_seat);
+            fd.append(
+                "first_class_price",
+                form.first_class_price || form.price_per_seat * 2
+            );
+            fd.append(
+                "departure_at",
+                new Date(form.departure_at).toISOString()
+            );
+            fd.append("origin_id", form.origin_id);
+            fd.append("destination_id", form.destination_id);
+            fd.append("duration_minutes", form.duration_minutes);
             if (form.aircraft_id) {
-                fd.append('aircraft_id', form.aircraft_id);
+                fd.append("aircraft_id", form.aircraft_id);
             }
             if (form.image) {
-                fd.append('image', form.image);
+                fd.append("image", form.image);
             }
-            fd.append('_method', 'PUT');
-            
+            fd.append("_method", "PUT");
+
             await api.post(`/admin/flights/${form.id}`, fd, {
-                headers: { 
+                headers: {
                     Authorization: "Bearer " + auth.token,
-                    'Content-Type': 'multipart/form-data'
+                    "Content-Type": "multipart/form-data",
                 },
             });
         }
@@ -810,6 +957,20 @@ async function save() {
         await reload();
     } catch (e) {
         const errs = e.response?.data?.errors || e.response?.data || e.message;
+
+        // Verificar si es un error de validación específico
+        if (e.response?.status === 422) {
+            const errorMessage = e.response?.data?.message;
+
+            if (errorMessage && errorMessage.includes("pasado")) {
+                alert(
+                    "No se puede editar un vuelo cuya fecha de salida ya pasó."
+                );
+            } else if (errorMessage) {
+                alert(errorMessage);
+            }
+        }
+
         formErrors.value = Array.isArray(errs)
             ? errs
             : Object.values(errs || {}).flat();
@@ -845,8 +1006,10 @@ function openPromo(f) {
     const flightDate = new Date(f.departure_at);
     const now = new Date();
 
-    if (f.status === 'completed' || flightDate < now) {
-        alert('No se pueden crear promociones para vuelos que ya se han realizado.');
+    if (f.status === "completed" || flightDate < now) {
+        alert(
+            "No se pueden crear promociones para vuelos que ya se han realizado."
+        );
         return;
     }
 
@@ -854,8 +1017,8 @@ function openPromo(f) {
     Object.assign(promo, {
         title: `Promo ${f.code}`,
         discount_percent: 10,
-        starts_at: toLocalInput(new Date()),  // Fecha actual como inicio por defecto
-        ends_at: toLocalInput(flightDate),    // Fecha del vuelo como fin por defecto
+        starts_at: toLocalInput(new Date()), // Fecha actual como inicio por defecto
+        ends_at: toLocalInput(flightDate), // Fecha del vuelo como fin por defecto
         is_active: true,
     });
     promoError.value = "";
@@ -873,10 +1036,14 @@ async function savePromo() {
         // Validaciones
         const errors = [];
         if (startDate >= endDate) {
-            errors.push("La fecha de inicio debe ser anterior a la fecha de fin");
+            errors.push(
+                "La fecha de inicio debe ser anterior a la fecha de fin"
+            );
         }
         if (endDate > flightDate) {
-            errors.push("La promoción debe terminar antes de la fecha del vuelo");
+            errors.push(
+                "La promoción debe terminar antes de la fecha del vuelo"
+            );
         }
         if (startDate < now) {
             errors.push("La fecha de inicio no puede ser en el pasado");
@@ -904,7 +1071,7 @@ async function savePromo() {
             }
         );
         promoOpen.value = false;
-        alert('Promoción creada exitosamente');
+        alert("Promoción creada exitosamente");
     } catch (e) {
         promoError.value = e.response?.data?.message || "Error al crear promo";
     }
@@ -914,6 +1081,6 @@ async function savePromo() {
 function validateNumericInput(event) {
     // Only allow numbers
     const regex = /[^0-9]/g;
-    event.target.value = event.target.value.replace(regex, '');
+    event.target.value = event.target.value.replace(regex, "");
 }
 </script>

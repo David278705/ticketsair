@@ -277,6 +277,9 @@ import {
     TransitionRoot,
     TransitionChild,
 } from "@headlessui/vue";
+import { useCurrency } from "../../composables/useCurrency";
+
+const { formatPrice: formatPriceCurrency } = useCurrency();
 
 const props = defineProps({
     open: Boolean,
@@ -298,12 +301,9 @@ const emit = defineEmits(["update:open", "submit"]);
 const passengers = ref([createBlankPassenger()]);
 const error = ref("");
 
-// Formatear precio
+// Formatear precio usando el composable de monedas
 const formatPrice = (price) => {
-    return Number(price).toLocaleString("es-CO", {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-    });
+    return formatPriceCurrency(Number(price));
 };
 
 watch(

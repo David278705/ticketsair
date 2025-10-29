@@ -94,19 +94,55 @@ class FlightAdminController extends Controller
 
   // PUT /admin/flights/{flight}
   public function update(FlightUpdateRequest $r, Flight $flight) {
-    // Regla: si el vuelo no está scheduled o ya tiene ventas, no permitimos cambios críticos
-    $hasSales = $flight->tickets()->exists() || $flight->bookings()->where('type','purchase')->exists();
+    // Verificar si el vuelo ya pasó
+    if ($flight->departure_at->isPast()) {
+      return response()->json([
+        'message' => 'No se puede editar un vuelo cuya fecha de salida ya pasó.'
+      ], 422);
+    }
+
+    // Verificar si hay ventas (tickets emitidos o reservas confirmadas)
+    $hasSales = $flight->tickets()->exists() || $flight->bookings()->whereIn('status', ['confirmed', 'pending'])->exists();
+    
     if ($flight->status !== 'scheduled' || $hasSales) {
-      // permitimos cambiar solo precio_per_seat, first_class_price y departure_at (siempre que sea futuro)
+      // Si hay ventas, verificar si intentan cambiar campos restringidos
+      $restrictedFields = ['origin_id', 'destination_id', 'aircraft_id', 'scope', 'capacity_first', 'capacity_economy', 'duration_minutes'];
+      $attemptedChanges = [];
+      
+      foreach ($restrictedFields as $field) {
+        if ($r->has($field) && $r->input($field) != $flight->$field) {
+          $fieldNames = [
+            'origin_id' => 'origen',
+            'destination_id' => 'destino',
+            'aircraft_id' => 'avión',
+            'scope' => 'tipo de vuelo',
+            'capacity_first' => 'capacidad de primera clase',
+            'capacity_economy' => 'capacidad económica',
+            'duration_minutes' => 'duración'
+          ];
+          $attemptedChanges[] = $fieldNames[$field] ?? $field;
+        }
+      }
+      
+      if (!empty($attemptedChanges)) {
+        return response()->json([
+          'message' => 'Este vuelo ya tiene reservas o compras. Solo puedes cambiar los precios',
+        ], 422);
+      }
+      
+      // Si hay ventas, solo permitimos cambiar precios y fecha de salida (si es futura)
       $data = $r->safe()->only(['price_per_seat','first_class_price','departure_at']);
+      
       if (isset($data['departure_at'])) {
         abort_if(now()->parse($data['departure_at'])->isPast(), 422, 'No puedes fijar una salida en el pasado.');
         $data['arrival_at'] = now()->parse($data['departure_at'])->addMinutes((int)$flight->duration_minutes);
       }
+      
       // Manejar imagen si existe
       if ($r->hasFile('image')) {
         $data['image_path'] = $r->file('image')->store('flights', 'public');
       }
+      
       $flight->update($data);
 
       // Actualizar la noticia existente del vuelo (si existe)

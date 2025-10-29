@@ -429,8 +429,12 @@
         <PassengersModal
             v-model:open="passengersOpen"
             :passengers-count="passengersCount"
-            :base-price-per-seat="parseFloat(selectedFlight?.price_per_seat) || 0"
-            :first-class-price="parseFloat(selectedFlight?.first_class_price) || 0"
+            :base-price-per-seat="
+                parseFloat(selectedFlight?.price_per_seat) || 0
+            "
+            :first-class-price="
+                parseFloat(selectedFlight?.first_class_price) || 0
+            "
             @submit="onPassengersSubmit"
         />
 
@@ -449,12 +453,14 @@ import { ref, computed, onMounted } from "vue";
 import { api, BASE_URL } from "../../lib/api";
 import { useAuth } from "../../stores/auth";
 import { useUi } from "../../stores/ui";
+import { useCurrency } from "../../composables/useCurrency";
 import FlightInfoModal from "../booking/FlightInfoModal.vue";
 import PassengersModal from "../booking/PassengersModal.vue";
 import PaymentModal from "../booking/PaymentModal.vue";
 
 const auth = useAuth();
 const ui = useUi();
+const { formatPrice: formatPriceCurrency } = useCurrency();
 
 const loading = ref(true);
 const allNews = ref([]);
@@ -488,10 +494,7 @@ const formatDate = (date) => {
 };
 
 const formatPrice = (price) => {
-    return Number(price).toLocaleString("es-CO", {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-    });
+    return formatPriceCurrency(Number(price));
 };
 
 const calculateDiscountedPrice = (price, discount) => {
