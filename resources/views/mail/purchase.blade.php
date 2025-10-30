@@ -30,7 +30,12 @@ Tu compra ha sido procesada exitosamente. A continuación los detalles de tu vue
 
 **Fecha de Salida:** {{ $booking->flight->departure_at->format('d/m/Y H:i') }}  
 **Fecha de Llegada:** {{ $booking->flight->arrival_at ? $booking->flight->arrival_at->format('d/m/Y H:i') : 'Por confirmar' }}  
-**Duración:** {{ $booking->flight->duration_minutes }} minutos
+**Duración:** @php
+    $duration = $booking->flight->duration_minutes;
+    $hours = floor($duration / 60);
+    $minutes = $duration % 60;
+    echo $hours > 0 ? ($hours . 'h' . ($minutes > 0 ? ' ' . $minutes . 'min' : '')) : $minutes . 'min';
+@endphp
 
 ---
 

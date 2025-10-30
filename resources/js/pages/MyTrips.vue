@@ -39,7 +39,39 @@
                                 >
                                     {{ b.type }} / {{ b.status }}
                                 </span>
-                                <div class="text-sm mt-1">
+
+                                <!-- Mostrar descuento si existe -->
+                                <div
+                                    v-if="b.discount_amount > 0"
+                                    class="mt-2 space-y-1"
+                                >
+                                    <div class="text-xs text-slate-500">
+                                        Precio original:
+                                        <span class="line-through">
+                                            {{
+                                                formatPrice(+b.original_amount)
+                                            }}
+                                        </span>
+                                    </div>
+                                    <div
+                                        class="text-xs text-green-600 font-semibold"
+                                    >
+                                        Descuento aplicado: -{{
+                                            formatPrice(+b.discount_amount)
+                                        }}
+                                    </div>
+                                    <div
+                                        class="text-sm font-bold text-slate-900"
+                                    >
+                                        Total pagado:
+                                        <span class="text-green-600">
+                                            {{ formatPrice(+b.total_amount) }}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Sin descuento -->
+                                <div v-else class="text-sm mt-1">
                                     Total:
                                     <b>{{ formatPrice(+b.total_amount) }}</b>
                                 </div>
@@ -148,10 +180,17 @@ import { ref, onMounted, reactive } from "vue";
 import { api } from "../lib/api";
 import { useAuth } from "../stores/auth";
 import { useCurrency } from "../composables/useCurrency";
+import { useSweetAlert } from "../composables/useSweetAlert";
 import SeatChangeModal from "../components/booking/SeatChangeModal.vue";
 
 const auth = useAuth();
 const { formatPrice } = useCurrency();
+const {
+    success,
+    error: showError,
+    confirm: showConfirm,
+    info,
+} = useSweetAlert();
 const bookings = ref({ data: [] });
 const loading = ref(true);
 
@@ -266,45 +305,60 @@ function canConvertToPurchase(booking) {
 // --- Acciones del Usuario ---
 
 async function buyNow(booking) {
-    if (
-        confirm(
-            `¿Deseas completar la compra de esta reserva por ${formatPrice(+booking.total_amount)}?`
-        )
-    ) {
+    const confirmed = await showConfirm(
+        "¿Confirmar compra?",
+        `¿Deseas completar la compra de esta reserva por ${formatPrice(
+            +booking.total_amount
+        )}?`,
+        "Sí, comprar",
+        "Cancelar"
+    );
+
+    if (confirmed) {
         try {
             await api.post(
                 `/bookings/${booking.id}/convert-to-purchase`,
                 {},
                 { headers: { Authorization: "Bearer " + auth.token } }
             );
-            alert(
-                "✅ ¡Compra completada exitosamente! Recibirás un correo de confirmación."
+            await success(
+                "¡Compra completada exitosamente!",
+                "Recibirás un correo de confirmación."
             );
             fetchBookings();
         } catch (e) {
-            alert(
-                "Error al completar la compra: " +
-                    (e.response?.data?.message || e.message)
+            showError(
+                "Error al completar la compra",
+                e.response?.data?.message || e.message
             );
         }
     }
 }
 
 async function cancelBooking(booking) {
-    if (
-        confirm(`¿Estás seguro de que quieres cancelar esta ${booking.type}?`)
-    ) {
+    const confirmed = await showConfirm(
+        "¿Confirmar cancelación?",
+        `¿Estás seguro de que quieres cancelar esta ${booking.type}?`,
+        "Sí, cancelar",
+        "No"
+    );
+
+    if (confirmed) {
         try {
             await api.post(
                 `/bookings/${booking.id}/cancel`,
                 {},
                 { headers: { Authorization: "Bearer " + auth.token } }
             );
-            alert("La solicitud ha sido procesada.");
+            await info(
+                "Solicitud procesada",
+                "La solicitud ha sido procesada."
+            );
             fetchBookings();
         } catch (e) {
-            alert(
-                "Error al cancelar: " + (e.response?.data?.message || e.message)
+            showError(
+                "Error al cancelar",
+                e.response?.data?.message || e.message
             );
         }
     }
@@ -312,14 +366,18 @@ async function cancelBooking(booking) {
 
 async function performCheckin(passenger) {
     const ticket = findTicketForPassenger(passenger);
-    if (!ticket) return alert("No se encontró el tiquete para este pasajero.");
+    if (!ticket) {
+        showError("Error", "No se encontró el tiquete para este pasajero.");
+        return;
+    }
     try {
         await api.post("/checkin/fast", { ticket_code: ticket.ticket_code });
-        alert("Check-in exitoso. Tu pasabordo está disponible.");
+        await success("Check-in exitoso", "Tu pasabordo está disponible.");
         fetchBookings();
     } catch (e) {
-        alert(
-            "Error en el check-in: " + (e.response?.data?.message || e.message)
+        showError(
+            "Error en el check-in",
+            e.response?.data?.message || e.message
         );
     }
 }

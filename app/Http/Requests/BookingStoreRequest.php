@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class BookingStoreRequest extends FormRequest
 {
@@ -34,6 +35,44 @@ public function rules(): array
         'payment.transaction_id' => ['nullable','string'],
     ];
 }
+
+/**
+ * Validación adicional después de las reglas básicas
+ */
+public function withValidator(Validator $validator): void
+{
+    $validator->after(function ($validator) {
+        // Validar DNIs únicos dentro de la reserva
+        $passengers = $this->input('passengers', []);
+        $dnis = array_map(fn($p) => strtolower(trim($p['dni'] ?? '')), $passengers);
+        $dniCounts = array_count_values(array_filter($dnis));
+        
+        foreach ($dniCounts as $dni => $count) {
+            if ($count > 1) {
+                $validator->errors()->add(
+                    'passengers',
+                    "La cédula '{$dni}' está duplicada. Cada pasajero debe tener un documento único."
+                );
+                break;
+            }
+        }
+
+        // Validar emails únicos dentro de la reserva
+        $emails = array_map(fn($p) => strtolower(trim($p['email'] ?? '')), $passengers);
+        $emailCounts = array_count_values(array_filter($emails));
+        
+        foreach ($emailCounts as $email => $count) {
+            if ($count > 1) {
+                $validator->errors()->add(
+                    'passengers',
+                    "El email '{$email}' está duplicado. Cada pasajero debe tener un email único."
+                );
+                break;
+            }
+        }
+    });
+}
+
 public function authorize(): bool
 {
     // Solo clientes pueden reservar/comprar

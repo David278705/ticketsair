@@ -80,12 +80,39 @@ class BookingController extends Controller
         return response()->json(['error'=>'minors_cannot_travel_alone'],422);
     }
 
-    // Máx. 5 por vuelo/cliente (Request ya limita el array a 5) + check duplicidad viajero en mismo vuelo
-    $dniList = $passengers->pluck('dni');
-    $dup = \App\Models\BookingPassenger::whereHas('booking', function($q) use ($request, $flight){
-        $q->where('user_id', $request->user()->id)->where('flight_id', $flight->id);
-    })->whereIn('dni', $dniList)->exists();
-    if ($dup) return response()->json(['error'=>'passenger_already_in_flight'],422);
+    // Verificar duplicados de DNI dentro de la misma reserva (ya validado en Request, pero doble check)
+    $dniList = $passengers->pluck('dni')->map(fn($dni) => strtolower(trim($dni)));
+    if ($dniList->count() !== $dniList->unique()->count()) {
+        return response()->json([
+            'error' => 'duplicate_dni_in_booking',
+            'message' => 'Hay cédulas duplicadas en la lista de pasajeros.'
+        ], 422);
+    }
+
+    // Verificar duplicados de email dentro de la misma reserva
+    $emailList = $passengers->pluck('email')->map(fn($email) => strtolower(trim($email)));
+    if ($emailList->count() !== $emailList->unique()->count()) {
+        return response()->json([
+            'error' => 'duplicate_email_in_booking',
+            'message' => 'Hay emails duplicados en la lista de pasajeros.'
+        ], 422);
+    }
+
+    // Verificar si algún pasajero ya está registrado en otra reserva del mismo usuario para el mismo vuelo
+    $existingPassengers = \App\Models\BookingPassenger::whereHas('booking', function($q) use ($request, $flight){
+        $q->where('user_id', $request->user()->id)
+          ->where('flight_id', $flight->id)
+          ->whereIn('status', ['pending', 'confirmed']); // Solo reservas activas
+    })->whereIn('dni', $dniList->toArray())->get();
+
+    if ($existingPassengers->isNotEmpty()) {
+        $duplicatedDnis = $existingPassengers->pluck('dni')->unique()->values();
+        return response()->json([
+            'error' => 'passenger_already_in_flight',
+            'message' => 'Los siguientes pasajeros ya están registrados en este vuelo: ' . $duplicatedDnis->join(', '),
+            'duplicated_dnis' => $duplicatedDnis
+        ], 422);
+    }
 
     // Verificar disponibilidad de asientos por clase
     $firstClassCount = $passengers->where('class', 'first')->count();
@@ -109,18 +136,31 @@ class BookingController extends Controller
         $expires = $data['type'] === 'reservation' ? now()->addDay() : null;
         
         // Calcular total basado en clase de cada pasajero
-        $total = $passengers->reduce(function($sum, $p) use ($flight) {
+        $totalBeforeDiscount = $passengers->reduce(function($sum, $p) use ($flight) {
             $price = $p['class'] === 'first' 
                 ? ($flight->first_class_price ?? $flight->price_per_seat * 2)
                 : $flight->price_per_seat;
             return $sum + $price;
         }, 0);
 
+        // Aplicar descuento si existe promoción activa
+        $total = $totalBeforeDiscount;
+        $discountApplied = 0;
+        $promotionId = null;
+        
+        if ($flight->hasActivePromotion()) {
+            $activePromo = $flight->activePromotion;
+            $total = $flight->getDiscountedPrice($totalBeforeDiscount);
+            $discountApplied = $totalBeforeDiscount - $total;
+            $promotionId = $activePromo->id;
+        }
+
         $reservationCode = Str::upper(Str::random(8));
 
         $booking = \App\Models\Booking::create([
             'user_id'=>$request->user()->id,
             'flight_id'=>$flight->id,
+            'promotion_id'=>$promotionId,
             'type'   =>$data['type'],
             'status' =>$data['type']==='purchase' ? 'confirmed' : 'pending',
             'reservation_code'=> $reservationCode,
@@ -128,6 +168,8 @@ class BookingController extends Controller
             'expires_at'=>$expires,
             'seats_count'=>$passengers->count(),
             'total_amount'=>$total,
+            'original_amount'=>$totalBeforeDiscount,
+            'discount_amount'=>$discountApplied,
         ]);
 
         foreach ($passengers->values() as $i => $p) {

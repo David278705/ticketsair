@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Demo: Sistema de Formato de Tiempo de Vuelo</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                    Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                padding: 2rem;
+                min-height: 100vh;
+            }
+
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+            }
+
+            h1 {
+                color: white;
+                text-align: center;
+                margin-bottom: 2rem;
+                font-size: 2.5rem;
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            }
+
+            .demo-section {
+                background: white;
+                border-radius: 12px;
+                padding: 2rem;
+                margin-bottom: 2rem;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            }
+
+            .demo-section h2 {
+                color: #667eea;
+                margin-bottom: 1.5rem;
+                font-size: 1.8rem;
+                border-bottom: 3px solid #667eea;
+                padding-bottom: 0.5rem;
+            }
+
+            .demo-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 1.5rem;
+                margin-top: 1rem;
+            }
+
+            .demo-card {
+                background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                border-radius: 8px;
+                padding: 1.5rem;
+                border-left: 4px solid #667eea;
+                transition: transform 0.2s, box-shadow 0.2s;
+            }
+
+            .demo-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            }
+
+            .demo-card h3 {
+                color: #2d3748;
+                margin-bottom: 1rem;
+                font-size: 1.2rem;
+            }
+
+            .demo-input {
+                background: #4a5568;
+                color: #e2e8f0;
+                padding: 0.75rem;
+                border-radius: 4px;
+                margin-bottom: 0.5rem;
+                font-family: "Courier New", monospace;
+                font-size: 1rem;
+            }
+
+            .demo-output {
+                background: #48bb78;
+                color: white;
+                padding: 1rem;
+                border-radius: 4px;
+                font-size: 1.2rem;
+                font-weight: bold;
+                text-align: center;
+                box-shadow: 0 4px 8px rgba(72, 187, 120, 0.3);
+            }
+
+            .demo-output.format-long {
+                background: #4299e1;
+            }
+
+            .demo-output.format-arrival {
+                background: #ed8936;
+            }
+
+            .demo-label {
+                color: #4a5568;
+                font-size: 0.875rem;
+                font-weight: 600;
+                margin-bottom: 0.25rem;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
+
+            .comparison-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 1rem;
+            }
+
+            .comparison-table th,
+            .comparison-table td {
+                padding: 1rem;
+                text-align: left;
+                border-bottom: 1px solid #e2e8f0;
+            }
+
+            .comparison-table th {
+                background: #667eea;
+                color: white;
+                font-weight: 600;
+            }
+
+            .comparison-table tr:hover {
+                background: #f7fafc;
+            }
+
+            .comparison-table .before {
+                color: #e53e3e;
+                text-decoration: line-through;
+            }
+
+            .comparison-table .after {
+                color: #48bb78;
+                font-weight: bold;
+            }
+
+            .icon {
+                font-size: 1.5rem;
+                margin-right: 0.5rem;
+            }
+
+            .badge {
+                display: inline-block;
+                background: #667eea;
+                color: white;
+                padding: 0.25rem 0.75rem;
+                border-radius: 12px;
+                font-size: 0.75rem;
+                font-weight: bold;
+                margin-left: 0.5rem;
+            }
+
+            .code-block {
+                background: #2d3748;
+                color: #e2e8f0;
+                padding: 1rem;
+                border-radius: 8px;
+                font-family: "Courier New", monospace;
+                font-size: 0.875rem;
+                overflow-x: auto;
+                margin: 1rem 0;
+            }
+
+            .highlight {
+                color: #fbd38d;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>⏱️ Sistema de Formato de Tiempo de Vuelo</h1>
+
+            <!-- Sección 1: Casos de Uso Comunes -->
+            <div class="demo-section">
+                <h2><span class="icon">✈️</span>Casos de Uso Comunes</h2>
+                <div class="demo-grid">
+                    <div class="demo-card">
+                        <h3>Vuelo Corto <span class="badge">< 1h</span></h3>
+                        <div class="demo-label">Input</div>
+                        <div class="demo-input">45 minutos</div>
+                        <div class="demo-label" style="margin-top: 1rem">
+                            Output
+                        </div>
+                        <div class="demo-output">⏱️ 45min</div>
+                    </div>
+
+                    <div class="demo-card">
+                        <h3>Vuelo Mediano <span class="badge">1-3h</span></h3>
+                        <div class="demo-label">Input</div>
+                        <div class="demo-input">90 minutos</div>
+                        <div class="demo-label" style="margin-top: 1rem">
+                            Output
+                        </div>
+                        <div class="demo-output">⏱️ 1h 30min</div>
+                    </div>
+
+                    <div class="demo-card">
+                        <h3>
+                            Horas Exactas <span class="badge">Sin minutos</span>
+                        </h3>
+                        <div class="demo-label">Input</div>
+                        <div class="demo-input">120 minutos</div>
+                        <div class="demo-label" style="margin-top: 1rem">
+                            Output
+                        </div>
+                        <div class="demo-output">⏱️ 2h</div>
+                    </div>
+
+                    <div class="demo-card">
+                        <h3>Vuelo Largo <span class="badge">3-6h</span></h3>
+                        <div class="demo-label">Input</div>
+                        <div class="demo-input">210 minutos</div>
+                        <div class="demo-label" style="margin-top: 1rem">
+                            Output
+                        </div>
+                        <div class="demo-output">⏱️ 3h 30min</div>
+                    </div>
+
+                    <div class="demo-card">
+                        <h3>
+                            Vuelo Ultra Largo <span class="badge">> 6h</span>
+                        </h3>
+                        <div class="demo-label">Input</div>
+                        <div class="demo-input">780 minutos</div>
+                        <div class="demo-label" style="margin-top: 1rem">
+                            Output
+                        </div>
+                        <div class="demo-output">⏱️ 13h</div>
+                    </div>
+
+                    <div class="demo-card">
+                        <h3>
+                            Vuelo Internacional <span class="badge">8-12h</span>
+                        </h3>
+                        <div class="demo-label">Input</div>
+                        <div class="demo-input">540 minutos</div>
+                        <div class="demo-label" style="margin-top: 1rem">
+                            Output
+                        </div>
+                        <div class="demo-output">⏱️ 9h</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección 2: Formatos Disponibles -->
+            <div class="demo-section">
+                <h2><span class="icon">🎨</span>Formatos Disponibles</h2>
+                <div class="demo-grid">
+                    <div class="demo-card">
+                        <h3>Formato Corto (Default)</h3>
+                        <div class="demo-label">Input: 90 minutos</div>
+                        <div class="demo-input">formatDuration(90)</div>
+                        <div class="demo-label" style="margin-top: 1rem">
+                            Output
+                        </div>
+                        <div class="demo-output">1h 30min</div>
+                    </div>
+
+                    <div class="demo-card">
+                        <h3>Formato Largo</h3>
+                        <div class="demo-label">Input: 90 minutos</div>
+                        <div class="demo-input">
+                            formatDuration(90, { short: false })
+                        </div>
+                        <div class="demo-label" style="margin-top: 1rem">
+                            Output
+                        </div>
+                        <div class="demo-output format-long">
+                            1 hora 30 minutos
+                        </div>
+                    </div>
+
+                    <div class="demo-card">
+                        <h3>Con Hora de Llegada</h3>
+                        <div class="demo-label">
+                            Salida: 10:00, Duración: 90 min
+                        </div>
+                        <div class="demo-input">formatArrivalTime(...)</div>
+                        <div class="demo-label" style="margin-top: 1rem">
+                            Output
+                        </div>
+                        <div class="demo-output format-arrival">
+                            Llega: 11:30
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección 3: Comparación Antes/Después -->
+            <div class="demo-section">
+                <h2>
+                    <span class="icon">📊</span>Comparación: Antes vs. Después
+                </h2>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Minutos</th>
+                            <th>Antes (Antiguo)</th>
+                            <th>Después (Nuevo)</th>
+                            <th>Ahorro de Espacio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>45</strong></td>
+                            <td class="before">45 minutos</td>
+                            <td class="after">45min</td>
+                            <td>-45% 📉</td>
+                        </tr>
+                        <tr>
+                            <td><strong>90</strong></td>
+                            <td class="before">90 minutos</td>
+                            <td class="after">1h 30min</td>
+                            <td>-18% 📉</td>
+                        </tr>
+                        <tr>
+                            <td><strong>120</strong></td>
+                            <td class="before">120 minutos</td>
+                            <td class="after">2h</td>
+                            <td>-75% 📉</td>
+                        </tr>
+                        <tr>
+                            <td><strong>150</strong></td>
+                            <td class="before">150 minutos</td>
+                            <td class="after">2h 30min</td>
+                            <td>-27% 📉</td>
+                        </tr>
+                        <tr>
+                            <td><strong>210</strong></td>
+                            <td class="before">210 minutos</td>
+                            <td class="after">3h 30min</td>
+                            <td>-27% 📉</td>
+                        </tr>
+                        <tr>
+                            <td><strong>780</strong></td>
+                            <td class="before">780 minutos</td>
+                            <td class="after">13h</td>
+                            <td>-75% 📉</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Sección 4: Ejemplos de Código -->
+            <div class="demo-section">
+                <h2><span class="icon">💻</span>Ejemplos de Código</h2>
+
+                <h3 style="color: #2d3748; margin-top: 1.5rem">
+                    Frontend (Vue 3)
+                </h3>
+                <div class="code-block">
+                    <span class="highlight">import</span> { useFlightTime }
+                    <span class="highlight">from</span>
+                    <span style="color: #9ae6b4"
+                        >'@/composables/useFlightTime'</span
+                    >;
+
+                    <span class="highlight">const</span> { formatDuration } =
+                    useFlightTime();
+
+                    <span style="color: #68d391">// En el template:</span>
+                    &lt;p&gt;⏱️ {{ formatDuration(flight.duration_minutes)
+                    }}&lt;/p&gt;
+
+                    <span style="color: #68d391">// Ejemplos:</span>
+                    formatDuration(<span style="color: #fbd38d">90</span>)
+                    <span style="color: #68d391">// "1h 30min"</span>
+                    formatDuration(<span style="color: #fbd38d">120</span>)
+                    <span style="color: #68d391">// "2h"</span>
+                    formatDuration(<span style="color: #fbd38d">45</span>)
+                    <span style="color: #68d391">// "45min"</span>
+                </div>
+
+                <h3 style="color: #2d3748; margin-top: 1.5rem">
+                    Backend (Blade)
+                </h3>
+                <div class="code-block">
+                    <span style="color: #68d391">{{-- Email Template --}}</span>
+                    <span class="highlight">**Duración:**</span> @<span
+                        class="highlight"
+                        >php</span
+                    >
+                    $duration = $flight-&gt;duration_minutes; $hours =
+                    floor($duration / <span style="color: #fbd38d">60</span>);
+                    $minutes = $duration %
+                    <span style="color: #fbd38d">60</span>;
+                    <span class="highlight">echo</span> $hours &gt;
+                    <span style="color: #fbd38d">0</span> ? ($hours .
+                    <span style="color: #9ae6b4">'h'</span> . ($minutes &gt;
+                    <span style="color: #fbd38d">0</span> ?
+                    <span style="color: #9ae6b4">' '</span> . $minutes .
+                    <span style="color: #9ae6b4">'min'</span> :
+                    <span style="color: #9ae6b4">''</span>)) : $minutes .
+                    <span style="color: #9ae6b4">'min'</span>; @<span
+                        class="highlight"
+                        >endphp</span
+                    >
+                </div>
+            </div>
+
+            <!-- Sección 5: Beneficios -->
+            <div class="demo-section">
+                <h2><span class="icon">✨</span>Beneficios del Sistema</h2>
+                <div class="demo-grid">
+                    <div class="demo-card">
+                        <h3>📱 Mejor UX</h3>
+                        <p style="color: #4a5568; line-height: 1.6">
+                            Formato más legible y familiar para los usuarios.
+                            Reduce el espacio en UI sin perder claridad.
+                        </p>
+                    </div>
+
+                    <div class="demo-card">
+                        <h3>🌍 Estándar de Industria</h3>
+                        <p style="color: #4a5568; line-height: 1.6">
+                            Sigue el formato utilizado por todas las aerolíneas
+                            principales a nivel mundial.
+                        </p>
+                    </div>
+
+                    <div class="demo-card">
+                        <h3>🔄 Consistencia</h3>
+                        <p style="color: #4a5568; line-height: 1.6">
+                            Mismo formato en frontend, backend, emails y PDFs.
+                            Experiencia coherente.
+                        </p>
+                    </div>
+
+                    <div class="demo-card">
+                        <h3>🛠️ Mantenibilidad</h3>
+                        <p style="color: #4a5568; line-height: 1.6">
+                            Lógica centralizada. Un solo lugar para actualizar
+                            el formato en toda la app.
+                        </p>
+                    </div>
+
+                    <div class="demo-card">
+                        <h3>♿ Accesibilidad</h3>
+                        <p style="color: #4a5568; line-height: 1.6">
+                            Compatible con lectores de pantalla. Pluralización
+                            correcta en español.
+                        </p>
+                    </div>
+
+                    <div class="demo-card">
+                        <h3>⚡ Performance</h3>
+                        <p style="color: #4a5568; line-height: 1.6">
+                            Funciones puras, sin dependencias externas.
+                            Complejidad O(1).
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

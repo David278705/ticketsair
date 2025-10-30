@@ -42,10 +42,10 @@
                                 ref="originOpts"
                                 :style="originFloatingStyles"
                                 static
-                                class="z-50 mt-1 max-h-60 w-64 overflow-auto rounded-xl bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm"
+                                class="z-50 mt-1 max-h-80 w-64 rounded-xl bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm flex flex-col"
                             >
                                 <div
-                                    class="px-3 py-2 sticky top-0 bg-white/95 backdrop-blur border-b border-slate-200/60"
+                                    class="px-3 py-2 bg-white/95 backdrop-blur border-b border-slate-200/60 flex-shrink-0"
                                 >
                                     <input
                                         v-model="originQuery"
@@ -53,40 +53,42 @@
                                         class="w-full h-9 rounded-lg border px-3 bg-white border-slate-300 outline-none"
                                     />
                                 </div>
-                                <ListboxOption
-                                    v-for="c in filteredOrigins"
-                                    :key="c.id"
-                                    :value="c"
-                                    v-slot="{ active, selected }"
-                                >
-                                    <li
-                                        :class="[
-                                            active
-                                                ? 'bg-blue-100  text-blue-900 '
-                                                : 'text-gray-900',
-                                            'relative cursor-default select-none py-2 pl-10 pr-4',
-                                        ]"
+                                <div class="overflow-y-auto flex-1">
+                                    <ListboxOption
+                                        v-for="c in filteredOrigins"
+                                        :key="c.id"
+                                        :value="c"
+                                        v-slot="{ active, selected }"
                                     >
-                                        <span
+                                        <li
                                             :class="[
-                                                selected
-                                                    ? 'font-medium'
-                                                    : 'font-normal',
-                                                'block truncate',
+                                                active
+                                                    ? 'bg-blue-100  text-blue-900 '
+                                                    : 'text-gray-900',
+                                                'relative cursor-default select-none py-2 pl-10 pr-4',
                                             ]"
-                                            >{{ c.name }}</span
                                         >
-                                        <span
-                                            v-if="selected"
-                                            class="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600"
-                                        >
-                                            <Check
-                                                class="h-5 w-5"
-                                                aria-hidden="true"
-                                            />
-                                        </span>
-                                    </li>
-                                </ListboxOption>
+                                            <span
+                                                :class="[
+                                                    selected
+                                                        ? 'font-medium'
+                                                        : 'font-normal',
+                                                    'block truncate',
+                                                ]"
+                                                >{{ c.name }}</span
+                                            >
+                                            <span
+                                                v-if="selected"
+                                                class="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600"
+                                            >
+                                                <Check
+                                                    class="h-5 w-5"
+                                                    aria-hidden="true"
+                                                />
+                                            </span>
+                                        </li>
+                                    </ListboxOption>
+                                </div>
                             </ListboxOptions>
                         </Teleport>
                     </Listbox>
@@ -130,10 +132,10 @@
                                 ref="destOpts"
                                 :style="destFloatingStyles"
                                 static
-                                class="z-50 mt-1 max-h-60 w-64 overflow-auto rounded-xl bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm"
+                                class="z-50 mt-1 max-h-80 w-64 rounded-xl bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm flex flex-col"
                             >
                                 <div
-                                    class="px-3 py-2 sticky top-0 bg-white/95 backdrop-blur border-b border-slate-200/60"
+                                    class="px-3 py-2 bg-white/95 backdrop-blur border-b border-slate-200/60 flex-shrink-0"
                                 >
                                     <input
                                         v-model="destQuery"
@@ -141,40 +143,42 @@
                                         class="w-full h-9 rounded-lg border px-3 bg-white border-slate-300 outline-none"
                                     />
                                 </div>
-                                <ListboxOption
-                                    v-for="c in filteredDestinations"
-                                    :key="c.id"
-                                    :value="c"
-                                    v-slot="{ active, selected }"
-                                >
-                                    <li
-                                        :class="[
-                                            active
-                                                ? 'bg-blue-100  text-blue-900'
-                                                : 'text-gray-900',
-                                            'relative cursor-default select-none py-2 pl-10 pr-4',
-                                        ]"
+                                <div class="overflow-y-auto flex-1">
+                                    <ListboxOption
+                                        v-for="c in filteredDestinations"
+                                        :key="c.id"
+                                        :value="c"
+                                        v-slot="{ active, selected }"
                                     >
-                                        <span
+                                        <li
                                             :class="[
-                                                selected
-                                                    ? 'font-medium'
-                                                    : 'font-normal',
-                                                'block truncate',
+                                                active
+                                                    ? 'bg-blue-100  text-blue-900'
+                                                    : 'text-gray-900',
+                                                'relative cursor-default select-none py-2 pl-10 pr-4',
                                             ]"
-                                            >{{ c.name }}</span
                                         >
-                                        <span
-                                            v-if="selected"
-                                            class="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600"
-                                        >
-                                            <Check
-                                                class="h-5 w-5"
-                                                aria-hidden="true"
-                                            />
-                                        </span>
-                                    </li>
-                                </ListboxOption>
+                                            <span
+                                                :class="[
+                                                    selected
+                                                        ? 'font-medium'
+                                                        : 'font-normal',
+                                                    'block truncate',
+                                                ]"
+                                                >{{ c.name }}</span
+                                            >
+                                            <span
+                                                v-if="selected"
+                                                class="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600"
+                                            >
+                                                <Check
+                                                    class="h-5 w-5"
+                                                    aria-hidden="true"
+                                                />
+                                            </span>
+                                        </li>
+                                    </ListboxOption>
+                                </div>
                             </ListboxOptions>
                         </Teleport>
                     </Listbox>
@@ -185,36 +189,18 @@
                     <label class="block text-xs text-slate-500 mb-2"
                         >Fecha</label
                     >
-                    <Popover class="relative" v-slot="{ close }">
-                        <PopoverButton
-                            ref="datePickerButtonRef"
-                            class="relative w-full cursor-default rounded-xl bg-white border border-slate-300 h-11 pl-10 pr-3 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center"
-                        >
-                            <CalendarDays
-                                class="absolute left-3 w-5 h-5 text-slate-400"
-                            />
-                            <span
-                                :class="{ 'text-slate-400': !date }"
-                                class="truncate"
-                                >{{ formattedDate }}</span
-                            >
-                        </PopoverButton>
-
-                        <Teleport to="body">
-                            <PopoverPanel
-                                ref="datePickerPanelRef"
-                                :style="datePickerFloatingStyles"
-                                class="z-50 focus:outline-none"
-                            >
-                                <VDatePicker
-                                    v-model="date"
-                                    :is-dark="isDark"
-                                    :min-date="new Date()"
-                                    @update:model-value="close()"
-                                />
-                            </PopoverPanel>
-                        </Teleport>
-                    </Popover>
+                    <div class="relative">
+                        <CalendarDays
+                            class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none z-10"
+                        />
+                        <input
+                            type="date"
+                            v-model="dateInput"
+                            :min="minDate"
+                            class="relative w-full rounded-xl bg-white border border-slate-300 h-11 pl-10 pr-3 text-left focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Selecciona una fecha"
+                        />
+                    </div>
                 </div>
 
                 <!-- Clase -->
@@ -319,8 +305,16 @@
             <article
                 v-for="f in results.data"
                 :key="f.id"
-                class="rounded-2xl border border-slate-200 p-4 transition-transform hover:-translate-y-0.5 hover:shadow-lg"
+                class="rounded-2xl border border-slate-200 p-4 transition-transform hover:-translate-y-0.5 hover:shadow-lg relative"
             >
+                <!-- Badge de descuento -->
+                <div
+                    v-if="f.active_promotion"
+                    class="absolute -top-2 -right-2 bg-gradient-to-br from-red-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg animate-pulse"
+                >
+                    -{{ f.active_promotion.discount_percent }}%
+                </div>
+
                 <header class="flex justify-between">
                     <h3 class="font-semibold">
                         {{ f.origin.name }} → {{ f.destination.name }}
@@ -329,10 +323,29 @@
                         new Date(f.departure_at).toLocaleString()
                     }}</span>
                 </header>
-                <p class="mt-2 text-sm">
-                    Precio por silla:
-                    <b>{{ formatPrice(+f.price_per_seat) }}</b>
-                </p>
+                <div class="mt-2 text-sm">
+                    <span v-if="!f.active_promotion">
+                        Precio por silla:
+                        <b>{{ formatPrice(+f.price_per_seat) }}</b>
+                    </span>
+                    <div v-else class="flex items-center gap-2">
+                        <span class="text-gray-500 line-through text-xs">
+                            {{ formatPrice(+f.price_per_seat) }}
+                        </span>
+                        <span class="text-green-600 font-bold text-base">
+                            {{
+                                formatPrice(
+                                    +f.price_per_seat *
+                                        (1 -
+                                            f.active_promotion
+                                                .discount_percent /
+                                                100)
+                                )
+                            }}
+                        </span>
+                        <span class="text-xs text-gray-500">por silla</span>
+                    </div>
+                </div>
                 <div class="mt-3 flex gap-2">
                     <button
                         class="h-10 px-4 rounded-xl border border-slate-300"
@@ -385,12 +398,8 @@
         <PassengersModal
             v-model:open="passengersOpen"
             :passengers-count="passengersCount"
-            :base-price-per-seat="
-                parseFloat(currentFlight?.price_per_seat) || 0
-            "
-            :first-class-price="
-                parseFloat(currentFlight?.first_class_price) || 0
-            "
+            :base-price-per-seat="discountedBasePricePerSeat"
+            :first-class-price="discountedFirstClassPrice"
             @submit="onPassengersSubmit"
         />
 
@@ -407,16 +416,11 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import {
-    Popover,
-    PopoverButton,
-    PopoverPanel,
     Listbox,
     ListboxButton,
     ListboxOptions,
     ListboxOption,
 } from "@headlessui/vue";
-import { DatePicker as VDatePicker } from "v-calendar";
-import "v-calendar/style.css";
 import {
     MapPin,
     ChevronsUpDown,
@@ -425,19 +429,19 @@ import {
     CalendarDays,
 } from "lucide-vue-next";
 import { useFloating, autoUpdate, offset } from "@floating-ui/vue";
-import { useDark } from "@vueuse/core";
 import { api } from "../../lib/api";
 import { useAuth } from "../../stores/auth";
 import { useUi } from "../../stores/ui";
 import { useCurrency } from "../../composables/useCurrency";
+import { useSweetAlert } from "../../composables/useSweetAlert";
 import FlightInfoModal from "../booking/FlightInfoModal.vue";
 import PassengersModal from "../booking/PassengersModal.vue";
 import PaymentModal from "../booking/PaymentModal.vue";
 
-const isDark = useDark();
 const auth = useAuth();
 const ui = useUi();
 const { formatPrice } = useCurrency();
+const { success, error: showError } = useSweetAlert();
 
 // Ciudades
 const cities = ref([]);
@@ -477,20 +481,17 @@ const filteredDestinations = computed(() =>
 
 // Fecha y clase
 const date = ref();
+const dateInput = ref("");
+const minDate = computed(() => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+});
+
 const classes = [
     { id: "economy", name: "Economy" },
     { id: "first", name: "First" },
 ];
 const selectedClass = ref(classes[0]);
-const formattedDate = computed(() =>
-    date.value
-        ? date.value.toLocaleDateString("es-ES", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-          })
-        : "Selecciona una fecha"
-);
 
 // FloatingUI
 const originBtn = ref(null),
@@ -513,17 +514,6 @@ const { floatingStyles: destFloatingStyles } = useFloating(destBtn, destOpts, {
     middleware: [offset(8)],
     strategy: "fixed",
 });
-const datePickerButtonRef = ref(null);
-const datePickerPanelRef = ref(null);
-const { floatingStyles: datePickerFloatingStyles } = useFloating(
-    datePickerButtonRef,
-    datePickerPanelRef,
-    {
-        whileElementsMounted: autoUpdate,
-        placement: "bottom-start",
-        middleware: [offset(8)],
-    }
-);
 
 // Resultados
 const loading = ref(false);
@@ -541,6 +531,30 @@ const passengersCount = ref(1);
 const pendingPassengers = ref([]);
 const pendingBooking = ref(null);
 
+// Precios con descuento aplicado
+const discountedBasePricePerSeat = computed(() => {
+    if (!currentFlight.value) return 0;
+    const basePrice = parseFloat(currentFlight.value.price_per_seat) || 0;
+    if (currentFlight.value.active_promotion) {
+        const discount = currentFlight.value.active_promotion.discount_percent;
+        return basePrice * (1 - discount / 100);
+    }
+    return basePrice;
+});
+
+const discountedFirstClassPrice = computed(() => {
+    if (!currentFlight.value) return 0;
+    const firstPrice =
+        parseFloat(currentFlight.value.first_class_price) ||
+        parseFloat(currentFlight.value.price_per_seat) * 2 ||
+        0;
+    if (currentFlight.value.active_promotion) {
+        const discount = currentFlight.value.active_promotion.discount_percent;
+        return firstPrice * (1 - discount / 100);
+    }
+    return firstPrice;
+});
+
 onMounted(async () => {
     const { data } = await api.get("/cities");
     cities.value = data;
@@ -554,7 +568,7 @@ async function search(url) {
         const params = {
             origin_id: originId.value?.id || "",
             destination_id: destinationId.value?.id || "",
-            date: date.value ? date.value.toISOString().slice(0, 10) : "",
+            date: dateInput.value || "",
             class: selectedClass.value.id,
         };
         const { data } = await api.get("/flights", { params });
@@ -608,11 +622,12 @@ async function onPassengersSubmit(passengers) {
     pendingPassengers.value = passengers;
 
     // Calcular precio total basado en las clases individuales de cada pasajero
+    // usando precios ya con descuento aplicado
     const total = passengers.reduce((sum, p) => {
-        const economyPrice = parseFloat(currentFlight.value.price_per_seat);
-        const firstPrice = parseFloat(currentFlight.value.first_class_price);
         const pricePerSeat =
-            p.flight_class === "first" ? firstPrice : economyPrice;
+            p.flight_class === "first"
+                ? discountedFirstClassPrice.value
+                : discountedBasePricePerSeat.value;
         return sum + pricePerSeat;
     }, 0);
 
@@ -666,10 +681,15 @@ async function processBooking(paymentData) {
 
         // Mostrar mensaje de éxito con código de reserva
         const message = isPurchase
-            ? `✅ ¡Compra realizada exitosamente!\n\nCódigo de Reserva: ${booking.reservation_code}\n\nRevisa tu correo para más detalles. Redirigiendo a Mis Viajes...`
-            : `✅ ¡Reserva creada exitosamente!\n\nCódigo de Reserva: ${booking.reservation_code}\n\nTienes 24 horas para completar tu compra. Recibirás un recordatorio por correo.\n\nRedirigiendo a Mis Viajes...`;
+            ? `Código de Reserva: ${booking.reservation_code}\n\nRevisa tu correo para más detalles.`
+            : `Código de Reserva: ${booking.reservation_code}\n\nTienes 24 horas para completar tu compra. Recibirás un recordatorio por correo.`;
 
-        alert(message);
+        await success(
+            isPurchase
+                ? "¡Compra realizada exitosamente!"
+                : "¡Reserva creada exitosamente!",
+            message
+        );
 
         // Redirigir a Mis Viajes después de 2 segundos
         setTimeout(() => {
@@ -680,7 +700,7 @@ async function processBooking(paymentData) {
             e.response?.data?.message ||
             e.response?.data?.error ||
             "No se pudo procesar la solicitud.";
-        alert(`❌ Error: ${errorMessage}`);
+        showError("Error al procesar", errorMessage);
     } finally {
         actionLoading.value = false;
     }

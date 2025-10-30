@@ -7,7 +7,16 @@
                     class="h-10 px-4 rounded-lg border bg-white hover:bg-slate-50 transition-colors flex items-center gap-2"
                     @click="openCreate()"
                 >
-                    <span class="text-xl">✈️</span>
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                    >
+                        <path
+                            d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"
+                        />
+                    </svg>
                     Nuevo vuelo
                 </button>
             </div>
@@ -81,7 +90,18 @@
                         class="hover:bg-slate-50 transition-colors"
                     >
                         <td class="p-3 font-mono text-blue-600">
-                            {{ f.code }}
+                            <div class="flex items-center gap-2">
+                                <span>{{ f.code }}</span>
+                                <span
+                                    v-if="f.any_valid_promotion"
+                                    class="px-2 py-0.5 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 text-white text-xs font-bold"
+                                    :title="`Promoción: ${f.any_valid_promotion.discount_percent}% de descuento`"
+                                >
+                                    -{{
+                                        f.any_valid_promotion.discount_percent
+                                    }}%
+                                </span>
+                            </div>
                         </td>
                         <td class="p-3">
                             <span class="font-medium">{{ f.origin.name }}</span>
@@ -100,7 +120,10 @@
                             </span>
                         </td>
                         <td class="p-3 font-medium">
-                            ${{ (+f.price_per_seat).toLocaleString("es-CO") }}
+                            ${{
+                                (+f.price_per_seat).toLocaleString("es-CO")
+                            }}
+                            COP
                         </td>
                         <td class="p-3">
                             {{ f.capacity_first }}/{{ f.capacity_economy }}
@@ -121,15 +144,26 @@
                                 </button>
                                 <button
                                     class="h-9 px-3 rounded-lg border text-sm hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    :class="
+                                        f.any_valid_promotion
+                                            ? 'border-green-500 text-green-700 bg-green-50'
+                                            : ''
+                                    "
                                     @click="openPromo(f)"
                                     :disabled="!canCreatePromo(f)"
                                     :title="
                                         !canCreatePromo(f)
                                             ? 'No se pueden crear promociones para vuelos pasados o completados'
-                                            : ''
+                                            : f.any_valid_promotion
+                                            ? 'Editar promoción existente'
+                                            : 'Crear nueva promoción'
                                     "
                                 >
-                                    Promo
+                                    {{
+                                        f.any_valid_promotion
+                                            ? "Editar Promo"
+                                            : "Crear Promo"
+                                    }}
                                 </button>
                                 <button
                                     v-if="f.has_sales"
@@ -181,7 +215,7 @@
         <!-- Modal Crear/Editar -->
         <BaseModal v-model:open="editOpen">
             <template #title>{{
-                form.id ? "Editar Vuelo" : "✈️ Nuevo Vuelo"
+                form.id ? "Editar Vuelo" : "Nuevo Vuelo"
             }}</template>
             <div class="grid gap-4">
                 <!-- Primera fila: Tipo de vuelo -->
@@ -202,11 +236,9 @@
                     </select>
                     <p class="text-xs text-slate-500 mt-1">
                         <span v-if="form.scope === 'national'">
-                            🇨🇴 Vuelos dentro de Colombia
+                            Vuelos dentro de Colombia
                         </span>
-                        <span v-else>
-                            ✈️ Vuelos desde Colombia al exterior
-                        </span>
+                        <span v-else> Vuelos desde Colombia al exterior </span>
                     </p>
                 </div>
 
@@ -337,7 +369,7 @@
                             </span>
                         </div>
                         <p class="text-xs text-blue-600 mt-1">
-                            ✓ Calculado automáticamente según distancia y
+                            Calculado automáticamente según distancia y
                             velocidad del avión
                         </p>
                     </div>
@@ -346,20 +378,23 @@
                             for="flight_price"
                             class="block text-sm font-medium text-gray-700 mb-1"
                         >
-                            💺 Precio Clase Económica *
+                            Precio Clase Económica (COP) *
                         </label>
-                        <input
-                            id="flight_price"
-                            v-model.number="form.price_per_seat"
-                            type="number"
-                            min="0"
-                            max="9999999"
-                            pattern="[0-9]+"
-                            title="Solo se permiten números"
-                            class="h-10 rounded-lg border px-3 w-full"
-                            placeholder="ej: 150000"
-                            @input="validateNumericInput($event)"
-                        />
+                        <div class="relative">
+                            <span
+                                class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium"
+                            >
+                                $
+                            </span>
+                            <input
+                                id="flight_price"
+                                :value="formatPriceDisplay(form.price_per_seat)"
+                                @input="updatePrice($event, 'price_per_seat')"
+                                type="text"
+                                class="h-10 rounded-lg border px-3 pl-7 w-full"
+                                placeholder="150.000"
+                            />
+                        </div>
                         <p class="text-xs text-gray-500 mt-1">
                             Precio base por asiento en clase económica
                         </p>
@@ -369,20 +404,27 @@
                             for="flight_price_first"
                             class="block text-sm font-medium text-gray-700 mb-1"
                         >
-                            ⭐ Precio Primera Clase *
+                            Precio Primera Clase (COP) *
                         </label>
-                        <input
-                            id="flight_price_first"
-                            v-model.number="form.first_class_price"
-                            type="number"
-                            min="0"
-                            max="9999999"
-                            pattern="[0-9]+"
-                            title="Solo se permiten números"
-                            class="h-10 rounded-lg border px-3 w-full"
-                            placeholder="ej: 300000"
-                            @input="validateNumericInput($event)"
-                        />
+                        <div class="relative">
+                            <span
+                                class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium"
+                            >
+                                $
+                            </span>
+                            <input
+                                id="flight_price_first"
+                                :value="
+                                    formatPriceDisplay(form.first_class_price)
+                                "
+                                @input="
+                                    updatePrice($event, 'first_class_price')
+                                "
+                                type="text"
+                                class="h-10 rounded-lg border px-3 pl-7 w-full"
+                                placeholder="300.000"
+                            />
+                        </div>
                         <p class="text-xs text-gray-500 mt-1">
                             Precio por asiento en primera clase (generalmente 2x
                             económica)
@@ -400,7 +442,7 @@
                             {{ form.capacity_first }} asientos
                         </div>
                         <p class="text-xs text-blue-600 mt-1">
-                            ✓ Del avión seleccionado
+                            Del avión seleccionado
                         </p>
                     </div>
                     <div v-if="form.aircraft_id">
@@ -415,7 +457,7 @@
                             {{ form.capacity_economy }} asientos
                         </div>
                         <p class="text-xs text-blue-600 mt-1">
-                            ✓ Del avión seleccionado
+                            Del avión seleccionado
                         </p>
                     </div>
                 </div>
@@ -466,9 +508,10 @@
 
         <!-- Modal Promoción -->
         <BaseModal v-model:open="promoOpen">
-            <template #title
-                >Crear promoción — {{ currentFlight?.code }}</template
-            >
+            <template #title>
+                {{ promo.id ? "Editar" : "Crear" }} promoción —
+                {{ currentFlight?.code }}
+            </template>
             <div class="grid md:grid-cols-2 gap-3">
                 <div>
                     <label
@@ -570,9 +613,17 @@
 import { reactive, ref, onMounted, computed, watch, nextTick } from "vue";
 import { api } from "../../lib/api";
 import { useAuth } from "../../stores/auth";
+import { useSweetAlert } from "../../composables/useSweetAlert";
 import BaseModal from "../../components/ui/BaseModal.vue";
 
-// --- Componente Modal (Reutilizable) ---
+const auth = useAuth();
+const {
+    success,
+    error: showError,
+    warning,
+    confirm: showConfirm,
+} = useSweetAlert();
+
 const Modal = {
     props: ["open"],
     emits: ["update:open"],
@@ -589,7 +640,6 @@ const Modal = {
 };
 
 // --- Estado del Componente ---
-const auth = useAuth();
 const list = ref({ data: [], meta: null });
 const cities = ref([]);
 const aircraft = ref([]);
@@ -912,58 +962,70 @@ async function save() {
     try {
         // Validaciones del frontend
         const errors = [];
-        
+
         if (!form.origin_id) {
-            errors.push('La ciudad de origen es requerida.');
+            errors.push("La ciudad de origen es requerida.");
         }
-        
+
         if (!form.destination_id) {
-            errors.push('La ciudad de destino es requerida.');
+            errors.push("La ciudad de destino es requerida.");
         }
-        
-        if (form.origin_id && form.destination_id && form.origin_id === form.destination_id) {
-            errors.push('La ciudad de destino debe ser diferente al origen.');
+
+        if (
+            form.origin_id &&
+            form.destination_id &&
+            form.origin_id === form.destination_id
+        ) {
+            errors.push("La ciudad de destino debe ser diferente al origen.");
         }
-        
+
         if (!form.departure_at) {
-            errors.push('La fecha y hora de salida es requerida.');
+            errors.push("La fecha y hora de salida es requerida.");
         } else {
             // Validar que sea una fecha válida
             const departureDate = new Date(form.departure_at);
             if (isNaN(departureDate.getTime())) {
-                errors.push('La fecha de salida no es válida.');
+                errors.push("La fecha de salida no es válida.");
             } else if (departureDate <= new Date()) {
-                errors.push('La fecha de salida debe ser posterior a la fecha actual.');
+                errors.push(
+                    "La fecha de salida debe ser posterior a la fecha actual."
+                );
             }
         }
-        
+
         if (!form.price_per_seat || form.price_per_seat <= 0) {
-            errors.push('El precio por asiento es requerido y debe ser mayor a 0.');
+            errors.push(
+                "El precio por asiento es requerido y debe ser mayor a 0."
+            );
         }
-        
+
         if (!form.first_class_price || form.first_class_price <= 0) {
-            errors.push('El precio de primera clase es requerido y debe ser mayor a 0.');
+            errors.push(
+                "El precio de primera clase es requerido y debe ser mayor a 0."
+            );
         }
-        
+
         if (!form.duration_minutes || form.duration_minutes < 10) {
-            errors.push('La duración del vuelo debe ser de al menos 10 minutos.');
+            errors.push(
+                "La duración del vuelo debe ser de al menos 10 minutos."
+            );
         }
-        
+
         if (!form.capacity_economy || form.capacity_economy < 1) {
-            errors.push('La capacidad de clase económica debe ser al menos 1.');
+            errors.push("La capacidad de clase económica debe ser al menos 1.");
         }
-        
+
         if (!form.id && !form.image) {
-            errors.push('La imagen del vuelo es requerida.');
+            errors.push("La imagen del vuelo es requerida.");
         }
-        
+
         // Si hay errores, mostrarlos y detener el envío
         if (errors.length > 0) {
             formErrors.value = errors;
             saving.value = false;
             return;
         }
-        
+
         if (!form.id) {
             // --- CREAR ---
             const fd = new FormData();
@@ -1035,11 +1097,12 @@ async function save() {
             const errorMessage = e.response?.data?.message;
 
             if (errorMessage && errorMessage.includes("pasado")) {
-                alert(
+                showError(
+                    "No se puede editar",
                     "No se puede editar un vuelo cuya fecha de salida ya pasó."
                 );
             } else if (errorMessage) {
-                alert(errorMessage);
+                showError("Error de validación", errorMessage);
             }
         }
 
@@ -1052,12 +1115,14 @@ async function save() {
 }
 
 async function cancelFlight(f) {
-    if (
-        !confirm(
-            `¿Seguro que quieres cancelar el vuelo ${f.code}? Esta acción no se puede deshacer.`
-        )
-    )
-        return;
+    const confirmed = await showConfirm(
+        "¿Cancelar vuelo?",
+        `¿Seguro que quieres cancelar el vuelo ${f.code}? Esta acción no se puede deshacer.`,
+        "Sí, cancelar",
+        "No"
+    );
+
+    if (!confirmed) return;
 
     try {
         await api.post(
@@ -1066,55 +1131,123 @@ async function cancelFlight(f) {
             { headers: { Authorization: "Bearer " + auth.token } }
         );
         await reload();
+        await success(
+            "Vuelo cancelado",
+            "El vuelo ha sido cancelado exitosamente."
+        );
     } catch (error) {
-        alert("Error al cancelar el vuelo.");
+        showError(
+            "Error al cancelar el vuelo",
+            error.response?.data?.message || error.message
+        );
         console.error(error);
     }
 }
 
 async function deleteFlight(f) {
-    if (
-        !confirm(
-            `¿Seguro que quieres ELIMINAR PERMANENTEMENTE el vuelo ${f.code}? Esta acción no se puede deshacer y eliminará todos los datos asociados (asientos, noticias, promociones).`
-        )
-    )
-        return;
+    const confirmed = await showConfirm(
+        "¿ELIMINAR PERMANENTEMENTE?",
+        `¿Seguro que quieres ELIMINAR PERMANENTEMENTE el vuelo ${f.code}? Esta acción no se puede deshacer y eliminará todos los datos asociados (asientos, noticias, promociones).`,
+        "Sí, eliminar",
+        "Cancelar"
+    );
+
+    if (!confirmed) return;
 
     try {
         await api.delete(`/admin/flights/${f.id}`, {
             headers: { Authorization: "Bearer " + auth.token },
         });
         await reload();
-        alert("Vuelo eliminado correctamente");
+        await success(
+            "Vuelo eliminado",
+            "El vuelo ha sido eliminado correctamente."
+        );
     } catch (error) {
         const errorMsg =
             error.response?.data?.error || "Error al eliminar el vuelo.";
-        alert(errorMsg);
+        showError("Error al eliminar", errorMsg);
         console.error(error);
     }
 }
 
 // --- Lógica para Promociones ---
-function openPromo(f) {
+async function openPromo(f) {
     // Validar si el vuelo ya se realizó
     const flightDate = new Date(f.departure_at);
     const now = new Date();
 
     if (f.status === "completed" || flightDate < now) {
-        alert(
+        warning(
+            "No disponible",
             "No se pueden crear promociones para vuelos que ya se han realizado."
         );
         return;
     }
 
     currentFlight.value = f;
-    Object.assign(promo, {
-        title: `Promo ${f.code}`,
-        discount_percent: 10,
-        starts_at: toLocalInput(new Date()), // Fecha actual como inicio por defecto
-        ends_at: toLocalInput(flightDate), // Fecha del vuelo como fin por defecto
-        is_active: true,
-    });
+
+    try {
+        // Verificar si ya existe una promoción válida (incluyendo futuras)
+        const { data } = await api.get(`/flights/${f.id}/promotions`, {
+            headers: { Authorization: "Bearer " + auth.token },
+        });
+
+        const validPromo = data.valid_promotion;
+
+        if (validPromo) {
+            // Cargar promoción existente (puede estar activa o futura)
+            Object.assign(promo, {
+                id: validPromo.id,
+                title: validPromo.title || `Promo ${f.code}`,
+                discount_percent: validPromo.discount_percent,
+                starts_at: toLocalInput(new Date(validPromo.starts_at)),
+                ends_at: toLocalInput(new Date(validPromo.ends_at)),
+                is_active: validPromo.is_active,
+            });
+
+            const now = new Date();
+            const startsAt = new Date(validPromo.starts_at);
+
+            if (startsAt > now) {
+                await info(
+                    "Promoción programada",
+                    `Este vuelo tiene una promoción programada con ${
+                        validPromo.discount_percent
+                    }% de descuento que iniciará el ${startsAt.toLocaleDateString(
+                        "es-ES"
+                    )}. Puedes editarla a continuación.`
+                );
+            } else {
+                await info(
+                    "Promoción activa",
+                    `Este vuelo ya tiene una promoción activa con ${validPromo.discount_percent}% de descuento. Puedes editarla a continuación.`
+                );
+            }
+        } else {
+            // Nueva promoción
+            Object.assign(promo, {
+                id: null,
+                title: `Promo ${f.code}`,
+                discount_percent: 10,
+                starts_at: toLocalInput(new Date()),
+                ends_at: toLocalInput(flightDate),
+                is_active: true,
+            });
+        }
+    } catch (error) {
+        console.error("Error al verificar promociones:", error);
+        // Si falla la verificación, continuar con nueva promoción
+        Object.assign(promo, {
+            id: null,
+            title: `Promo ${f.code}`,
+            discount_percent: 10,
+            starts_at: toLocalInput(new Date()),
+            ends_at: toLocalInput(flightDate),
+            is_active: true,
+        });
+    }
+
     promoError.value = "";
     promoOpen.value = true;
 }
@@ -1157,17 +1290,34 @@ async function savePromo() {
             description: "", // opcional
         };
 
-        await api.post(
+        const response = await api.post(
             `/flights/${currentFlight.value.id}/promotions`,
             payload,
             {
                 headers: { Authorization: "Bearer " + auth.token },
             }
         );
+
         promoOpen.value = false;
-        alert("Promoción creada exitosamente");
+
+        // Verificar si fue una actualización o creación
+        if (response.data.updated) {
+            await success(
+                "Promoción actualizada",
+                "La promoción existente ha sido actualizada exitosamente."
+            );
+        } else {
+            await success(
+                "Promoción creada",
+                "La promoción ha sido creada exitosamente."
+            );
+        }
+
+        // Recargar vuelos para mostrar la promoción actualizada
+        await reload();
     } catch (e) {
-        promoError.value = e.response?.data?.message || "Error al crear promo";
+        promoError.value =
+            e.response?.data?.message || "Error al guardar promo";
     }
 }
 
@@ -1176,5 +1326,17 @@ function validateNumericInput(event) {
     // Only allow numbers
     const regex = /[^0-9]/g;
     event.target.value = event.target.value.replace(regex, "");
+}
+
+// Funciones para formatear precios con puntuación
+function formatPriceDisplay(value) {
+    if (!value || value === 0) return "";
+    return Number(value).toLocaleString("es-CO");
+}
+
+function updatePrice(event, field) {
+    // Remover todo excepto números
+    const numericValue = event.target.value.replace(/[^\d]/g, "");
+    form[field] = numericValue ? parseInt(numericValue) : 0;
 }
 </script>

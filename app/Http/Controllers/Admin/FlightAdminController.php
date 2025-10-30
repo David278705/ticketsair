@@ -15,7 +15,7 @@ class FlightAdminController extends Controller
 {
   // GET /admin/flights
   public function index(Request $r) {
-    $q = Flight::query()->with(['origin','destination'])
+    $q = Flight::query()->with(['origin','destination','anyValidPromotion'])
       ->when($r->filled('code'), fn($q)=>$q->where('code','like','%'.$r->code.'%'))
       ->when($r->filled('status'), fn($q)=>$q->where('status',$r->status))
       ->when($r->filled('origin_id'), fn($q)=>$q->where('origin_id',$r->origin_id))
@@ -99,7 +99,7 @@ class FlightAdminController extends Controller
       // Crear noticia automática con la imagen del vuelo
       \App\Models\News::create([
         'title' => "Nuevo vuelo {$flight->code}: ".$flight->origin->name.' → '.$flight->destination->name,
-        'body'  => '¡Ya disponible para reservas y compras! Precio desde $'.number_format($flight->price_per_seat, 0, ',', '.'),
+        'body'  => '¡Ya disponible para reservas y compras!',
         'flight_id' => $flight->id,
         'image_path' => $imagePath,
         'is_promotion' => false,
@@ -187,7 +187,7 @@ class FlightAdminController extends Controller
       if ($news) {
         $news->update([
           'title' => "Nuevo vuelo {$flight->code}: ".$flight->origin->name.' → '.$flight->destination->name,
-          'body'  => '¡Ya disponible para reservas y compras! Precio desde $'.number_format($flight->price_per_seat, 0, ',', '.'),
+          'body'  => '¡Ya disponible para reservas y compras!',
           'image_path' => $data['image_path'] ?? $flight->image_path,
         ]);
       }
@@ -235,7 +235,7 @@ class FlightAdminController extends Controller
     if ($news) {
       $news->update([
         'title' => "Nuevo vuelo {$updatedFlight->code}: ".$updatedFlight->origin->name.' → '.$updatedFlight->destination->name,
-        'body'  => '¡Ya disponible para reservas y compras! Precio desde $'.number_format($updatedFlight->price_per_seat, 0, ',', '.'),
+        'body'  => '¡Ya disponible para reservas y compras!',
         'image_path' => $data['image_path'] ?? $updatedFlight->image_path,
       ]);
     }

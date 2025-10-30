@@ -21,7 +21,12 @@ Tu reserva ha sido confirmada exitosamente. A continuación los detalles:
 **Vuelo:** {{ $booking->flight->code }}  
 **Ruta:** {{ $booking->flight->origin->name }} → {{ $booking->flight->destination->name }}  
 **Fecha de Salida:** {{ $booking->flight->departure_at->format('d/m/Y H:i') }}  
-**Duración:** {{ $booking->flight->duration_minutes }} minutos
+**Duración:** @php
+    $duration = $booking->flight->duration_minutes;
+    $hours = floor($duration / 60);
+    $minutes = $duration % 60;
+    echo $hours > 0 ? ($hours . 'h' . ($minutes > 0 ? ' ' . $minutes . 'min' : '')) : $minutes . 'min';
+@endphp
 
 ---
 

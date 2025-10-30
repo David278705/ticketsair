@@ -10,12 +10,15 @@
 
         <template v-else>
             <!-- SECCIÓN 1: PROMOCIONES -->
-            <section v-if="promotions.length > 0">
+            <section
+                v-if="promotions.length > 0"
+                class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 border-2 border-blue-200 shadow-sm"
+            >
                 <div class="flex items-center justify-between mb-6">
                     <h2
                         class="text-3xl font-bold text-gray-900 flex items-center gap-2"
                     >
-                        🎉 Promociones Activas
+                        Promociones Activas
                     </h2>
                     <span class="text-sm text-gray-500"
                         >{{ promotions.length }} disponibles</span
@@ -107,13 +110,15 @@
                                     <span
                                         class="text-xs px-2 py-1 rounded-full font-medium"
                                         :class="
-                                            item.flight.is_international
+                                            item.flight.scope ===
+                                            'international'
                                                 ? 'bg-purple-100 text-purple-700'
                                                 : 'bg-green-100 text-green-700'
                                         "
                                     >
                                         {{
-                                            item.flight.is_international
+                                            item.flight.scope ===
+                                            "international"
                                                 ? "🌍 Internacional"
                                                 : "🇨🇴 Nacional"
                                         }}
@@ -182,9 +187,24 @@
                                             >Desde</span
                                         >
                                         <span
-                                            class="text-xl font-black text-blue-600"
+                                            v-if="item.promotion"
+                                            class="text-sm line-through text-gray-400"
                                         >
-                                            ${{
+                                            {{
+                                                formatPrice(
+                                                    item.flight.price_per_seat
+                                                )
+                                            }}
+                                        </span>
+                                        <span
+                                            class="text-xl font-black"
+                                            :class="
+                                                item.promotion
+                                                    ? 'text-green-600'
+                                                    : 'text-blue-600'
+                                            "
+                                        >
+                                            {{
                                                 formatPrice(
                                                     calculateDiscountedPrice(
                                                         item.flight
@@ -196,16 +216,6 @@
                                             }}
                                         </span>
                                     </div>
-                                    <span
-                                        v-if="item.promotion"
-                                        class="text-sm text-gray-400 line-through"
-                                    >
-                                        ${{
-                                            formatPrice(
-                                                item.flight.price_per_seat
-                                            )
-                                        }}
-                                    </span>
                                 </div>
                             </div>
 
@@ -256,9 +266,14 @@
             </section>
 
             <!-- SECCIÓN 2: NOTICIAS GENERALES -->
-            <section v-if="regularNews.length > 0">
+            <section
+                v-if="regularNews.length > 0"
+                class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm"
+            >
                 <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-3xl font-bold text-gray-900">
+                    <h2
+                        class="text-3xl font-bold text-gray-900 flex items-center gap-2"
+                    >
                         Últimas Noticias
                     </h2>
                     <span class="text-sm text-gray-500"
@@ -270,89 +285,169 @@
                     <div
                         v-for="item in regularNews"
                         :key="'news-' + item.id"
-                        class="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300"
+                        class="bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5 overflow-hidden"
                     >
                         <!-- Imagen -->
-                        <img
-                            v-if="item.image_path"
-                            class="rounded-t-xl w-full h-48 object-cover"
-                            :src="getImageUrl(item.image_path)"
-                            :alt="item.title"
-                        />
-                        <div
-                            v-else
-                            class="rounded-t-xl w-full h-48 bg-gradient-to-br from-slate-500 to-slate-600 flex items-center justify-center"
-                        >
-                            <svg
-                                class="w-16 h-16 text-white opacity-50"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
+                        <div class="relative">
+                            <img
+                                v-if="item.image_path"
+                                class="w-full h-48 object-cover"
+                                :src="getImageUrl(item.image_path)"
+                                :alt="item.title"
+                            />
+                            <div
+                                v-else
+                                class="w-full h-48 bg-gradient-to-br from-slate-100 via-gray-100 to-slate-200 flex items-center justify-center"
                             >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
-                                />
-                            </svg>
+                                <svg
+                                    class="w-16 h-16 text-slate-400 opacity-60"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
+                                    />
+                                </svg>
+                            </div>
+
+                            <!-- Fecha Badge -->
+                            <div
+                                class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-sm border border-slate-200"
+                            >
+                                <span
+                                    class="text-xs font-medium text-slate-600"
+                                >
+                                    {{ formatDate(item.created_at) }}
+                                </span>
+                            </div>
                         </div>
 
                         <!-- Contenido -->
                         <div class="p-5">
                             <h5
-                                class="mb-2 text-xl font-bold tracking-tight text-gray-900"
+                                class="mb-3 text-lg font-bold tracking-tight text-gray-900 line-clamp-2"
                             >
                                 {{ item.title }}
                             </h5>
 
-                            <!-- Info del Vuelo MEJORADA (si existe) -->
+                            <!-- Info del Vuelo (si existe) -->
                             <div
                                 v-if="item.flight"
-                                class="mb-3 p-3 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg border border-blue-200"
+                                class="mb-3 p-3 bg-gradient-to-br from-slate-50 to-gray-50 rounded-lg border border-slate-200"
                             >
                                 <div
                                     class="flex items-center justify-between mb-2"
                                 >
                                     <div class="flex items-center gap-1.5">
-                                        <svg
-                                            class="w-4 h-4 text-blue-600"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
+                                        <div
+                                            class="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center"
                                         >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                                            />
-                                        </svg>
+                                            <svg
+                                                class="w-3.5 h-3.5 text-slate-600"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                                                />
+                                            </svg>
+                                        </div>
                                         <span
-                                            class="font-bold text-blue-900 text-sm"
+                                            class="font-semibold text-slate-700 text-sm"
                                             >{{ item.flight.code }}</span
                                         >
                                     </div>
                                     <span
-                                        class="text-blue-700 font-semibold text-sm"
+                                        class="text-slate-600 font-medium text-xs px-2 py-1 bg-white rounded-md"
+                                        :class="
+                                            item.flight.scope ===
+                                            'international'
+                                                ? 'border border-purple-200'
+                                                : 'border border-green-200'
+                                        "
                                     >
-                                        {{ item.flight.origin?.code }} →
-                                        {{ item.flight.destination?.code }}
-                                    </span>
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs text-gray-500"
-                                        >Desde</span
-                                    >
-                                    <span
-                                        class="text-base font-bold text-blue-600"
-                                    >
-                                        ${{
-                                            formatPrice(
-                                                item.flight.price_per_seat
-                                            )
+                                        {{
+                                            item.flight.scope ===
+                                            "international"
+                                                ? "🌍"
+                                                : "🇨🇴"
                                         }}
                                     </span>
+                                </div>
+
+                                <!-- Ruta simplificada -->
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2 flex-1">
+                                        <span
+                                            class="text-sm font-bold text-slate-700"
+                                        >
+                                            {{ item.flight.origin?.code }}
+                                        </span>
+                                        <svg
+                                            class="w-4 h-4 text-slate-400"
+                                            fill="currentColor"
+                                            viewBox="0 0 20 20"
+                                        >
+                                            <path
+                                                fill-rule="evenodd"
+                                                d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                                                clip-rule="evenodd"
+                                            />
+                                        </svg>
+                                        <span
+                                            class="text-sm font-bold text-slate-700"
+                                        >
+                                            {{ item.flight.destination?.code }}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div
+                                    class="flex items-center justify-between mt-2 pt-2 border-t border-slate-200"
+                                >
+                                    <span class="text-xs text-slate-500"
+                                        >Desde</span
+                                    >
+                                    <div class="flex items-center gap-2">
+                                        <span
+                                            v-if="item.flight.active_promotion"
+                                            class="text-xs line-through text-slate-400"
+                                        >
+                                            {{
+                                                formatPrice(
+                                                    item.flight.price_per_seat
+                                                )
+                                            }}
+                                        </span>
+                                        <span
+                                            class="text-base font-bold"
+                                            :class="
+                                                item.flight.active_promotion
+                                                    ? 'text-green-600'
+                                                    : 'text-slate-700'
+                                            "
+                                        >
+                                            {{
+                                                formatPrice(
+                                                    calculateDiscountedPrice(
+                                                        item.flight
+                                                            .price_per_seat,
+                                                        item.flight
+                                                            .active_promotion
+                                                            ?.discount_percent
+                                                    )
+                                                )
+                                            }}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
 
@@ -429,12 +524,8 @@
         <PassengersModal
             v-model:open="passengersOpen"
             :passengers-count="passengersCount"
-            :base-price-per-seat="
-                parseFloat(selectedFlight?.price_per_seat) || 0
-            "
-            :first-class-price="
-                parseFloat(selectedFlight?.first_class_price) || 0
-            "
+            :base-price-per-seat="discountedBasePricePerSeat"
+            :first-class-price="discountedFirstClassPrice"
             @submit="onPassengersSubmit"
         />
 
@@ -454,6 +545,7 @@ import { api, BASE_URL } from "../../lib/api";
 import { useAuth } from "../../stores/auth";
 import { useUi } from "../../stores/ui";
 import { useCurrency } from "../../composables/useCurrency";
+import { useSweetAlert } from "../../composables/useSweetAlert";
 import FlightInfoModal from "../booking/FlightInfoModal.vue";
 import PassengersModal from "../booking/PassengersModal.vue";
 import PaymentModal from "../booking/PaymentModal.vue";
@@ -461,6 +553,7 @@ import PaymentModal from "../booking/PaymentModal.vue";
 const auth = useAuth();
 const ui = useUi();
 const { formatPrice: formatPriceCurrency } = useCurrency();
+const { success, error: showError } = useSweetAlert();
 
 const loading = ref(true);
 const allNews = ref([]);
@@ -475,6 +568,30 @@ const passengersCount = ref(1); // Número de pasajeros
 const pendingPassengers = ref([]);
 const pendingBooking = ref(null);
 const actionLoading = ref(false);
+
+// Precios con descuento aplicado para el modal de pasajeros
+const discountedBasePricePerSeat = computed(() => {
+    if (!selectedFlight.value) return 0;
+    const basePrice = parseFloat(selectedFlight.value.price_per_seat) || 0;
+    if (selectedFlight.value.active_promotion) {
+        const discount = selectedFlight.value.active_promotion.discount_percent;
+        return basePrice * (1 - discount / 100);
+    }
+    return basePrice;
+});
+
+const discountedFirstClassPrice = computed(() => {
+    if (!selectedFlight.value) return 0;
+    const firstPrice =
+        parseFloat(selectedFlight.value.first_class_price) ||
+        parseFloat(selectedFlight.value.price_per_seat) * 2 ||
+        0;
+    if (selectedFlight.value.active_promotion) {
+        const discount = selectedFlight.value.active_promotion.discount_percent;
+        return firstPrice * (1 - discount / 100);
+    }
+    return firstPrice;
+});
 
 // Separar promociones y noticias
 const promotions = computed(() =>
@@ -533,27 +650,17 @@ const onPassengersSubmit = async (passengers) => {
     passengersOpen.value = false;
 
     // Calcular total basado en las clases individuales de cada pasajero
-    const economyPrice = parseFloat(selectedFlight.value.price_per_seat);
-    const firstClassPrice = parseFloat(selectedFlight.value.first_class_price);
+    // usando precios ya con descuento aplicado
     let totalAmount = 0;
 
     // Sumar el precio de cada pasajero según su clase
     passengers.forEach((p) => {
         if (p.flight_class === "first") {
-            totalAmount += firstClassPrice;
+            totalAmount += discountedFirstClassPrice.value;
         } else {
-            totalAmount += economyPrice;
+            totalAmount += discountedBasePricePerSeat.value;
         }
     });
-
-    // Aplicar descuento si es promoción
-    const newsItem = allNews.value.find(
-        (n) => n.flight?.id === selectedFlight.value.id && n.promotion
-    );
-    if (newsItem?.promotion) {
-        totalAmount =
-            totalAmount * (1 - newsItem.promotion.discount_percent / 100);
-    }
 
     pendingBooking.value = {
         total_amount: totalAmount,
@@ -605,10 +712,15 @@ const processBooking = async (paymentData) => {
         const isPurchase = selectedAction.value === "purchase";
 
         const message = isPurchase
-            ? `Compra realizada exitosamente\n\nCódigo de Reserva: ${booking.reservation_code}\n\nRevisa tu correo para más detalles. Redirigiendo a Mis Viajes...`
-            : `Reserva creada exitosamente\n\nCódigo de Reserva: ${booking.reservation_code}\n\nTienes 24 horas para completar tu compra. Recibirás un recordatorio por correo.\n\nRedirigiendo a Mis Viajes...`;
+            ? `Código de Reserva: ${booking.reservation_code}\n\nRevisa tu correo para más detalles.`
+            : `Código de Reserva: ${booking.reservation_code}\n\nTienes 24 horas para completar tu compra. Recibirás un recordatorio por correo.`;
 
-        alert(message);
+        await success(
+            isPurchase
+                ? "¡Compra realizada exitosamente!"
+                : "¡Reserva creada exitosamente!",
+            message
+        );
 
         setTimeout(() => {
             window.location.href = "/mis-viajes";
@@ -618,7 +730,7 @@ const processBooking = async (paymentData) => {
             e.response?.data?.message ||
             e.response?.data?.error ||
             "No se pudo procesar la solicitud.";
-        alert(`Error: ${errorMessage}`);
+        showError("Error al procesar", errorMessage);
     } finally {
         actionLoading.value = false;
         paymentOpen.value = false;

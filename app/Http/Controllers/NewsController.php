@@ -17,19 +17,16 @@ class NewsController extends Controller
           // Solo vuelos disponibles (scheduled y futuros)
           $query->where('status', 'scheduled')
                 ->where('departure_at', '>', now())
-                ->select('id','origin_id','destination_id','price_per_seat','first_class_price','departure_at','duration_minutes','capacity_first','capacity_economy');
+                ->with(['activePromotion', 'origin', 'destination'])
+                ->select('id','code','origin_id','destination_id','price_per_seat','first_class_price','departure_at','duration_minutes','capacity_first','capacity_economy','scope');
         },
-        'flight.origin:id,name',
-        'flight.destination:id,name',
+        'flight.origin:id,name,timezone,country',
+        'flight.destination:id,name,timezone,country',
         'promotion' => function($query) {
-          // Solo promociones activas
+          // Solo promociones activas (YA INICIADAS)
           $query->where('is_active', true)
-                ->where(function($q) {
-                  $q->whereNull('starts_at')->orWhere('starts_at', '<=', now());
-                })
-                ->where(function($q) {
-                  $q->whereNull('ends_at')->orWhere('ends_at', '>=', now());
-                })
+                ->where('starts_at', '<=', now())
+                ->where('ends_at', '>=', now())
                 ->select('id','flight_id','title','discount_percent','starts_at','ends_at','is_active');
         }
       ])
@@ -40,10 +37,29 @@ class NewsController extends Controller
             ->where('departure_at', '>', now());
         })->orWhereNull('flight_id');
       })
+      // Si es promoción, solo mostrar si la promoción YA inició
+      ->where(function($query) {
+        $query->where('is_promotion', false)
+              ->orWhereHas('promotion', function($q) {
+                $q->where('is_active', true)
+                  ->where('starts_at', '<=', now())
+                  ->where('ends_at', '>=', now());
+              });
+      })
       ->when($r->filled('is_promotion'), fn($q)=>$q->where('is_promotion', (bool)$r->is_promotion))
       ->orderByDesc('created_at');
     
-    return $q->paginate(12);
+    $news = $q->paginate(12);
+    
+    // Agregar información de hora de llegada con zona horaria para cada vuelo
+    $news->getCollection()->transform(function ($newsItem) {
+        if ($newsItem->flight) {
+            $newsItem->flight->arrival_info = $newsItem->flight->getFormattedArrivalTime();
+        }
+        return $newsItem;
+    });
+    
+    return $news;
   }
 
   // POST /news (admin/root)
