@@ -309,6 +309,54 @@ class FlightAdminController extends Controller
     });
   }
 
+  // POST /admin/flights/update-statuses
+  public function updateStatuses(Request $r) {
+    try {
+      $now = \Carbon\Carbon::now();
+      $completedFlights = [];
+      $updatedCount = 0;
+
+      // Obtener todos los vuelos programados
+      $flights = Flight::where('status', 'scheduled')
+        ->with(['origin', 'destination'])
+        ->get();
+
+      foreach ($flights as $flight) {
+        $departureTime = \Carbon\Carbon::parse($flight->departure_at);
+        $arrivalTime = $departureTime->copy()->addMinutes($flight->duration_minutes);
+
+        // Si ya llegó el vuelo (hora de salida + duración < ahora)
+        if ($arrivalTime->lessThan($now)) {
+          $flight->update(['status' => 'completed']);
+          
+          $completedFlights[] = [
+            'code' => $flight->code,
+            'route' => $flight->origin->name . ' → ' . $flight->destination->name,
+            'departure' => $departureTime->format('d/m/Y H:i'),
+            'arrival' => $arrivalTime->format('d/m/Y H:i'),
+          ];
+          
+          $updatedCount++;
+        }
+      }
+
+      return response()->json([
+        'success' => true,
+        'updated_count' => $updatedCount,
+        'flights' => $completedFlights,
+        'message' => $updatedCount > 0 
+          ? "Se actualizaron {$updatedCount} vuelo(s) a estado 'completado'"
+          : "No hay vuelos pendientes de actualizar"
+      ]);
+
+    } catch (\Exception $e) {
+      return response()->json([
+        'success' => false,
+        'message' => 'Error al actualizar estados: ' . $e->getMessage()
+      ], 500);
+    }
+  }
+
   /**
    * Genera un código único para el vuelo
    */

@@ -4,6 +4,25 @@
             <h1 class="text-3xl font-bold text-slate-800">Gestión de Vuelos</h1>
             <div class="flex gap-2">
                 <button
+                    class="h-10 px-4 rounded-lg border bg-emerald-600 text-white hover:bg-emerald-700 transition-colors flex items-center gap-2"
+                    @click="updateFlightStatuses()"
+                    title="Actualizar estados de vuelos completados"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                    >
+                        <path
+                            fill-rule="evenodd"
+                            d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+                            clip-rule="evenodd"
+                        />
+                    </svg>
+                    Registrar vuelos
+                </button>
+                <button
                     class="h-10 px-4 rounded-lg border bg-white hover:bg-slate-50 transition-colors flex items-center gap-2"
                     @click="openCreate()"
                 >
@@ -614,6 +633,7 @@ import { reactive, ref, onMounted, computed, watch, nextTick } from "vue";
 import { api } from "../../lib/api";
 import { useAuth } from "../../stores/auth";
 import { useSweetAlert } from "../../composables/useSweetAlert";
+import Swal from "sweetalert2";
 import BaseModal from "../../components/ui/BaseModal.vue";
 
 const auth = useAuth();
@@ -1167,6 +1187,77 @@ async function deleteFlight(f) {
         const errorMsg =
             error.response?.data?.error || "Error al eliminar el vuelo.";
         showError("Error al eliminar", errorMsg);
+        console.error(error);
+    }
+}
+
+// --- Actualizar Estados de Vuelos ---
+async function updateFlightStatuses() {
+    try {
+        const { data } = await api.post(
+            "/admin/flights/update-statuses",
+            {},
+            { headers: { Authorization: "Bearer " + auth.token } }
+        );
+
+        if (data.success) {
+            // Recargar la lista de vuelos
+            await reload();
+
+            // Construir el mensaje HTML con los detalles
+            let html = `<p class="mb-4">${data.message}</p>`;
+            
+            if (data.flights && data.flights.length > 0) {
+                html += `
+                    <div class="text-left bg-slate-50 rounded-lg p-4 max-h-96 overflow-y-auto">
+                        <p class="font-semibold mb-3 text-slate-700">Vuelos actualizados:</p>
+                        <ul class="space-y-3">
+                `;
+                
+                data.flights.forEach((flight) => {
+                    html += `
+                        <li class="border-b border-slate-200 pb-2 last:border-0">
+                            <div class="font-mono text-blue-600 font-semibold">${flight.code}</div>
+                            <div class="text-sm text-slate-600">${flight.route}</div>
+                            <div class="text-xs text-slate-500 mt-1">
+                                <span class="inline-flex items-center">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/>
+                                    </svg>
+                                    Salida: ${flight.departure}
+                                </span>
+                                <span class="ml-3 inline-flex items-center">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" transform="rotate(180 10 10)"/>
+                                    </svg>
+                                    Llegada: ${flight.arrival}
+                                </span>
+                            </div>
+                        </li>
+                    `;
+                });
+                
+                html += `
+                        </ul>
+                    </div>
+                `;
+            }
+
+            // Mostrar SweetAlert con los detalles
+            await Swal.fire({
+                icon: data.updated_count > 0 ? "success" : "info",
+                title: data.updated_count > 0 ? "Estados actualizados" : "Sin cambios",
+                html: html,
+                confirmButtonText: "Entendido",
+                confirmButtonColor: data.updated_count > 0 ? "#10b981" : "#3b82f6",
+                width: "600px",
+            });
+        }
+    } catch (error) {
+        showError(
+            "Error al actualizar estados",
+            error.response?.data?.message || error.message
+        );
         console.error(error);
     }
 }
