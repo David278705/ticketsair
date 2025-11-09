@@ -5,11 +5,47 @@ namespace App\Http\Controllers;
 use App\Http\Requests\PromotionStoreRequest;
 use App\Models\Flight;
 use App\Models\Promotion;
+use App\Models\News;
 
 class PromotionController extends Controller
 {
   // POST /flights/{flight}/promotions
   public function store(PromotionStoreRequest $r, Flight $flight) {
+    // Verificar si ya existe una promoción válida (activa o futura) para este vuelo
+    $existingPromo = $flight->promotions()
+        ->where('is_active', true)
+        ->where('ends_at', '>=', now())
+        ->first();
+    
+    if ($existingPromo) {
+      // Actualizar la promoción existente en lugar de crear una nueva
+      $existingPromo->update([
+        'title'            => $r->title,
+        'description'      => $r->description,
+        'discount_percent' => $r->discount_percent,
+        'starts_at'        => $r->starts_at,
+        'ends_at'          => $r->ends_at,
+        'is_active'        => $r->boolean('is_active', true),
+      ]);
+      
+      // Actualizar la noticia asociada
+      $news = News::where('promotion_id', $existingPromo->id)->first();
+      if ($news) {
+        $news->update([
+          'title' => $existingPromo->title,
+          'body'  => $existingPromo->description . ' - ¡' . $existingPromo->discount_percent . '% de descuento! Vuelo ' . $flight->code . ': ' . $flight->origin->name . ' → ' . $flight->destination->name,
+          'image_path' => $flight->image_path,
+        ]);
+      }
+      
+      return response()->json([
+        'message' => 'Promoción actualizada exitosamente',
+        'promotion' => $existingPromo->fresh(),
+        'updated' => true
+      ], 200);
+    }
+    
+    // Crear nueva promoción solo si no existe una activa
     $promo = Promotion::create([
       'flight_id'        => $flight->id,
       'title'            => $r->title,
@@ -21,7 +57,7 @@ class PromotionController extends Controller
     ]);
 
     // Crear noticia de la promoción con la imagen del vuelo
-    \App\Models\News::create([
+    News::create([
       'title'        => $promo->title,
       'body'         => $promo->description . ' - ¡' . $promo->discount_percent . '% de descuento! Vuelo ' . $flight->code . ': ' . $flight->origin->name . ' → ' . $flight->destination->name,
       'flight_id'    => $flight->id,
@@ -30,6 +66,51 @@ class PromotionController extends Controller
       'is_promotion' => true,
     ]);
 
-    return response()->json($promo, 201);
+    return response()->json([
+      'message' => 'Promoción creada exitosamente',
+      'promotion' => $promo,
+      'updated' => false
+    ], 201);
+  }
+  
+  // GET /flights/{flight}/promotions - Obtener promociones del vuelo
+  public function index(Flight $flight) {
+    $promotions = $flight->promotions()
+        ->orderByDesc('created_at')
+        ->get();
+    
+    // Promoción válida (incluyendo futuras)
+    $validPromo = $flight->promotions()
+        ->where('is_active', true)
+        ->where('ends_at', '>=', now())
+        ->first();
+    
+    // Promoción activa (solo si ya empezó)
+    $activePromo = $flight->promotions()
+        ->where('is_active', true)
+        ->where('starts_at', '<=', now())
+        ->where('ends_at', '>=', now())
+        ->first();
+    
+    return response()->json([
+      'promotions' => $promotions,
+      'valid_promotion' => $validPromo,
+      'active_promotion' => $activePromo,
+      'has_valid' => (bool) $validPromo,
+      'has_active' => (bool) $activePromo
+    ]);
+  }
+  
+  // DELETE /promotions/{promotion} - Eliminar promoción
+  public function destroy(Promotion $promotion) {
+    // Eliminar la noticia asociada
+    News::where('promotion_id', $promotion->id)->delete();
+    
+    // Eliminar la promoción
+    $promotion->delete();
+    
+    return response()->json([
+      'message' => 'Promoción eliminada exitosamente'
+    ]);
   }
 }

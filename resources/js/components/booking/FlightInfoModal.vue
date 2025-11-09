@@ -65,7 +65,8 @@
                                             </p>
                                             <p class="text-lg font-semibold">
                                                 {{
-                                                    flight.is_international
+                                                    flight.scope ===
+                                                    "international"
                                                         ? "🌍 Internacional"
                                                         : "🇨🇴 Nacional"
                                                 }}
@@ -104,8 +105,12 @@
                                             <p
                                                 class="text-center text-xs text-gray-500 mt-1"
                                             >
-                                                {{ flight.duration_minutes }}
-                                                min
+                                                ⏱️
+                                                {{
+                                                    formatDuration(
+                                                        flight.duration_minutes
+                                                    )
+                                                }}
                                             </p>
                                         </div>
                                         <div class="text-center">
@@ -124,7 +129,7 @@
                                     <div class="grid grid-cols-2 gap-4">
                                         <div class="p-3 bg-white/60 rounded-lg">
                                             <p class="text-xs text-gray-500">
-                                                Fecha de Salida
+                                                🛫 Salida
                                             </p>
                                             <p class="text-sm font-semibold">
                                                 {{
@@ -133,17 +138,58 @@
                                                     )
                                                 }}
                                             </p>
-                                        </div>
-                                        <div class="p-3 bg-white/60 rounded-lg">
-                                            <p class="text-xs text-gray-500">
-                                                Hora de Salida
-                                            </p>
-                                            <p class="text-sm font-semibold">
+                                            <p
+                                                class="text-xs text-gray-600 mt-1"
+                                            >
                                                 {{
                                                     formatTime(
                                                         flight.departure_at
                                                     )
                                                 }}
+                                            </p>
+                                        </div>
+                                        <div class="p-3 bg-white/60 rounded-lg">
+                                            <p class="text-xs text-gray-500">
+                                                🛬 Llegada
+                                                <span
+                                                    v-if="
+                                                        arrivalInfo?.timezone_abbr
+                                                    "
+                                                    class="font-medium"
+                                                >
+                                                    ({{
+                                                        arrivalInfo.timezone_abbr
+                                                    }})
+                                                </span>
+                                            </p>
+                                            <p
+                                                v-if="arrivalInfo"
+                                                class="text-sm font-semibold"
+                                                :class="
+                                                    arrivalInfo.is_different_day
+                                                        ? 'text-orange-600'
+                                                        : ''
+                                                "
+                                            >
+                                                {{
+                                                    getArrivalDate(arrivalInfo)
+                                                }}
+                                            </p>
+                                            <p
+                                                v-if="arrivalInfo"
+                                                class="text-xs text-gray-600 mt-1"
+                                            >
+                                                {{
+                                                    getArrivalTime(arrivalInfo)
+                                                }}
+                                                <span
+                                                    v-if="
+                                                        arrivalInfo.is_different_day
+                                                    "
+                                                    class="text-orange-600 font-semibold ml-1"
+                                                >
+                                                    (+1 día)
+                                                </span>
                                             </p>
                                         </div>
                                     </div>
@@ -273,6 +319,9 @@ import {
     DialogPanel,
     DialogTitle,
 } from "@headlessui/vue";
+import { useFlightTime } from "../../composables/useFlightTime";
+
+const { formatDuration } = useFlightTime();
 
 const props = defineProps({
     open: Boolean,
@@ -284,6 +333,66 @@ const emit = defineEmits(["update:open", "submit"]);
 
 const passengersCount = ref(1);
 const error = ref("");
+
+// Computed para calcular info de llegada - AUTÓNOMO Y ROBUSTO
+const arrivalInfo = computed(() => {
+    if (!props.flight) return null;
+
+    // PRIORIDAD 1: Si viene del backend con arrival_info completo, usarlo directamente
+    if (props.flight.arrival_info && props.flight.arrival_info.timezone_abbr) {
+        // Asegurarse de que datetime sea un objeto Date válido
+        const datetime =
+            typeof props.flight.arrival_info.datetime === "string"
+                ? new Date(props.flight.arrival_info.datetime)
+                : props.flight.arrival_info.datetime;
+
+        return {
+            ...props.flight.arrival_info,
+            datetime: datetime,
+        };
+    }
+
+    // PRIORIDAD 2: Calcular localmente con la zona horaria del destino
+    // Esto es el fallback si no viene del backend
+    const departure = new Date(props.flight.departure_at);
+    const arrivalLocal = new Date(
+        departure.getTime() + (props.flight.duration_minutes || 0) * 60000
+    );
+
+    // Verificar si llega en un día diferente (comparando fechas en UTC)
+    const isDifferentDay =
+        arrivalLocal.toDateString() !== departure.toDateString();
+
+    // Obtener la zona horaria del destino
+    const destTimezone = props.flight.destination?.timezone || "America/Bogota";
+
+    // Calcular la hora de llegada en la zona horaria del destino
+    let timezoneAbbr = "COT";
+    let arrivalInDestTz = arrivalLocal;
+
+    try {
+        // Usar Intl.DateTimeFormat para obtener la abreviatura correcta
+        const formatter = new Intl.DateTimeFormat("en-US", {
+            timeZone: destTimezone,
+            timeZoneName: "short",
+        });
+
+        const parts = formatter.formatToParts(arrivalLocal);
+        const tzPart = parts.find((part) => part.type === "timeZoneName");
+        if (tzPart) {
+            timezoneAbbr = tzPart.value;
+        }
+    } catch (e) {
+        console.error("Error calculating timezone:", e);
+        timezoneAbbr = "COT";
+    }
+
+    return {
+        datetime: arrivalInDestTz,
+        timezone_abbr: timezoneAbbr,
+        is_different_day: isDifferentDay,
+    };
+});
 
 // Funciones para incrementar/decrementar pasajeros
 const incrementPassengers = () => {
@@ -330,6 +439,21 @@ const formatTime = (date) => {
         hour: "2-digit",
         minute: "2-digit",
     });
+};
+
+// Funciones helper para formatear la hora de llegada
+const getArrivalDate = (arrivalInfo) => {
+    if (!arrivalInfo) return "";
+    // Si viene del backend como string, usar datetime
+    // Si viene del fallback como Date object, usar datetime
+    const dateToFormat = arrivalInfo.datetime || arrivalInfo.formatted;
+    return formatDate(dateToFormat);
+};
+
+const getArrivalTime = (arrivalInfo) => {
+    if (!arrivalInfo) return "";
+    const dateToFormat = arrivalInfo.datetime || arrivalInfo.formatted;
+    return formatTime(dateToFormat);
 };
 
 const close = () => {

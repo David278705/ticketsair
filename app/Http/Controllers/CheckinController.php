@@ -33,7 +33,7 @@ class CheckinController extends Controller
     $hoursBeforeFlight = $now->diffInHours($flight->departure_at, false);
     
     // Nacional: 24 horas antes, Internacional: 48 horas antes
-    $requiredHours = $flight->is_international ? 48 : 24;
+    $requiredHours = ($flight->scope === 'international') ? 48 : 24;
     
     if ($hoursBeforeFlight > $requiredHours) {
         return response()->json([

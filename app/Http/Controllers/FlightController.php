@@ -21,7 +21,7 @@ class FlightController extends Controller
 {
   // Usar el scope available para solo mostrar vuelos programados y no finalizados
   $q = \App\Models\Flight::query()
-        ->with(['origin','destination'])
+        ->with(['origin','destination','activePromotion'])
         ->available(); // Solo vuelos disponibles (no completados ni pasados)
 
   if ($r->filled('origin_id'))      $q->where('origin_id',$r->origin_id);
@@ -36,7 +36,15 @@ class FlightController extends Controller
     'criteria'=>$r->all()
   ]);
 
-  return $q->orderBy('departure_at')->paginate(12);
+  $flights = $q->orderBy('departure_at')->paginate(12);
+  
+  // Agregar información de hora de llegada con zona horaria
+  $flights->getCollection()->transform(function ($flight) {
+      $flight->arrival_info = $flight->getFormattedArrivalTime();
+      return $flight;
+  });
+
+  return $flights;
 }
 
 }

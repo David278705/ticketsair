@@ -86,11 +86,27 @@
                                             placeholder="Apellidos *"
                                             class="h-11 rounded-lg border border-gray-300 px-3 bg-white col-span-2 sm:col-span-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                                         />
-                                        <input
-                                            v-model="p.dni"
-                                            placeholder="Documento *"
-                                            class="h-11 rounded-lg border border-gray-300 px-3 bg-white col-span-2 sm:col-span-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                        />
+                                        <div class="col-span-2 sm:col-span-1">
+                                            <input
+                                                v-model="p.dni"
+                                                placeholder="Documento *"
+                                                @input="checkDuplicateDni"
+                                                :class="[
+                                                    'h-11 rounded-lg border px-3 bg-white w-full focus:ring-2',
+                                                    isDniDuplicate(p.dni, idx)
+                                                        ? 'border-red-500 focus:border-red-500 focus:ring-red-200'
+                                                        : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200',
+                                                ]"
+                                            />
+                                            <p
+                                                v-if="
+                                                    isDniDuplicate(p.dni, idx)
+                                                "
+                                                class="text-xs text-red-600 mt-1"
+                                            >
+                                                ⚠️ Cédula duplicada
+                                            </p>
+                                        </div>
                                         <input
                                             v-model="p.birth_date"
                                             type="date"
@@ -108,13 +124,35 @@
                                                 No binario
                                             </option>
                                         </select>
-                                        <input
-                                            v-model="p.email"
-                                            type="email"
-                                            placeholder="Email"
-                                            required
-                                            class="h-11 rounded-lg border px-3 bg-white col-span-2 sm:col-span-1 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                        />
+                                        <div class="col-span-2 sm:col-span-1">
+                                            <input
+                                                v-model="p.email"
+                                                type="email"
+                                                placeholder="Email *"
+                                                required
+                                                @input="checkDuplicateEmail"
+                                                :class="[
+                                                    'h-11 rounded-lg border px-3 bg-white w-full focus:ring-2',
+                                                    isEmailDuplicate(
+                                                        p.email,
+                                                        idx
+                                                    )
+                                                        ? 'border-red-500 focus:border-red-500 focus:ring-red-200'
+                                                        : 'border-blue-300 focus:border-blue-500 focus:ring-blue-200',
+                                                ]"
+                                            />
+                                            <p
+                                                v-if="
+                                                    isEmailDuplicate(
+                                                        p.email,
+                                                        idx
+                                                    )
+                                                "
+                                                class="text-xs text-red-600 mt-1"
+                                            >
+                                                ⚠️ Email duplicado
+                                            </p>
+                                        </div>
                                     </div>
 
                                     <!-- Selección de Clase -->
@@ -358,6 +396,39 @@ function getAge(dateString) {
     return age;
 }
 
+// Función para verificar si un DNI está duplicado
+function isDniDuplicate(dni, currentIndex) {
+    if (!dni || dni.trim() === "") return false;
+    const normalized = dni.trim().toLowerCase();
+    return passengers.value.some(
+        (p, idx) =>
+            idx !== currentIndex &&
+            p.dni &&
+            p.dni.trim().toLowerCase() === normalized
+    );
+}
+
+// Función para verificar si un email está duplicado
+function isEmailDuplicate(email, currentIndex) {
+    if (!email || email.trim() === "") return false;
+    const normalized = email.trim().toLowerCase();
+    return passengers.value.some(
+        (p, idx) =>
+            idx !== currentIndex &&
+            p.email &&
+            p.email.trim().toLowerCase() === normalized
+    );
+}
+
+// Trigger manual para re-renderizar cuando cambian los valores
+function checkDuplicateDni() {
+    // Forzar re-evaluación de la validación
+}
+
+function checkDuplicateEmail() {
+    // Forzar re-evaluación de la validación
+}
+
 function submit() {
     // Validar campos vacíos
     for (const p of passengers.value) {
@@ -388,6 +459,28 @@ function submit() {
             }.`;
             return;
         }
+    }
+
+    // Validar cédulas duplicadas dentro de la misma reserva
+    const dniCounts = {};
+    for (const p of passengers.value) {
+        const dniNormalized = p.dni.trim().toLowerCase();
+        if (dniCounts[dniNormalized]) {
+            error.value = `La cédula "${p.dni}" está duplicada. Cada pasajero debe tener un documento único.`;
+            return;
+        }
+        dniCounts[dniNormalized] = true;
+    }
+
+    // Validar emails duplicados dentro de la misma reserva
+    const emailCounts = {};
+    for (const p of passengers.value) {
+        const emailNormalized = p.email.trim().toLowerCase();
+        if (emailCounts[emailNormalized]) {
+            error.value = `El email "${p.email}" está duplicado. Cada pasajero debe tener un email único.`;
+            return;
+        }
+        emailCounts[emailNormalized] = true;
     }
 
     // Validar menores

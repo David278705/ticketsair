@@ -15,13 +15,22 @@ class FlightAdminController extends Controller
 {
   // GET /admin/flights
   public function index(Request $r) {
-    $q = Flight::query()->with(['origin','destination'])
+    $q = Flight::query()->with(['origin','destination','anyValidPromotion'])
       ->when($r->filled('code'), fn($q)=>$q->where('code','like','%'.$r->code.'%'))
       ->when($r->filled('status'), fn($q)=>$q->where('status',$r->status))
       ->when($r->filled('origin_id'), fn($q)=>$q->where('origin_id',$r->origin_id))
       ->when($r->filled('destination_id'), fn($q)=>$q->where('destination_id',$r->destination_id))
       ->orderByDesc('departure_at');
-    return $q->paginate(12);
+
+    $flights = $q->paginate(12);
+
+    // Agregar información sobre si tiene ventas
+    $flights->getCollection()->transform(function($flight) {
+      $flight->has_sales = $flight->tickets()->exists() || $flight->bookings()->where('type','purchase')->exists();
+      return $flight;
+    });
+
+    return $flights;
   }
 
   // POST /admin/flights
@@ -90,7 +99,7 @@ class FlightAdminController extends Controller
       // Crear noticia automática con la imagen del vuelo
       \App\Models\News::create([
         'title' => "Nuevo vuelo {$flight->code}: ".$flight->origin->name.' → '.$flight->destination->name,
-        'body'  => '¡Ya disponible para reservas y compras! Precio desde $'.number_format($flight->price_per_seat, 0, ',', '.'),
+        'body'  => '¡Ya disponible para reservas y compras!',
         'flight_id' => $flight->id,
         'image_path' => $imagePath,
         'is_promotion' => false,
@@ -178,7 +187,7 @@ class FlightAdminController extends Controller
       if ($news) {
         $news->update([
           'title' => "Nuevo vuelo {$flight->code}: ".$flight->origin->name.' → '.$flight->destination->name,
-          'body'  => '¡Ya disponible para reservas y compras! Precio desde $'.number_format($flight->price_per_seat, 0, ',', '.'),
+          'body'  => '¡Ya disponible para reservas y compras!',
           'image_path' => $data['image_path'] ?? $flight->image_path,
         ]);
       }
@@ -226,12 +235,43 @@ class FlightAdminController extends Controller
     if ($news) {
       $news->update([
         'title' => "Nuevo vuelo {$updatedFlight->code}: ".$updatedFlight->origin->name.' → '.$updatedFlight->destination->name,
-        'body'  => '¡Ya disponible para reservas y compras! Precio desde $'.number_format($updatedFlight->price_per_seat, 0, ',', '.'),
+        'body'  => '¡Ya disponible para reservas y compras!',
         'image_path' => $data['image_path'] ?? $updatedFlight->image_path,
       ]);
     }
 
     return $updatedFlight;
+  }
+
+  // DELETE /admin/flights/{flight}
+  public function destroy(Flight $flight) {
+    // Verificar si el vuelo tiene tiquetes vendidos
+    $hasSales = $flight->tickets()->exists() || $flight->bookings()->where('type','purchase')->exists();
+
+    if ($hasSales) {
+      return response()->json([
+        'error' => 'No se puede eliminar el vuelo porque ya tiene tiquetes vendidos.'
+      ], 422);
+    }
+
+    return DB::transaction(function() use ($flight) {
+      // Eliminar asientos asociados
+      $flight->seats()->delete();
+
+      // Eliminar reservas (si no son compras)
+      $flight->bookings()->where('type', 'reservation')->delete();
+
+      // Eliminar noticias asociadas al vuelo
+      \App\Models\News::where('flight_id', $flight->id)->delete();
+
+      // Eliminar promociones asociadas
+      \App\Models\Promotion::where('flight_id', $flight->id)->delete();
+
+      // Finalmente eliminar el vuelo
+      $flight->delete();
+
+      return ['ok' => true, 'message' => 'Vuelo eliminado correctamente'];
+    });
   }
 
   // POST /admin/flights/{flight}/cancel
@@ -267,6 +307,54 @@ class FlightAdminController extends Controller
 
       return ['ok'=>true];
     });
+  }
+
+  // POST /admin/flights/update-statuses
+  public function updateStatuses(Request $r) {
+    try {
+      $now = \Carbon\Carbon::now();
+      $completedFlights = [];
+      $updatedCount = 0;
+
+      // Obtener todos los vuelos programados
+      $flights = Flight::where('status', 'scheduled')
+        ->with(['origin', 'destination'])
+        ->get();
+
+      foreach ($flights as $flight) {
+        $departureTime = \Carbon\Carbon::parse($flight->departure_at);
+        $arrivalTime = $departureTime->copy()->addMinutes($flight->duration_minutes);
+
+        // Si ya llegó el vuelo (hora de salida + duración < ahora)
+        if ($arrivalTime->lessThan($now)) {
+          $flight->update(['status' => 'completed']);
+          
+          $completedFlights[] = [
+            'code' => $flight->code,
+            'route' => $flight->origin->name . ' → ' . $flight->destination->name,
+            'departure' => $departureTime->format('d/m/Y H:i'),
+            'arrival' => $arrivalTime->format('d/m/Y H:i'),
+          ];
+          
+          $updatedCount++;
+        }
+      }
+
+      return response()->json([
+        'success' => true,
+        'updated_count' => $updatedCount,
+        'flights' => $completedFlights,
+        'message' => $updatedCount > 0 
+          ? "Se actualizaron {$updatedCount} vuelo(s) a estado 'completado'"
+          : "No hay vuelos pendientes de actualizar"
+      ]);
+
+    } catch (\Exception $e) {
+      return response()->json([
+        'success' => false,
+        'message' => 'Error al actualizar estados: ' . $e->getMessage()
+      ], 500);
+    }
   }
 
   /**

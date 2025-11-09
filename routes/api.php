@@ -106,10 +106,14 @@ Route::middleware(['auth:sanctum','role:admin'])->group(function () {
     Route::get('/admin/flights', [FlightAdminController::class,'index']);
     Route::post('/admin/flights', [FlightAdminController::class,'store']);
     Route::put('/admin/flights/{flight}', [FlightAdminController::class,'update']);
+    Route::delete('/admin/flights/{flight}', [FlightAdminController::class,'destroy']);
     Route::post('/admin/flights/{flight}/cancel', [FlightAdminController::class,'cancel']);
+    Route::post('/admin/flights/update-statuses', [FlightAdminController::class,'updateStatuses']);
     
     // Promociones y noticias (solo admin)
+    Route::get('/flights/{flight}/promotions', [PromotionController::class,'index']);
     Route::post('/flights/{flight}/promotions', [PromotionController::class,'store']);
+    Route::delete('/promotions/{promotion}', [PromotionController::class,'destroy']);
     Route::post('/news', [NewsController::class,'store']);
     
     // Panel de foros para administradores

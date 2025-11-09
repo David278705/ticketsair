@@ -239,7 +239,14 @@
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Duración</div>
-                    <div class="detail-value">{{ $ticket->booking->flight->duration_minutes }}min</div>
+                    <div class="detail-value">
+                        @php
+                            $duration = $ticket->booking->flight->duration_minutes;
+                            $hours = floor($duration / 60);
+                            $minutes = $duration % 60;
+                            echo $hours > 0 ? ($hours . 'h' . ($minutes > 0 ? ' ' . $minutes . 'min' : '')) : $minutes . 'min';
+                        @endphp
+                    </div>
                 </div>
             </div>
             

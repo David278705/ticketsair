@@ -44,8 +44,12 @@ class Flight extends Model
         $now = Carbon::now();
         return $query->where('status', 'scheduled')
             ->where(function($q) use ($now) {
-                $q->where('departure_at', '>', $now)
-                  ->orWhereRaw('DATE_ADD(departure_at, INTERVAL duration_minutes MINUTE) > ?', [$now]);
+                // Incluir vuelos futuros Y vuelos de hoy que aún no han salido
+                $q->whereDate('departure_at', '>', $now->toDateString())
+                  ->orWhere(function($q2) use ($now) {
+                      $q2->whereDate('departure_at', '=', $now->toDateString())
+                         ->whereTime('departure_at', '>', $now->toTimeString());
+                  });
             });
     }
 
@@ -83,6 +87,49 @@ class Flight extends Model
     {
         return $this->status === 'scheduled' && !$this->isPast();
     }
+    
+    /**
+     * Calcular la hora de llegada en la zona horaria del destino
+     */
+    public function getArrivalTimeInDestinationTimezone()
+    {
+        $departure = Carbon::parse($this->departure_at);
+        $arrival = $departure->copy()->addMinutes($this->duration_minutes);
+        
+        // Si hay destino con timezone, convertir a esa zona horaria
+        if ($this->destination) {
+            $destinationTimezone = $this->destination->getTimezone();
+            return $arrival->setTimezone($destinationTimezone);
+        }
+        
+        // Fallback: devolver en la zona horaria por defecto
+        return $arrival;
+    }
+    
+    /**
+     * Obtener la hora de llegada formateada con zona horaria
+     */
+    public function getFormattedArrivalTime()
+    {
+        // Asegurarse de que destination esté cargado
+        if (!$this->relationLoaded('destination')) {
+            $this->load('destination');
+        }
+        
+        $arrival = $this->getArrivalTimeInDestinationTimezone();
+        $timezone = $this->destination ? $this->destination->getTimezone() : 'America/Bogota';
+        
+        // Obtener el nombre corto de la zona horaria (ej: COT, CET, PST)
+        $timezoneAbbr = $arrival->format('T');
+        
+        return [
+            'datetime' => $arrival->format('Y-m-d H:i:s'),
+            'formatted' => $arrival->format('d/m/Y H:i'),
+            'timezone' => $timezone,
+            'timezone_abbr' => $timezoneAbbr,
+            'is_different_day' => $arrival->format('Y-m-d') !== Carbon::parse($this->departure_at)->format('Y-m-d')
+        ];
+    }
 
     // Accesor útil
     public function getCapacityTotalAttribute(){
@@ -97,4 +144,41 @@ class Flight extends Model
     public function seats(){ return $this->hasMany(Seat::class); }
     public function bookings(){ return $this->hasMany(Booking::class); }
     public function tickets(){ return $this->hasManyThrough(Ticket::class, Booking::class); }
+    public function promotions(){ return $this->hasMany(Promotion::class); }
+    
+    // Obtener la promoción activa actual (ya iniciada y no expirada)
+    public function activePromotion() {
+        return $this->hasOne(Promotion::class)
+            ->where('is_active', true)
+            ->where('starts_at', '<=', now())
+            ->where('ends_at', '>=', now())
+            ->latest();
+    }
+    
+    // Obtener cualquier promoción válida (incluyendo futuras)
+    public function anyValidPromotion() {
+        return $this->hasOne(Promotion::class)
+            ->where('is_active', true)
+            ->where('ends_at', '>=', now())
+            ->latest();
+    }
+    
+    // Verificar si el vuelo tiene una promoción activa
+    public function hasActivePromotion() {
+        return $this->activePromotion()->exists();
+    }
+    
+    // Verificar si el vuelo tiene alguna promoción válida (incluyendo futuras)
+    public function hasAnyValidPromotion() {
+        return $this->anyValidPromotion()->exists();
+    }
+    
+    // Obtener el precio con descuento si aplica
+    public function getDiscountedPrice($basePrice) {
+        $promo = $this->activePromotion;
+        if ($promo) {
+            return $basePrice * (1 - ($promo->discount_percent / 100));
+        }
+        return $basePrice;
+    }
 }
