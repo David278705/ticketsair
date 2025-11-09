@@ -15,6 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Trust Heroku proxies
+        $middleware->trustProxies(at: '*');
+        
         $middleware->alias([
         'role' => \App\Http\Middleware\EnsureUserHasRole::class,
         ]);
