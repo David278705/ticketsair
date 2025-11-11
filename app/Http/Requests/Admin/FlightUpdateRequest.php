@@ -17,7 +17,6 @@ class FlightUpdateRequest extends FormRequest {
       'code'              => ['sometimes','string','max:20',"unique:flights,code,{$id}"],
       'origin_id'         => ['sometimes','exists:cities,id'],
       'destination_id'    => ['sometimes','different:origin_id','exists:cities,id'],
-      'aircraft_id'       => ['nullable','exists:aircraft,id'],
       'departure_at'      => ['sometimes','date','after:' . now()->addHours($minHoursBeforeFlight)->format('Y-m-d H:i:s')],
       'duration_minutes'  => ['sometimes','integer','min:10','max:2000'],
       'price_per_seat'    => ['sometimes','numeric','min:0'],
@@ -40,9 +39,6 @@ class FlightUpdateRequest extends FormRequest {
       // Destination
       'destination_id.different' => 'La ciudad de destino debe ser diferente al origen.',
       'destination_id.exists' => 'La ciudad de destino seleccionada no es válida.',
-      
-      // Aircraft
-      'aircraft_id.exists' => 'La aeronave seleccionada no es válida.',
       
       // Departure
       'departure_at.date' => 'La fecha de salida debe ser una fecha válida.',
