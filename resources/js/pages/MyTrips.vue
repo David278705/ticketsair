@@ -172,6 +172,19 @@
             :current-seat-id="selectedPassengerInfo.currentSeatId"
             @seatChanged="fetchBookings"
         />
+        
+        <!-- Modal de Pago Unificado -->
+        <UnifiedPaymentModal
+            v-model:open="paymentOpen"
+            :total-amount="selectedBooking?.total_amount || 0"
+            :booking-info="{
+                flight: selectedBooking?.flight,
+                passengers_count: selectedBooking?.passengers?.length || 0,
+                class: selectedBooking?.passengers?.[0]?.class || 'economy',
+                action: 'purchase',
+            }"
+            @payment-success="convertToPurchase"
+        />
     </div>
 </template>
 
@@ -182,6 +195,7 @@ import { useAuth } from "../stores/auth";
 import { useCurrency } from "../composables/useCurrency";
 import { useSweetAlert } from "../composables/useSweetAlert";
 import SeatChangeModal from "../components/booking/SeatChangeModal.vue";
+import UnifiedPaymentModal from "../components/booking/UnifiedPaymentModal.vue";
 
 const auth = useAuth();
 const { formatPrice } = useCurrency();
@@ -201,6 +215,10 @@ const selectedPassengerInfo = reactive({
     klass: null,
     currentSeatId: null,
 });
+
+// Estados para el modal de pago unificado
+const paymentOpen = ref(false);
+const selectedBooking = ref(null);
 
 onMounted(() => fetchBookings());
 
@@ -305,33 +323,32 @@ function canConvertToPurchase(booking) {
 // --- Acciones del Usuario ---
 
 async function buyNow(booking) {
-    const confirmed = await showConfirm(
-        "¿Confirmar compra?",
-        `¿Deseas completar la compra de esta reserva por ${formatPrice(
-            +booking.total_amount
-        )}?`,
-        "Sí, comprar",
-        "Cancelar"
-    );
+    // Abrimos el modal de pago unificado
+    selectedBooking.value = booking;
+    paymentOpen.value = true;
+}
 
-    if (confirmed) {
-        try {
-            await api.post(
-                `/bookings/${booking.id}/convert-to-purchase`,
-                {},
-                { headers: { Authorization: "Bearer " + auth.token } }
-            );
-            await success(
-                "¡Compra completada exitosamente!",
-                "Recibirás un correo de confirmación."
-            );
-            fetchBookings();
-        } catch (e) {
-            showError(
-                "Error al completar la compra",
-                e.response?.data?.message || e.message
-            );
-        }
+async function convertToPurchase(paymentData) {
+    if (!selectedBooking.value) return;
+    
+    try {
+        await api.post(
+            `/bookings/${selectedBooking.value.id}/convert-to-purchase`,
+            paymentData,
+            { headers: { Authorization: "Bearer " + auth.token } }
+        );
+        await success(
+            "¡Compra completada exitosamente!",
+            "Recibirás un correo de confirmación."
+        );
+        paymentOpen.value = false;
+        selectedBooking.value = null;
+        fetchBookings();
+    } catch (e) {
+        showError(
+            "Error al completar la compra",
+            e.response?.data?.message || e.message
+        );
     }
 }
 

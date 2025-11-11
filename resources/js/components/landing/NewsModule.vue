@@ -530,11 +530,17 @@
         />
 
         <!-- Modal de Pago -->
-        <PaymentModal
+                <!-- Modal de Pago -->
+        <UnifiedPaymentModal
             v-model:open="paymentOpen"
             :total-amount="pendingBooking?.total_amount || 0"
-            :booking-info="pendingBooking"
-            @payment-success="onPaymentSuccess"
+            :booking-info="{
+                flight: selectedFlight,
+                passengers_count: pendingPassengers.length,
+                class: selectedClass,
+                action: selectedAction,
+            }"
+            @payment-success="processBooking"
         />
     </div>
 </template>
@@ -548,7 +554,7 @@ import { useCurrency } from "../../composables/useCurrency";
 import { useSweetAlert } from "../../composables/useSweetAlert";
 import FlightInfoModal from "../booking/FlightInfoModal.vue";
 import PassengersModal from "../booking/PassengersModal.vue";
-import PaymentModal from "../booking/PaymentModal.vue";
+import UnifiedPaymentModal from "../booking/UnifiedPaymentModal.vue";
 
 const auth = useAuth();
 const ui = useUi();

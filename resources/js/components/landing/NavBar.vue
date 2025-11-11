@@ -10,11 +10,7 @@
     >
         <div class="container flex h-16 items-center justify-between">
             <RouterLink to="/" class="flex items-center gap-2 font-semibold">
-                <img 
-                    :src="logoUrl" 
-                    alt="TicketsAir Logo" 
-                    class="h-8 w-auto"
-                >
+                <img :src="logoUrl" alt="TicketsAir Logo" class="h-8 w-auto" />
                 <span>TicketsAir</span>
             </RouterLink>
 
@@ -111,7 +107,7 @@
             <!-- Zona derecha -->
             <div class="hidden md:flex items-center gap-2">
                 <!-- Selector de Moneda -->
-                <div 
+                <div
                     class="relative"
                     @mouseenter="currencyMenuOpen = true"
                     @mouseleave="currencyMenuOpen = false"
@@ -120,12 +116,34 @@
                         class="flex items-center gap-2 px-3 h-10 rounded-xl border border-slate-300/70 hover:bg-slate-100 transition-colors"
                         title="Cambiar moneda"
                     >
-                        <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                            class="w-4 h-4 text-slate-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
                         </svg>
-                        <span class="text-sm font-medium">{{ currentCurrency }}</span>
-                        <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        <span class="text-sm font-medium">{{
+                            currentCurrency
+                        }}</span>
+                        <svg
+                            class="w-3 h-3 text-slate-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M19 9l-7 7-7-7"
+                            />
                         </svg>
                     </button>
 
@@ -147,19 +165,30 @@
                                 :key="currency.code"
                                 @click="changeCurrency(currency.code)"
                                 class="w-full flex items-center justify-between px-4 py-2 text-sm hover:bg-slate-100 transition-colors"
-                                :class="{ 'bg-blue-50 text-blue-600': currentCurrency === currency.code }"
+                                :class="{
+                                    'bg-blue-50 text-blue-600':
+                                        currentCurrency === currency.code,
+                                }"
                             >
                                 <span class="flex items-center gap-2">
-                                    <span class="font-medium">{{ currency.code }}</span>
-                                    <span class="text-xs text-slate-500">{{ currency.symbol }}</span>
+                                    <span class="font-medium">{{
+                                        currency.code
+                                    }}</span>
+                                    <span class="text-xs text-slate-500">{{
+                                        currency.symbol
+                                    }}</span>
                                 </span>
-                                <svg 
+                                <svg
                                     v-if="currentCurrency === currency.code"
-                                    class="w-4 h-4 text-blue-600" 
-                                    fill="currentColor" 
+                                    class="w-4 h-4 text-blue-600"
+                                    fill="currentColor"
                                     viewBox="0 0 20 20"
                                 >
-                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                    <path
+                                        fill-rule="evenodd"
+                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                        clip-rule="evenodd"
+                                    />
                                 </svg>
                             </button>
                         </div>
@@ -190,16 +219,42 @@
                         <button
                             class="flex items-center gap-2 px-4 h-10 rounded-xl border border-slate-300/70 hover:bg-slate-100 transition-colors"
                         >
-                            <div class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center">
-                                <span class="text-xs text-indigo-600 font-medium">
-                                    {{ (auth.user.first_name || auth.user.name || 'U').charAt(0).toUpperCase() }}
+                            <div
+                                class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center"
+                            >
+                                <span
+                                    class="text-xs text-indigo-600 font-medium"
+                                >
+                                    {{
+                                        (
+                                            auth.user.first_name ||
+                                            auth.user.name ||
+                                            "U"
+                                        )
+                                            .charAt(0)
+                                            .toUpperCase()
+                                    }}
                                 </span>
                             </div>
                             <span class="text-sm">
-                                {{ auth.user.first_name || auth.user.name || 'Usuario' }}
+                                {{
+                                    auth.user.first_name ||
+                                    auth.user.name ||
+                                    "Usuario"
+                                }}
                             </span>
-                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            <svg
+                                class="w-4 h-4 text-slate-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M19 9l-7 7-7-7"
+                                />
                             </svg>
                         </button>
 
@@ -216,32 +271,70 @@
                                 v-if="userMenuOpen"
                                 class="absolute right-0 top-full mt-2 w-56 rounded-lg bg-white shadow-xl border border-slate-200/60 py-2 z-50"
                             >
-                                <div class="px-4 py-2 border-b border-slate-100">
-                                    <p class="text-sm font-medium text-slate-900">{{ auth.user.name }}</p>
-                                    <p class="text-xs text-slate-500">{{ auth.user.email }}</p>
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mt-1"
-                                          :class="getRoleBadgeClass(auth.user.role?.name)">
-                                        {{ getRoleDisplayName(auth.user.role?.name) }}
+                                <div
+                                    class="px-4 py-2 border-b border-slate-100"
+                                >
+                                    <p
+                                        class="text-sm font-medium text-slate-900"
+                                    >
+                                        {{ auth.user.name }}
+                                    </p>
+                                    <p class="text-xs text-slate-500">
+                                        {{ auth.user.email }}
+                                    </p>
+                                    <span
+                                        class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mt-1"
+                                        :class="
+                                            getRoleBadgeClass(
+                                                auth.user.role?.name
+                                            )
+                                        "
+                                    >
+                                        {{
+                                            getRoleDisplayName(
+                                                auth.user.role?.name
+                                            )
+                                        }}
                                     </span>
                                 </div>
-                                
+
                                 <RouterLink
                                     to="/profile"
                                     class="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
                                     @click="userMenuOpen = false"
                                 >
-                                    <svg class="w-4 h-4 mr-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    <svg
+                                        class="w-4 h-4 mr-3 text-slate-400"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                        />
                                     </svg>
                                     Mi Perfil
                                 </RouterLink>
-                                
+
                                 <button
                                     @click="logout"
                                     class="w-full flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors text-left"
                                 >
-                                    <svg class="w-4 h-4 mr-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                    <svg
+                                        class="w-4 h-4 mr-3 text-slate-400"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                                        />
                                     </svg>
                                     Cerrar Sesión
                                 </button>
@@ -317,10 +410,7 @@
                         @click="close()"
                         >Mis viajes</RouterLink
                     >
-                    <RouterLink
-                        v-if="auth.user"
-                        to="/forum"
-                        @click="close()"
+                    <RouterLink v-if="auth.user" to="/forum" @click="close()"
                         >Foro</RouterLink
                     >
 
@@ -366,14 +456,27 @@
                     </template>
 
                     <!-- Perfil de usuario en móvil -->
-                    <div v-if="auth.user" class="pt-2 border-t border-slate-200">
+                    <div
+                        v-if="auth.user"
+                        class="pt-2 border-t border-slate-200"
+                    >
                         <RouterLink
                             to="/profile"
                             @click="close()"
                             class="flex items-center py-2 text-slate-700 hover:text-blue-600 transition-colors"
                         >
-                            <svg class="w-4 h-4 mr-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            <svg
+                                class="w-4 h-4 mr-3 text-slate-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                />
                             </svg>
                             Mi Perfil
                         </RouterLink>
@@ -381,16 +484,20 @@
 
                     <!-- Selector de moneda en móvil -->
                     <div class="pt-2 border-t border-slate-200">
-                        <p class="text-xs font-medium text-slate-500 mb-2">Moneda</p>
+                        <p class="text-xs font-medium text-slate-500 mb-2">
+                            Moneda
+                        </p>
                         <div class="flex gap-2">
                             <button
                                 v-for="currency in availableCurrencies"
                                 :key="currency.code"
                                 @click="changeCurrency(currency.code)"
                                 class="flex-1 px-3 py-2 rounded-lg border text-sm font-medium transition-colors"
-                                :class="currentCurrency === currency.code 
-                                    ? 'bg-blue-50 border-blue-500 text-blue-600' 
-                                    : 'border-slate-300 text-slate-700 hover:bg-slate-50'"
+                                :class="
+                                    currentCurrency === currency.code
+                                        ? 'bg-blue-50 border-blue-500 text-blue-600'
+                                        : 'border-slate-300 text-slate-700 hover:bg-slate-50'
+                                "
                             >
                                 {{ currency.code }}
                             </button>
@@ -437,7 +544,7 @@ const auth = useAuth();
 const ui = useUi();
 const { currentCurrency, setCurrency, availableCurrencies } = useCurrency();
 
-const logoUrl = '/logo.png';
+const logoUrl = "/logo.png";
 const open = ref(false);
 const adminMenuOpen = ref(false);
 const userMenuOpen = ref(false);

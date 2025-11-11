@@ -8,7 +8,7 @@ import AdminFlights from "../pages/admin/AdminFlights.vue";
 import UserManagement from "../pages/admin/UserManagement.vue";
 import MessagesAdmin from "../pages/admin/MessagesAdmin.vue";
 import ForumAdmin from "../pages/admin/ForumAdmin.vue";
-import SearchResults from '../components/landing/SearchResults.vue'
+import SearchResults from '../components/landing/SearchResults.vue';
 
 const router = createRouter({
     history: createWebHistory(),

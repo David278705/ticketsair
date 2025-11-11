@@ -41,6 +41,7 @@ class User extends Authenticatable {
   public function role(){ return $this->belongsTo(Role::class); }
   public function bookings(){ return $this->hasMany(Booking::class); }
   public function cards(){ return $this->hasMany(Card::class); }
+  public function walletTransactions(){ return $this->hasMany(WalletTransaction::class); }
   public function messagesSent(){ return $this->hasMany(Message::class,'from_user_id'); }
   public function messagesReceived(){ return $this->hasMany(Message::class,'to_user_id'); }
 

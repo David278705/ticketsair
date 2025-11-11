@@ -17,6 +17,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\FlightAdminController;
 use App\Http\Controllers\Admin\UserAdminController;
 use App\Http\Controllers\PromotionController;
+use App\Http\Controllers\PaymentMethodController;
+use App\Http\Controllers\WalletController;
 
 // =================================
 // RUTAS PÚBLICAS (Sin autenticación)
@@ -138,6 +140,20 @@ Route::middleware(['auth:sanctum','role:client'])->group(function () {
     
     // Mensaje a administradores
     Route::post('/messages/to-admin', [MessageController::class,'sendToAdmin']);
+    
+    // ========== GESTIÓN FINANCIERA ==========
+    // Gestión de tarjetas (Payment Methods)
+    Route::get('/payment-methods', [PaymentMethodController::class, 'index']);
+    Route::post('/payment-methods', [PaymentMethodController::class, 'store']);
+    Route::get('/payment-methods/{card}', [PaymentMethodController::class, 'show']);
+    Route::post('/payment-methods/{card}/set-default', [PaymentMethodController::class, 'setDefault']);
+    Route::delete('/payment-methods/{card}', [PaymentMethodController::class, 'destroy']);
+    
+    // Gestión de Wallet (Saldo)
+    Route::get('/wallet', [WalletController::class, 'index']);
+    Route::post('/wallet/recharge', [WalletController::class, 'recharge']);
+    Route::get('/wallet/statistics', [WalletController::class, 'statistics']);
+    Route::get('/wallet/transactions', [WalletController::class, 'transactions']);
 });
 
 // =================================
@@ -147,13 +163,3 @@ Route::middleware(['auth:sanctum','role:admin,root'])->group(function () {
     // Funcionalidades compartidas entre admin y root si las hay
     // (Por ahora ninguna específica)
 });
-
-// =================================
-// RUTAS COMENTADAS (Para futura implementación)
-// =================================
-// Route::middleware(['auth:sanctum','role:client'])->group(function(){
-//   Route::get('/cards', [PaymentController::class,'cards']);
-//   Route::post('/cards', [PaymentController::class,'storeCard']);
-//   Route::delete('/cards/{card}', [PaymentController::class,'destroyCard']);
-// });
-
