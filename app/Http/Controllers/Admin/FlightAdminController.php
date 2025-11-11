@@ -42,6 +42,10 @@ class FlightAdminController extends Controller
         // Generar código único para el vuelo
         $code = $this->generateFlightCode($data['scope']);
         
+        // Obtener capacidades según el scope
+        $capacityFirst = Flight::getDefaultFirstClassCapacity($data['scope']);
+        $capacityEconomy = Flight::getDefaultEconomyCapacity($data['scope']);
+        
         // Manejar imagen si existe
         $imagePath = null;
         if ($r->hasFile('image')) {
@@ -57,43 +61,49 @@ class FlightAdminController extends Controller
       
       $flight = Flight::create([
         'code'             => $code,
-        'aircraft_id'      => $data['aircraft_id'] ?? null,
+        'aircraft_id'      => null,
         'origin_id'        => $data['origin_id'],
         'destination_id'   => $data['destination_id'],
         'scope'            => $data['scope'],
         'departure_at'     => $data['departure_at'],
-        'arrival_at'       => now()->parse($data['departure_at'])->addMinutes((int)$data['duration_minutes']), // puedes ajustar TZs luego
+        'arrival_at'       => now()->parse($data['departure_at'])->addMinutes((int)$data['duration_minutes']),
         'duration_minutes' => (int)$data['duration_minutes'],
         'status'           => 'scheduled',
         'price_per_seat'   => $data['price_per_seat'],
         'first_class_price'=> $data['first_class_price'] ?? ($data['price_per_seat'] * 2),
-        'capacity_first'   => (int)$data['capacity_first'],
-        'capacity_economy' => (int)$data['capacity_economy'],
+        'capacity_first'   => $capacityFirst,
+        'capacity_economy' => $capacityEconomy,
         'image_path'       => $imagePath,
       ]);
 
-      // Generar asientos
+      // Generar asientos con numeración secuencial
       $seats = [];
-      for ($i=1; $i <= (int)$data['capacity_first']; $i++) {
+      
+      // Asientos de primera clase (1-25 para nacional, 1-50 para internacional)
+      for ($i=1; $i <= $capacityFirst; $i++) {
           $seats[] = [
               'flight_id' => $flight->id,
-              'number'    => "F{$i}",         // <-- STRING
+              'number'    => (string)$i,
               'class'     => 'first',
               'status'    => 'available',
               'created_at'=> now(),
               'updated_at'=> now(),
           ];
       }
-      for ($i=1; $i <= (int)$data['capacity_economy']; $i++) {
+      
+      // Asientos de clase económica (26-150 para nacional, 51-250 para internacional)
+      for ($i=1; $i <= $capacityEconomy; $i++) {
+          $seatNumber = $capacityFirst + $i;
           $seats[] = [
               'flight_id' => $flight->id,
-              'number'    => "E{$i}",         // <-- STRING
+              'number'    => (string)$seatNumber,
               'class'     => 'economy',
               'status'    => 'available',
               'created_at'=> now(),
               'updated_at'=> now(),
           ];
       }
+      
       \App\Models\Seat::insert($seats);
 
       // Crear noticia automática con la imagen del vuelo
@@ -129,7 +139,7 @@ class FlightAdminController extends Controller
     
     if ($flight->status !== 'scheduled' || $hasSales) {
       // Si hay ventas, verificar si intentan cambiar campos restringidos
-      $restrictedFields = ['origin_id', 'destination_id', 'aircraft_id', 'scope', 'capacity_first', 'capacity_economy', 'duration_minutes'];
+      $restrictedFields = ['origin_id', 'destination_id', 'scope', 'duration_minutes'];
       $attemptedChanges = [];
       
       foreach ($restrictedFields as $field) {
@@ -137,10 +147,7 @@ class FlightAdminController extends Controller
           $fieldNames = [
             'origin_id' => 'origen',
             'destination_id' => 'destino',
-            'aircraft_id' => 'avión',
             'scope' => 'tipo de vuelo',
-            'capacity_first' => 'capacidad de primera clase',
-            'capacity_economy' => 'capacidad económica',
             'duration_minutes' => 'duración'
           ];
           $attemptedChanges[] = $fieldNames[$field] ?? $field;
@@ -203,12 +210,7 @@ class FlightAdminController extends Controller
     if (isset($data['duration_minutes'])) {
       $data['duration_minutes'] = (int)$data['duration_minutes'];
     }
-    if (isset($data['capacity_first'])) {
-      $data['capacity_first'] = (int)$data['capacity_first'];
-    }
-    if (isset($data['capacity_economy'])) {
-      $data['capacity_economy'] = (int)$data['capacity_economy'];
-    }
+    
     // Manejar imagen si existe
     if ($r->hasFile('image')) {
       try {

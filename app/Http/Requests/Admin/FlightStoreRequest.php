@@ -15,14 +15,11 @@ class FlightStoreRequest extends FormRequest {
     return [
       'origin_id'         => ['required','exists:cities,id'],
       'destination_id'    => ['required','different:origin_id','exists:cities,id'],
-      'aircraft_id'       => ['nullable','exists:aircraft,id'],
       'scope'             => ['required','in:national,international'],
       'departure_at'      => ['required','date','after:' . now()->addHours($minHoursBeforeFlight)->format('Y-m-d H:i:s')],
       'duration_minutes'  => ['required','integer','min:10','max:2000'],
       'price_per_seat'    => ['required','numeric','min:0'],
       'first_class_price' => ['nullable','numeric','min:0'],
-      'capacity_first'    => ['required','integer','min:0','max:300'],
-      'capacity_economy'  => ['required','integer','min:1','max:400'],
       'image'             => ['required','image','mimes:jpeg,png,jpg,gif,webp','max:2048'],
     ];
   }
@@ -37,9 +34,6 @@ class FlightStoreRequest extends FormRequest {
       'destination_id.required' => 'La ciudad de destino es requerida.',
       'destination_id.different' => 'La ciudad de destino debe ser diferente al origen.',
       'destination_id.exists' => 'La ciudad de destino seleccionada no es válida.',
-      
-      // Aircraft
-      'aircraft_id.exists' => 'La aeronave seleccionada no es válida.',
       
       // Scope
       'scope.required' => 'El alcance del vuelo es requerido.',
@@ -64,17 +58,6 @@ class FlightStoreRequest extends FormRequest {
       // First Class Price
       'first_class_price.numeric' => 'El precio de primera clase debe ser un número válido.',
       'first_class_price.min' => 'El precio de primera clase no puede ser negativo.',
-      
-      // Capacity
-      'capacity_first.required' => 'La capacidad de primera clase es requerida.',
-      'capacity_first.integer' => 'La capacidad de primera clase debe ser un número entero.',
-      'capacity_first.min' => 'La capacidad de primera clase no puede ser negativa.',
-      'capacity_first.max' => 'La capacidad máxima de primera clase es 300 asientos.',
-      
-      'capacity_economy.required' => 'La capacidad de clase económica es requerida.',
-      'capacity_economy.integer' => 'La capacidad de clase económica debe ser un número entero.',
-      'capacity_economy.min' => 'La capacidad mínima de clase económica es 1 asiento.',
-      'capacity_economy.max' => 'La capacidad máxima de clase económica es 400 asientos.',
       
       // Image
       'image.required' => 'La imagen del vuelo es requerida.',

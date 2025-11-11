@@ -259,34 +259,6 @@
                     </p>
                 </div>
 
-                <!-- Selector de Avión -->
-                <div>
-                    <label
-                        for="flight_aircraft"
-                        class="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                        Avión *
-                    </label>
-                    <select
-                        id="flight_aircraft"
-                        v-model="form.aircraft_id"
-                        class="h-10 rounded-lg border px-3 w-full"
-                    >
-                        <option value="">Selecciona un avión</option>
-                        <option v-for="a in aircraft" :key="a.id" :value="a.id">
-                            {{ a.name }} - {{ a.brand }} ({{
-                                a.capacity_first
-                            }}F + {{ a.capacity_economy }}E =
-                            {{ a.capacity_first + a.capacity_economy }}
-                            asientos)
-                        </option>
-                    </select>
-                    <p class="text-xs text-slate-500 mt-1">
-                        La duración y capacidades se calcularán automáticamente
-                    </p>
-                </div>
-
-                <!-- Segunda fila: Origen y Destino -->
                 <!-- Segunda fila: Origen y Destino -->
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
@@ -387,7 +359,7 @@
                         </div>
                         <p class="text-xs text-blue-600 mt-1">
                             Calculado automáticamente según distancia y
-                            velocidad del avión
+                            velocidad (Nacional: 850 km/h, Internacional: 900 km/h)
                         </p>
                     </div>
                     <div>
@@ -447,7 +419,7 @@
                             económica)
                         </p>
                     </div>
-                    <div v-if="form.aircraft_id">
+                    <div>
                         <label
                             class="block text-sm font-medium text-gray-700 mb-1"
                         >
@@ -456,13 +428,13 @@
                         <div
                             class="h-10 rounded-lg border border-blue-200 bg-blue-50 px-3 flex items-center text-blue-900 font-semibold"
                         >
-                            {{ form.capacity_first }} asientos
+                            {{ getDefaultCapacities().first }} asientos
                         </div>
                         <p class="text-xs text-blue-600 mt-1">
-                            Del avión seleccionado
+                            Asientos {{ form.scope === 'national' ? '1-25' : '1-50' }}
                         </p>
                     </div>
-                    <div v-if="form.aircraft_id">
+                    <div>
                         <label
                             class="block text-sm font-medium text-gray-700 mb-1"
                         >
@@ -471,10 +443,10 @@
                         <div
                             class="h-10 rounded-lg border border-blue-200 bg-blue-50 px-3 flex items-center text-blue-900 font-semibold"
                         >
-                            {{ form.capacity_economy }} asientos
+                            {{ getDefaultCapacities().economy }} asientos
                         </div>
                         <p class="text-xs text-blue-600 mt-1">
-                            Del avión seleccionado
+                            Asientos {{ form.scope === 'national' ? '26-150' : '51-250' }}
                         </p>
                     </div>
                 </div>
@@ -805,8 +777,6 @@ const Modal = {
 // --- Estado del Componente ---
 const list = ref({ data: [], meta: null });
 const cities = ref([]);
-const aircraft = ref([]);
-const currentFlight = ref(null);
 
 // Ciudades filtradas según el alcance del vuelo
 const availableOriginCities = computed(() => {
@@ -868,13 +838,10 @@ const form = reactive({
     scope: "national",
     origin_id: "",
     destination_id: "",
-    aircraft_id: "",
     departure_at: "",
     duration_minutes: 90,
     price_per_seat: 0,
     first_class_price: 0,
-    capacity_first: 0,
-    capacity_economy: 100,
     image: null,
 });
 
@@ -920,44 +887,28 @@ watch(
     }
 );
 
-// Calcular duración automáticamente cuando se selecciona avión, origen y destino
+// Calcular duración automáticamente cuando se selecciona origen y destino
 watch(
-    [() => form.origin_id, () => form.destination_id, () => form.aircraft_id],
+    [() => form.origin_id, () => form.destination_id, () => form.scope],
     () => {
         calculateFlightDuration();
     }
 );
 
-// Actualizar capacidades cuando se selecciona un avión
-watch(
-    () => form.aircraft_id,
-    (newAircraftId) => {
-        if (newAircraftId) {
-            const selectedAircraft = aircraft.value.find(
-                (a) => a.id === newAircraftId
-            );
-            if (selectedAircraft) {
-                form.capacity_first = selectedAircraft.capacity_first;
-                form.capacity_economy = selectedAircraft.capacity_economy;
-            }
-        }
-    }
-);
-
 // Función para calcular la duración del vuelo
 function calculateFlightDuration() {
-    if (!form.origin_id || !form.destination_id || !form.aircraft_id) return;
+    if (!form.origin_id || !form.destination_id) return;
 
     const originCity = cities.value.find((c) => c.id === form.origin_id);
-    const selectedAircraft = aircraft.value.find(
-        (a) => a.id === form.aircraft_id
-    );
+    
+    // Velocidad según el scope
+    const speed = form.scope === 'international' ? 900 : 850;
 
-    if (originCity && originCity.distances && selectedAircraft) {
+    if (originCity && originCity.distances) {
         const distanceKm = originCity.distances[form.destination_id];
-        if (distanceKm && selectedAircraft.speed_kmh) {
+        if (distanceKm && speed) {
             // Calcular tiempo en horas y convertir a minutos
-            const hours = distanceKm / selectedAircraft.speed_kmh;
+            const hours = distanceKm / speed;
             const minutes = Math.round(hours * 60);
             // Agregar 15 minutos de buffer (taxi, despegue, aterrizaje)
             form.duration_minutes = minutes + 15;
@@ -965,13 +916,26 @@ function calculateFlightDuration() {
     }
 }
 
+// Función helper para obtener las capacidades por defecto según el scope
+function getDefaultCapacities() {
+    if (form.scope === 'international') {
+        return {
+            first: 50,
+            economy: 200,
+            total: 250
+        };
+    }
+    return {
+        first: 25,
+        economy: 125,
+        total: 150
+    };
+}
+
 // --- Ciclo de Vida ---
 onMounted(async () => {
     const citiesResponse = await api.get("/cities");
     cities.value = citiesResponse.data;
-
-    const aircraftResponse = await api.get("/aircraft");
-    aircraft.value = aircraftResponse.data;
 
     await reload();
 });
@@ -1058,19 +1022,23 @@ function toLocalInput(dt) {
     return d.toISOString().slice(0, 16);
 }
 
+// Formatear duración en minutos a formato legible
+function formatDuration(minutes) {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours}h ${mins}min`;
+}
+
 // --- Lógica CRUD para Vuelos ---
 const VUELO_VACIO = {
     id: null,
     scope: "national",
     origin_id: "",
     destination_id: "",
-    aircraft_id: "",
     departure_at: "",
     duration_minutes: 90,
     price_per_seat: 0,
     first_class_price: 0,
-    capacity_first: 0,
-    capacity_economy: 100,
     image: null,
 };
 
@@ -1095,15 +1063,12 @@ async function openEdit(f) {
     Object.assign(form, {
         id: f.id,
         scope: f.scope,
-        aircraft_id: f.aircraft_id,
         origin_id: f.origin_id,
         destination_id: f.destination_id,
         departure_at: toLocalInput(f.departure_at),
         duration_minutes: f.duration_minutes,
         price_per_seat: f.price_per_seat,
         first_class_price: f.first_class_price || f.price_per_seat * 2,
-        capacity_first: f.capacity_first,
-        capacity_economy: f.capacity_economy,
         image: null,
     });
 
@@ -1176,10 +1141,6 @@ async function save() {
             );
         }
 
-        if (!form.capacity_economy || form.capacity_economy < 1) {
-            errors.push("La capacidad de clase económica debe ser al menos 1.");
-        }
-
         if (!form.id && !form.image) {
             errors.push("La imagen del vuelo es requerida.");
         }
@@ -1197,9 +1158,6 @@ async function save() {
             fd.append("scope", form.scope);
             fd.append("origin_id", form.origin_id);
             fd.append("destination_id", form.destination_id);
-            if (form.aircraft_id) {
-                fd.append("aircraft_id", form.aircraft_id);
-            }
             fd.append(
                 "departure_at",
                 new Date(form.departure_at).toISOString()
@@ -1210,8 +1168,6 @@ async function save() {
                 "first_class_price",
                 form.first_class_price || form.price_per_seat * 2
             );
-            fd.append("capacity_first", form.capacity_first);
-            fd.append("capacity_economy", form.capacity_economy);
             if (form.image) {
                 fd.append("image", form.image);
             }
@@ -1237,9 +1193,6 @@ async function save() {
             fd.append("origin_id", form.origin_id);
             fd.append("destination_id", form.destination_id);
             fd.append("duration_minutes", form.duration_minutes);
-            if (form.aircraft_id) {
-                fd.append("aircraft_id", form.aircraft_id);
-            }
             if (form.image) {
                 fd.append("image", form.image);
             }

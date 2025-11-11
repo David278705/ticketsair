@@ -136,6 +136,33 @@ class Flight extends Model
         return (int)$this->capacity_first + (int)$this->capacity_economy;
     }
 
+    /**
+     * Obtener la capacidad de primera clase según el scope del vuelo
+     * Nacional: 25 asientos
+     * Internacional: 50 asientos
+     */
+    public static function getDefaultFirstClassCapacity($scope) {
+        return $scope === 'international' ? 50 : 25;
+    }
+
+    /**
+     * Obtener la capacidad de clase económica según el scope del vuelo
+     * Nacional: 125 asientos (26-150)
+     * Internacional: 200 asientos (51-250)
+     */
+    public static function getDefaultEconomyCapacity($scope) {
+        return $scope === 'international' ? 200 : 125;
+    }
+
+    /**
+     * Obtener la velocidad del avión según el scope del vuelo
+     * Nacional: 850 km/h
+     * Internacional: 900 km/h
+     */
+    public static function getDefaultSpeed($scope) {
+        return $scope === 'international' ? 900 : 850;
+    }
+
     // Relaciones típicas
     public function origin(){ return $this->belongsTo(City::class,'origin_id'); }
     public function destination(){ return $this->belongsTo(City::class,'destination_id'); }

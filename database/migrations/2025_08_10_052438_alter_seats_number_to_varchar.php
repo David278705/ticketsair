@@ -36,9 +36,17 @@ return new class extends Migration {
             $t->dropUnique('seats_flight_number_unique');
         });
 
-        // Volver a INT (⚠️ sólo seguro si todos los valores son numéricos)
-        Schema::table('seats', function (Blueprint $table) {
-            $table->integer('number')->change();
-        });
+        // Volver a INT con conversión explícita para PostgreSQL
+        // Primero limpiar datos no numéricos si los hay
+        DB::statement("UPDATE seats SET number = regexp_replace(number, '[^0-9]', '', 'g') WHERE number ~ '[^0-9]'");
+        
+        // Ahora convertir usando USING para PostgreSQL
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE seats ALTER COLUMN number TYPE INTEGER USING number::integer');
+        } else {
+            Schema::table('seats', function (Blueprint $table) {
+                $table->integer('number')->change();
+            });
+        }
     }
 };
