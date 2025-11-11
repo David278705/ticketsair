@@ -28,13 +28,30 @@ class PromotionController extends Controller
         'is_active'        => $r->boolean('is_active', true),
       ]);
       
-      // Actualizar la noticia asociada
+      // Actualizar o eliminar la noticia asociada según el estado
       $news = News::where('promotion_id', $existingPromo->id)->first();
+      
       if ($news) {
-        $news->update([
-          'title' => $existingPromo->title,
-          'body'  => $existingPromo->description . ' - ¡' . $existingPromo->discount_percent . '% de descuento! Vuelo ' . $flight->code . ': ' . $flight->origin->name . ' → ' . $flight->destination->name,
-          'image_path' => $flight->image_path,
+        if ($r->boolean('is_active', true)) {
+          // Actualizar la noticia si la promoción está activa
+          $news->update([
+            'title' => $existingPromo->title,
+            'body'  => $existingPromo->description . ' - ¡' . $existingPromo->discount_percent . '% de descuento! Vuelo ' . $flight->code . ': ' . $flight->origin->name . ' → ' . $flight->destination->name,
+            'image_path' => $flight->image_path,
+          ]);
+        } else {
+          // Eliminar la noticia si la promoción se desactiva
+          $news->delete();
+        }
+      } elseif ($r->boolean('is_active', true)) {
+        // Crear noticia si no existe y la promoción está activa
+        News::create([
+          'title'        => $existingPromo->title,
+          'body'         => $existingPromo->description . ' - ¡' . $existingPromo->discount_percent . '% de descuento! Vuelo ' . $flight->code . ': ' . $flight->origin->name . ' → ' . $flight->destination->name,
+          'flight_id'    => $flight->id,
+          'promotion_id' => $existingPromo->id,
+          'image_path'   => $flight->image_path,
+          'is_promotion' => true,
         ]);
       }
       
@@ -56,15 +73,17 @@ class PromotionController extends Controller
       'is_active'        => $r->boolean('is_active', true),
     ]);
 
-    // Crear noticia de la promoción con la imagen del vuelo
-    News::create([
-      'title'        => $promo->title,
-      'body'         => $promo->description . ' - ¡' . $promo->discount_percent . '% de descuento! Vuelo ' . $flight->code . ': ' . $flight->origin->name . ' → ' . $flight->destination->name,
-      'flight_id'    => $flight->id,
-      'promotion_id' => $promo->id,
-      'image_path'   => $flight->image_path,
-      'is_promotion' => true,
-    ]);
+    // Crear noticia de la promoción SOLO si está activa
+    if ($r->boolean('is_active', true)) {
+      News::create([
+        'title'        => $promo->title,
+        'body'         => $promo->description . ' - ¡' . $promo->discount_percent . '% de descuento! Vuelo ' . $flight->code . ': ' . $flight->origin->name . ' → ' . $flight->destination->name,
+        'flight_id'    => $flight->id,
+        'promotion_id' => $promo->id,
+        'image_path'   => $flight->image_path,
+        'is_promotion' => true,
+      ]);
+    }
 
     return response()->json([
       'message' => 'Promoción creada exitosamente',
@@ -79,13 +98,13 @@ class PromotionController extends Controller
         ->orderByDesc('created_at')
         ->get();
     
-    // Promoción válida (incluyendo futuras)
+    // Promoción válida (incluyendo futuras, SOLO si está activa)
     $validPromo = $flight->promotions()
         ->where('is_active', true)
         ->where('ends_at', '>=', now())
         ->first();
     
-    // Promoción activa (solo si ya empezó)
+    // Promoción activa (solo si ya empezó y está activa)
     $activePromo = $flight->promotions()
         ->where('is_active', true)
         ->where('starts_at', '<=', now())

@@ -139,9 +139,7 @@
                             </span>
                         </td>
                         <td class="p-3 font-medium">
-                            ${{
-                                (+f.price_per_seat).toLocaleString("es-CO")
-                            }}
+                            ${{ (+f.price_per_seat).toLocaleString("es-CO") }}
                             COP
                         </td>
                         <td class="p-3">
@@ -528,11 +526,54 @@
         <!-- Modal Promoción -->
         <BaseModal v-model:open="promoOpen">
             <template #title>
-                {{ promo.id ? "Editar" : "Crear" }} promoción —
-                {{ currentFlight?.code }}
+                <div class="flex items-center gap-3">
+                    <span
+                        v-if="promo.id"
+                        class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-sm font-medium"
+                    >
+                        Editando promoción
+                    </span>
+                    <span
+                        v-else
+                        class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-medium"
+                    >
+                        Nueva promoción
+                    </span>
+                    <span class="text-slate-500">—</span>
+                    <span class="font-mono text-blue-600">{{
+                        currentFlight?.code
+                    }}</span>
+                </div>
             </template>
-            <div class="grid md:grid-cols-2 gap-3">
-                <div>
+
+            <!-- Información del vuelo -->
+            <div
+                class="mb-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200"
+            >
+                <div class="flex items-center gap-2 text-sm">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-5 w-5 text-blue-600"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                    >
+                        <path
+                            d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"
+                        />
+                    </svg>
+                    <span class="font-semibold text-slate-700"
+                        >{{ currentFlight?.origin?.name }} →
+                        {{ currentFlight?.destination?.name }}</span
+                    >
+                    <span class="text-slate-500">•</span>
+                    <span class="text-slate-600">{{
+                        fmt(currentFlight?.departure_at)
+                    }}</span>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
                     <label
                         for="promo_title"
                         class="block text-sm font-medium text-gray-700 mb-1"
@@ -542,8 +583,8 @@
                     <input
                         id="promo_title"
                         v-model="promo.title"
-                        placeholder="ej: Descuento de Temporada"
-                        class="h-10 rounded-lg border px-3 w-full"
+                        placeholder="ej: ¡Descuento especial de temporada!"
+                        class="h-10 rounded-lg border px-3 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                 </div>
                 <div>
@@ -553,18 +594,58 @@
                     >
                         Porcentaje de Descuento *
                     </label>
-                    <input
-                        id="promo_discount"
-                        v-model.number="promo.discount_percent"
-                        type="number"
-                        min="1"
-                        max="90"
-                        pattern="[0-9]+"
-                        title="Solo se permiten números"
-                        class="h-10 rounded-lg border px-3 w-full"
-                        placeholder="ej: 25"
-                        @input="validateNumericInput($event)"
-                    />
+                    <div class="relative">
+                        <input
+                            id="promo_discount"
+                            v-model.number="promo.discount_percent"
+                            type="number"
+                            min="1"
+                            max="90"
+                            pattern="[0-9]+"
+                            title="Solo se permiten números"
+                            class="h-10 rounded-lg border px-3 pr-8 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="25"
+                            @input="validateNumericInput($event)"
+                        />
+                        <span
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium"
+                            >%</span
+                        >
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1">
+                        Entre 1% y 90% de descuento
+                    </p>
+                </div>
+                <div>
+                    <label
+                        class="flex items-center gap-2 h-10 px-4 rounded-lg border cursor-pointer hover:bg-slate-50 transition-colors"
+                        :class="{
+                            'bg-green-50 border-green-500 text-green-700':
+                                promo.is_active,
+                            'bg-slate-50 border-slate-300 text-slate-500':
+                                !promo.is_active,
+                        }"
+                    >
+                        <input
+                            type="checkbox"
+                            v-model="promo.is_active"
+                            class="w-4 h-4"
+                        />
+                        <span class="font-medium">
+                            {{
+                                promo.is_active
+                                    ? "✓ Promoción activa"
+                                    : "✗ Promoción inactiva"
+                            }}
+                        </span>
+                    </label>
+                    <p class="text-xs text-slate-500 mt-1">
+                        {{
+                            promo.is_active
+                                ? "La promoción estará visible para los clientes"
+                                : "La promoción estará oculta y no aplicará descuentos"
+                        }}
+                    </p>
                 </div>
                 <div>
                     <label
@@ -577,11 +658,17 @@
                         id="promo_start"
                         v-model="promo.starts_at"
                         type="datetime-local"
-                        :min="toLocalInput(new Date())"
+                        :min="promo.id ? null : toLocalInput(new Date())"
                         :max="promo.ends_at"
-                        class="h-10 rounded-lg border px-3 w-full"
+                        class="h-10 rounded-lg border px-3 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         required
                     />
+                    <p
+                        v-if="promo.id && isPromoPast(promo.starts_at)"
+                        class="text-xs text-amber-600 mt-1"
+                    >
+                        ⚠️ Fecha de inicio en el pasado (no se puede cambiar)
+                    </p>
                 </div>
                 <div>
                     <label
@@ -598,31 +685,86 @@
                         :max="
                             toLocalInput(new Date(currentFlight?.departure_at))
                         "
-                        class="h-10 rounded-lg border px-3 w-full"
+                        class="h-10 rounded-lg border px-3 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         required
                     />
+                    <p class="text-xs text-slate-500 mt-1">
+                        Debe ser antes del vuelo
+                    </p>
                 </div>
-                <label class="inline-flex items-center gap-2 mt-1"
-                    ><input type="checkbox" v-model="promo.is_active" />
-                    Activa</label
-                >
             </div>
-            <p v-if="promoError" class="mt-2 text-rose-600 text-sm">
-                {{ promoError }}
+
+            <!-- Estado de la promoción (si está editando) -->
+            <div
+                v-if="promo.id"
+                class="mt-4 p-3 rounded-lg"
+                :class="{
+                    'bg-green-50 border border-green-200': isPromoActive(promo),
+                    'bg-amber-50 border border-amber-200': isPromoFuture(promo),
+                    'bg-slate-50 border border-slate-200':
+                        isPromoExpired(promo) || !promo.is_active,
+                }"
+            >
+                <p class="text-sm font-medium">
+                    <span v-if="!promo.is_active" class="text-slate-700">
+                        🔒 Estado: Promoción inactiva (no visible para clientes)
+                    </span>
+                    <span
+                        v-else-if="isPromoActive(promo)"
+                        class="text-green-700"
+                    >
+                        ✅ Estado: Promoción activa y visible
+                    </span>
+                    <span
+                        v-else-if="isPromoFuture(promo)"
+                        class="text-amber-700"
+                    >
+                        ⏳ Estado: Programada para
+                        {{ formatDate(promo.starts_at) }}
+                    </span>
+                    <span v-else class="text-slate-700">
+                        ⏹️ Estado: Promoción expirada
+                    </span>
+                </p>
+            </div>
+
+            <p
+                v-if="promoError"
+                class="mt-4 p-3 text-rose-700 text-sm bg-rose-50 border border-rose-200 rounded-lg"
+            >
+                ⚠️ {{ promoError }}
             </p>
-            <div class="mt-4 flex justify-end gap-2">
+
+            <div class="mt-6 flex justify-between gap-3">
                 <button
-                    class="h-10 px-4 rounded-lg border"
-                    @click="promoOpen = false"
+                    v-if="promo.id"
+                    class="h-10 px-4 rounded-lg border border-red-500 text-red-600 hover:bg-red-50 transition-colors font-medium"
+                    @click="deletePromo"
                 >
-                    Cerrar
+                    🗑️ Eliminar promoción
                 </button>
-                <button
-                    class="h-10 px-4 rounded-lg bg-blue-600 text-white"
-                    @click="savePromo"
-                >
-                    Guardar
-                </button>
+                <div class="flex gap-3 ml-auto">
+                    <button
+                        class="h-10 px-4 rounded-lg border hover:bg-slate-50 transition-colors"
+                        @click="promoOpen = false"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        class="h-10 px-6 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+                        @click="savePromo"
+                        :disabled="savingPromo"
+                    >
+                        {{
+                            savingPromo
+                                ? "Guardando..."
+                                : promo.id
+                                ? "Actualizar"
+                                : "Crear"
+                        }}
+                        promoción
+                    </button>
+                </div>
             </div>
         </BaseModal>
     </section>
@@ -642,6 +784,7 @@ const {
     error: showError,
     warning,
     confirm: showConfirm,
+    info,
 } = useSweetAlert();
 
 const Modal = {
@@ -738,7 +881,9 @@ const form = reactive({
 // Estado para Promociones
 const promoOpen = ref(false);
 const promoError = ref("");
+const savingPromo = ref(false);
 const promo = reactive({
+    id: null,
     title: "",
     discount_percent: 10,
     starts_at: "",
@@ -1206,14 +1351,14 @@ async function updateFlightStatuses() {
 
             // Construir el mensaje HTML con los detalles
             let html = `<p class="mb-4">${data.message}</p>`;
-            
+
             if (data.flights && data.flights.length > 0) {
                 html += `
                     <div class="text-left bg-slate-50 rounded-lg p-4 max-h-96 overflow-y-auto">
                         <p class="font-semibold mb-3 text-slate-700">Vuelos actualizados:</p>
                         <ul class="space-y-3">
                 `;
-                
+
                 data.flights.forEach((flight) => {
                     html += `
                         <li class="border-b border-slate-200 pb-2 last:border-0">
@@ -1236,7 +1381,7 @@ async function updateFlightStatuses() {
                         </li>
                     `;
                 });
-                
+
                 html += `
                         </ul>
                     </div>
@@ -1246,10 +1391,14 @@ async function updateFlightStatuses() {
             // Mostrar SweetAlert con los detalles
             await Swal.fire({
                 icon: data.updated_count > 0 ? "success" : "info",
-                title: data.updated_count > 0 ? "Estados actualizados" : "Sin cambios",
+                title:
+                    data.updated_count > 0
+                        ? "Estados actualizados"
+                        : "Sin cambios",
                 html: html,
                 confirmButtonText: "Entendido",
-                confirmButtonColor: data.updated_count > 0 ? "#10b981" : "#3b82f6",
+                confirmButtonColor:
+                    data.updated_count > 0 ? "#10b981" : "#3b82f6",
                 width: "600px",
             });
         }
@@ -1344,8 +1493,10 @@ async function openPromo(f) {
 }
 
 async function savePromo() {
+    savingPromo.value = true;
+    promoError.value = "";
+
     try {
-        // Validar fechas
         const startDate = new Date(promo.starts_at);
         const endDate = new Date(promo.ends_at);
         const flightDate = new Date(currentFlight.value.departure_at);
@@ -1353,32 +1504,51 @@ async function savePromo() {
 
         // Validaciones
         const errors = [];
+
+        // Solo validar fecha de inicio si es una nueva promoción o si se está modificando la fecha
+        if (!promo.id && startDate < now) {
+            errors.push(
+                "La fecha de inicio no puede ser en el pasado para una nueva promoción"
+            );
+        }
+
         if (startDate >= endDate) {
             errors.push(
                 "La fecha de inicio debe ser anterior a la fecha de fin"
             );
         }
+
         if (endDate > flightDate) {
             errors.push(
                 "La promoción debe terminar antes de la fecha del vuelo"
             );
         }
-        if (startDate < now) {
-            errors.push("La fecha de inicio no puede ser en el pasado");
+
+        if (!promo.title || promo.title.trim() === "") {
+            errors.push("El título es requerido");
+        }
+
+        if (
+            !promo.discount_percent ||
+            promo.discount_percent < 1 ||
+            promo.discount_percent > 90
+        ) {
+            errors.push("El descuento debe estar entre 1% y 90%");
         }
 
         if (errors.length > 0) {
             promoError.value = errors.join(". ");
+            savingPromo.value = false;
             return;
         }
 
         const payload = {
-            title: promo.title,
+            title: promo.title.trim(),
             discount_percent: Number(promo.discount_percent),
             starts_at: startDate.toISOString(),
             ends_at: endDate.toISOString(),
             is_active: !!promo.is_active,
-            description: "", // opcional
+            description: promo.title.trim(),
         };
 
         const response = await api.post(
@@ -1394,13 +1564,19 @@ async function savePromo() {
         // Verificar si fue una actualización o creación
         if (response.data.updated) {
             await success(
-                "Promoción actualizada",
-                "La promoción existente ha sido actualizada exitosamente."
+                "✅ Promoción actualizada",
+                `La promoción "${
+                    promo.title
+                }" ha sido actualizada exitosamente.${
+                    !promo.is_active
+                        ? " La promoción está inactiva y no será visible para los clientes."
+                        : ""
+                }`
             );
         } else {
             await success(
-                "Promoción creada",
-                "La promoción ha sido creada exitosamente."
+                "✅ Promoción creada",
+                `La promoción "${promo.title}" ha sido creada exitosamente con ${promo.discount_percent}% de descuento.`
             );
         }
 
@@ -1408,8 +1584,78 @@ async function savePromo() {
         await reload();
     } catch (e) {
         promoError.value =
-            e.response?.data?.message || "Error al guardar promo";
+            e.response?.data?.message || "Error al guardar la promoción";
+        console.error(e);
+    } finally {
+        savingPromo.value = false;
     }
+}
+
+// Función para eliminar una promoción
+async function deletePromo() {
+    const confirmed = await showConfirm(
+        "¿Eliminar promoción?",
+        `¿Estás seguro de que quieres eliminar la promoción "${promo.title}"? También se eliminará la noticia asociada.`,
+        "Sí, eliminar",
+        "Cancelar"
+    );
+
+    if (!confirmed) return;
+
+    try {
+        await api.delete(`/promotions/${promo.id}`, {
+            headers: { Authorization: "Bearer " + auth.token },
+        });
+
+        promoOpen.value = false;
+
+        await success(
+            "Promoción eliminada",
+            "La promoción y su noticia asociada han sido eliminadas correctamente."
+        );
+
+        // Recargar vuelos
+        await reload();
+    } catch (error) {
+        showError(
+            "Error al eliminar",
+            error.response?.data?.message || "Error al eliminar la promoción"
+        );
+        console.error(error);
+    }
+}
+
+// Funciones de ayuda para el estado de las promociones
+function isPromoActive(promotion) {
+    if (!promotion.is_active) return false;
+    const now = new Date();
+    const start = new Date(promotion.starts_at);
+    const end = new Date(promotion.ends_at);
+    return start <= now && now <= end;
+}
+
+function isPromoFuture(promotion) {
+    if (!promotion.is_active) return false;
+    const now = new Date();
+    const start = new Date(promotion.starts_at);
+    return start > now;
+}
+
+function isPromoExpired(promotion) {
+    const now = new Date();
+    const end = new Date(promotion.ends_at);
+    return end < now;
+}
+
+function isPromoPast(dateString) {
+    return new Date(dateString) < new Date();
+}
+
+function formatDate(dateString) {
+    return new Date(dateString).toLocaleString("es-CO", {
+        dateStyle: "medium",
+        timeStyle: "short",
+    });
 }
 
 // Validation functions
