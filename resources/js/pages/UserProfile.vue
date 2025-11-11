@@ -104,6 +104,17 @@
                 </svg>
                 Seguridad
               </button>
+              <button
+                v-if="!isRootUser"
+                @click="activeTab = 'financial'"
+                :class="activeTab === 'financial' ? 'bg-indigo-50 border-indigo-500 text-indigo-700' : 'border-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+                class="w-full flex items-center px-3 py-2 text-sm font-medium border-l-4 transition-colors text-left"
+              >
+                <svg class="mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+                Gestión Financiera
+              </button>
             </nav>
           </div>
         </div>
@@ -449,6 +460,11 @@
               </div>
             </form>
           </div>
+
+          <!-- Financial Tab -->
+          <div v-if="activeTab === 'financial' && !isRootUser">
+            <FinancialManagementTab />
+          </div>
         </div>
       </div>
     </div>
@@ -460,6 +476,7 @@ import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useAuth } from '../stores/auth'
 import { api, getCsrfCookie } from '../lib/api'
 import LocationSelector from '../components/LocationSelector.vue'
+import FinancialManagementTab from '../components/profile/FinancialManagementTab.vue'
 
 const auth = useAuth()
 
