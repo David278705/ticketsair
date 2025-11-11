@@ -24,6 +24,8 @@ return [
         'http://localhost:8000',
         'http://127.0.0.1:3000',
         'http://127.0.0.1:8000',
+        'https://tickets-air-017d4e5be9ac.herokuapp.com',
+        env('APP_URL', 'http://localhost'),
     ],
 
     'allowed_origins_patterns' => [],

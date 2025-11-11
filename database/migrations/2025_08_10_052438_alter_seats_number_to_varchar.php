@@ -8,8 +8,10 @@ use Illuminate\Support\Facades\DB;
 return new class extends Migration {
     public function up(): void
     {
-        // Cambiar tipo a VARCHAR(10)
-        DB::statement('ALTER TABLE `seats` MODIFY `number` VARCHAR(10) NOT NULL');
+        // Cambiar tipo a VARCHAR(10) - Compatible con MySQL y PostgreSQL
+        Schema::table('seats', function (Blueprint $table) {
+            $table->string('number', 10)->change();
+        });
 
         // Asegurar columnas class/status si no existen (por si tu seats original era minimal)
         Schema::table('seats', function (Blueprint $t) {
@@ -35,6 +37,8 @@ return new class extends Migration {
         });
 
         // Volver a INT (⚠️ sólo seguro si todos los valores son numéricos)
-        DB::statement('ALTER TABLE `seats` MODIFY `number` INT NOT NULL');
+        Schema::table('seats', function (Blueprint $table) {
+            $table->integer('number')->change();
+        });
     }
 };
