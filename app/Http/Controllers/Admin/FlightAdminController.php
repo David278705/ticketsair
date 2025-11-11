@@ -24,9 +24,10 @@ class FlightAdminController extends Controller
 
     $flights = $q->paginate(12);
 
-    // Agregar información sobre si tiene ventas
+    // Agregar información sobre si tiene ventas y hora de llegada con zona horaria
     $flights->getCollection()->transform(function($flight) {
       $flight->has_sales = $flight->tickets()->exists() || $flight->bookings()->where('type','purchase')->exists();
+      $flight->arrival_info = $flight->getFormattedArrivalTime();
       return $flight;
     });
 
@@ -46,16 +47,17 @@ class FlightAdminController extends Controller
         $capacityFirst = Flight::getDefaultFirstClassCapacity($data['scope']);
         $capacityEconomy = Flight::getDefaultEconomyCapacity($data['scope']);
         
-        // Manejar imagen si existe
-        $imagePath = null;
+        // Manejar imagen - usar por defecto si no se proporciona
+        $imagePath = 'flights/default-flight.svg'; // Imagen por defecto
         if ($r->hasFile('image')) {
           try {
-            $imagePath = $r->file('image')->store('flights', 'public');
-            if (!$imagePath) {
-              throw new \Exception('No se pudo guardar la imagen.');
+            $uploadedPath = $r->file('image')->store('flights', 'public');
+            if ($uploadedPath) {
+              $imagePath = $uploadedPath;
             }
           } catch (\Exception $e) {
-            throw new \Exception('Error al cargar la imagen. Por favor, intenta de nuevo con una imagen más pequeña.');
+            // Si falla la carga, usar la imagen por defecto
+            \Log::warning('Error al cargar imagen de vuelo: ' . $e->getMessage());
           }
         }
       
