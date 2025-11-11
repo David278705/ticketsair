@@ -342,7 +342,7 @@
                             class="h-10 rounded-lg border px-3 w-full"
                         />
                     </div>
-                    <div v-if="form.aircraft_id">
+                    <div>
                         <label
                             class="block text-sm font-medium text-gray-700 mb-1"
                         >
@@ -351,10 +351,14 @@
                         <div
                             class="h-10 rounded-lg border border-blue-200 bg-blue-50 px-3 flex items-center text-blue-900 font-semibold"
                         >
-                            {{ form.duration_minutes }} minutos
-                            <span class="ml-2 text-xs text-blue-600">
-                                (≈ {{ Math.floor(form.duration_minutes / 60) }}h
-                                {{ form.duration_minutes % 60 }}min)
+                            <template v-if="form.duration_minutes">
+                                {{ form.duration_minutes }} minutos
+                                <span class="ml-2 text-xs text-blue-600">
+                                    ({{ formatDuration(form.duration_minutes) }})
+                                </span>
+                            </template>
+                            <span v-else class="text-slate-500 text-sm">
+                                Selecciona origen y destino
                             </span>
                         </div>
                         <p class="text-xs text-blue-600 mt-1">
