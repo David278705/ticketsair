@@ -85,12 +85,13 @@
         </div>
 
         <div class="rounded-xl border overflow-x-auto">
-            <table class="min-w-[1024px] w-full text-sm text-left">
+            <table class="min-w-[1200px] w-full text-sm text-left">
                 <thead class="bg-slate-100 text-slate-600">
                     <tr>
                         <th class="p-3 font-semibold">Código</th>
                         <th class="p-3 font-semibold">Ruta</th>
                         <th class="p-3 font-semibold">Salida</th>
+                        <th class="p-3 font-semibold">Llegada</th>
                         <th class="p-3 font-semibold">Estado</th>
                         <th class="p-3 font-semibold">Precio Base</th>
                         <th class="p-3 font-semibold">Capacidad (F/E)</th>
@@ -99,7 +100,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     <tr v-if="list.data.length === 0">
-                        <td colspan="7" class="text-center p-8 text-slate-500">
+                        <td colspan="8" class="text-center p-8 text-slate-500">
                             No se encontraron vuelos con los filtros actuales.
                         </td>
                     </tr>
@@ -130,6 +131,17 @@
                             }}</span>
                         </td>
                         <td class="p-3">{{ fmt(f.departure_at) }}</td>
+                        <td class="p-3">
+                            <div class="flex flex-col">
+                                <span class="font-medium">{{ formatArrivalDate(f.arrival_info) }}</span>
+                                <span class="text-xs text-slate-500" v-if="f.arrival_info?.timezone_abbr">
+                                    {{ f.arrival_info.timezone_abbr }}
+                                    <span v-if="f.arrival_info?.is_different_day" class="text-orange-600 font-semibold">
+                                        (+1 día)
+                                    </span>
+                                </span>
+                            </div>
+                        </td>
                         <td class="p-3">
                             <span
                                 class="px-2 py-1 rounded-full border text-xs font-medium"
@@ -341,6 +353,14 @@
                             required
                             class="h-10 rounded-lg border px-3 w-full"
                         />
+                        <p class="text-xs text-slate-500 mt-1">
+                            <span v-if="form.scope === 'international'">
+                                ⚠️ Los vuelos internacionales requieren mínimo 3 horas de anticipación
+                            </span>
+                            <span v-else>
+                                ⚠️ Los vuelos nacionales requieren mínimo 1 hora de anticipación
+                            </span>
+                        </p>
                     </div>
                     <div>
                         <label
@@ -419,8 +439,7 @@
                             />
                         </div>
                         <p class="text-xs text-gray-500 mt-1">
-                            Precio por asiento en primera clase (generalmente 2x
-                            económica)
+                            Debe ser mayor al precio de clase económica (generalmente 2x)
                         </p>
                     </div>
                     <div>
@@ -461,7 +480,7 @@
                         for="flight_image"
                         class="block text-sm font-medium text-gray-700 mb-1"
                     >
-                        Imagen del Vuelo
+                        Imagen del Vuelo (Opcional)
                     </label>
                     <input
                         id="flight_image"
@@ -471,8 +490,7 @@
                         class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                     />
                     <p class="text-xs text-slate-500 mt-1">
-                        Imagen representativa del vuelo (se usará para crear la
-                        noticia automáticamente)
+                        Si no se proporciona, se usará una imagen por defecto
                     </p>
                 </div>
             </div>
@@ -972,6 +990,14 @@ function fmt(d) {
     });
 }
 
+// Formatear la hora de llegada desde arrival_info
+function formatArrivalDate(arrivalInfo) {
+    if (!arrivalInfo || !arrivalInfo.formatted) {
+        return "N/A";
+    }
+    return arrivalInfo.formatted;
+}
+
 function chip(status) {
     const styles = {
         scheduled: "border-amber-300 text-amber-700 bg-amber-50 ",
@@ -1118,12 +1144,26 @@ async function save() {
         } else {
             // Validar que sea una fecha válida
             const departureDate = new Date(form.departure_at);
+            const now = new Date();
+            
             if (isNaN(departureDate.getTime())) {
                 errors.push("La fecha de salida no es válida.");
-            } else if (departureDate <= new Date()) {
-                errors.push(
-                    "La fecha de salida debe ser posterior a la fecha actual."
-                );
+            } else {
+                // Validar tiempo mínimo según el scope
+                const minHours = form.scope === 'international' ? 3 : 1;
+                const minTime = new Date(now.getTime() + minHours * 60 * 60 * 1000);
+                
+                if (departureDate < minTime) {
+                    if (form.scope === 'international') {
+                        errors.push(
+                            "La fecha de salida debe ser al menos 3 horas en el futuro para vuelos internacionales."
+                        );
+                    } else {
+                        errors.push(
+                            "La fecha de salida debe ser al menos 1 hora en el futuro."
+                        );
+                    }
+                }
             }
         }
 
@@ -1137,6 +1177,10 @@ async function save() {
             errors.push(
                 "El precio de primera clase es requerido y debe ser mayor a 0."
             );
+        } else if (form.first_class_price <= form.price_per_seat) {
+            errors.push(
+                "El precio de primera clase debe ser mayor al precio de clase económica."
+            );
         }
 
         if (!form.duration_minutes || form.duration_minutes < 10) {
@@ -1145,9 +1189,7 @@ async function save() {
             );
         }
 
-        if (!form.id && !form.image) {
-            errors.push("La imagen del vuelo es requerida.");
-        }
+        // La imagen ya no es requerida, se usará una por defecto si no se proporciona
 
         // Si hay errores, mostrarlos y detener el envío
         if (errors.length > 0) {
