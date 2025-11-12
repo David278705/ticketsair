@@ -61,7 +61,8 @@ class WalletController extends Controller
                     'card_last4' => $card ? $card->last4 : null,
                     'ip' => $request->ip(),
                     'user_agent' => $request->userAgent(),
-                ]
+                ],
+                'COP' // Siempre en COP
             );
 
             DB::commit();

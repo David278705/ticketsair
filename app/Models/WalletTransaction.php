@@ -13,6 +13,7 @@ class WalletTransaction extends Model
         'user_id',
         'type',
         'amount',
+        'currency',
         'balance_before',
         'balance_after',
         'description',
@@ -46,7 +47,8 @@ class WalletTransaction extends Model
         $amount,
         $description = null,
         $related = null,
-        $meta = []
+        $meta = [],
+        $currency = 'COP'
     ) {
         $user = User::findOrFail($userId);
         $balanceBefore = $user->wallet_balance ?? 0;
@@ -63,6 +65,7 @@ class WalletTransaction extends Model
             'user_id' => $userId,
             'type' => $type,
             'amount' => abs($amount),
+            'currency' => $currency,
             'balance_before' => $balanceBefore,
             'balance_after' => $balanceAfter,
             'description' => $description,

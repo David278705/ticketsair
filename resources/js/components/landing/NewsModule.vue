@@ -530,14 +530,13 @@
         />
 
         <!-- Modal de Pago -->
-                <!-- Modal de Pago -->
         <UnifiedPaymentModal
             v-model:open="paymentOpen"
             :total-amount="pendingBooking?.total_amount || 0"
             :booking-info="{
                 flight: selectedFlight,
                 passengers_count: pendingPassengers.length,
-                class: selectedClass,
+                class: pendingPassengers[0]?.flight_class || 'economy',
                 action: selectedAction,
             }"
             @payment-success="processBooking"

@@ -3,13 +3,13 @@
     <!-- Wallet Balance Card -->
     <div class="bg-white shadow rounded-lg">
       <div class="px-6 py-4 border-b border-gray-200">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h2 class="text-lg font-semibold text-gray-900">Saldo de Billetera</h2>
             <p class="mt-1 text-sm text-gray-600">Gestiona tu saldo y realiza recargas</p>
           </div>
-          <div class="text-right">
-            <p class="text-3xl font-bold text-indigo-600">{{ formatMoney(walletBalance) }}</p>
+          <div class="text-left md:text-right">
+            <p class="text-xl md:text-2xl font-bold text-indigo-600 break-words">{{ formatMoney(walletBalance) }}</p>
             <p class="text-sm text-gray-500">Saldo disponible</p>
           </div>
         </div>
@@ -19,45 +19,45 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <!-- Total Income Card -->
           <div class="bg-green-50 rounded-lg p-4">
-            <div class="flex items-center">
+            <div class="flex items-start gap-3">
               <div class="flex-shrink-0">
                 <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
               </div>
-              <div class="ml-4">
+              <div class="flex-1 min-w-0">
                 <p class="text-sm font-medium text-green-900">Ingresos Totales</p>
-                <p class="text-xl font-bold text-green-700">{{ formatMoney(statistics.totalIncome) }}</p>
+                <p class="text-base md:text-lg font-semibold text-green-700 break-words">{{ formatMoney(statistics.totalIncome) }}</p>
               </div>
             </div>
           </div>
 
           <!-- Total Expenses Card -->
           <div class="bg-red-50 rounded-lg p-4">
-            <div class="flex items-center">
+            <div class="flex items-start gap-3">
               <div class="flex-shrink-0">
                 <svg class="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
                 </svg>
               </div>
-              <div class="ml-4">
+              <div class="flex-1 min-w-0">
                 <p class="text-sm font-medium text-red-900">Gastos Totales</p>
-                <p class="text-xl font-bold text-red-700">{{ formatMoney(statistics.totalExpenses) }}</p>
+                <p class="text-base md:text-lg font-semibold text-red-700 break-words">{{ formatMoney(statistics.totalExpenses) }}</p>
               </div>
             </div>
           </div>
 
           <!-- Total Transactions Card -->
           <div class="bg-blue-50 rounded-lg p-4">
-            <div class="flex items-center">
+            <div class="flex items-start gap-3">
               <div class="flex-shrink-0">
                 <svg class="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
               </div>
-              <div class="ml-4">
+              <div class="flex-1 min-w-0">
                 <p class="text-sm font-medium text-blue-900">Transacciones</p>
-                <p class="text-xl font-bold text-blue-700">{{ statistics.totalTransactions }}</p>
+                <p class="text-lg md:text-xl font-bold text-blue-700">{{ statistics.totalTransactions }}</p>
               </div>
             </div>
           </div>
@@ -107,8 +107,8 @@
             class="border-2 rounded-lg p-4 hover:border-indigo-500 transition-colors"
             :class="card.is_default ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200'"
           >
-            <div class="flex items-start justify-between">
-              <div class="flex items-center space-x-3">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-start gap-3 flex-1 min-w-0">
                 <!-- Card Icon -->
                 <div class="flex-shrink-0">
                   <svg class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -116,24 +116,24 @@
                   </svg>
                 </div>
                 
-                <div>
-                  <div class="flex items-center space-x-2">
-                    <p class="text-sm font-medium text-gray-900">{{ card.card_type || 'Tarjeta' }}</p>
-                    <span v-if="card.is_default" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <p class="text-sm font-medium text-gray-900 uppercase">{{ card.card_type || 'Tarjeta' }}</p>
+                    <span v-if="card.is_default" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800 whitespace-nowrap">
                       Predeterminada
                     </span>
                   </div>
-                  <p class="text-sm text-gray-600">•••• •••• •••• {{ card.last_four }}</p>
+                  <p class="text-sm text-gray-600 font-mono">•••• •••• •••• {{ card.last_four }}</p>
                   <p class="text-xs text-gray-500">Vence: {{ card.expiry_month }}/{{ card.expiry_year }}</p>
                 </div>
               </div>
 
               <!-- Card Actions -->
-              <div class="flex items-center space-x-2">
+              <div class="flex items-center gap-2 flex-shrink-0">
                 <button
                   v-if="!card.is_default"
                   @click="setDefaultCard(card.id)"
-                  class="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                  class="text-indigo-600 hover:text-indigo-700"
                   title="Establecer como predeterminada"
                 >
                   <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,7 +143,7 @@
                 
                 <button
                   @click="deleteCard(card.id)"
-                  class="text-sm text-red-600 hover:text-red-700 font-medium"
+                  class="text-red-600 hover:text-red-700"
                   title="Eliminar tarjeta"
                 >
                   <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -198,7 +198,7 @@
             :key="transaction.id"
             class="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
           >
-            <div class="flex items-center space-x-4">
+            <div class="flex items-center gap-4 flex-1 min-w-0">
               <div
                 class="flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center"
                 :class="getTransactionIconClass(transaction.type)"
@@ -209,21 +209,21 @@
                 </svg>
               </div>
               
-              <div>
-                <p class="text-sm font-medium text-gray-900">{{ transaction.description }}</p>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-900 truncate">{{ transaction.description }}</p>
                 <p class="text-xs text-gray-500">{{ formatDate(transaction.created_at) }}</p>
               </div>
             </div>
 
-            <div class="text-right">
+            <div class="text-right flex-shrink-0 ml-4">
               <p
-                class="text-sm font-bold"
-                :class="transaction.type === 'payment' ? 'text-red-600' : 'text-green-600'"
+                class="text-sm font-bold whitespace-nowrap"
+                :class="['payment', 'purchase', 'adjustment'].includes(transaction.type) ? 'text-red-600' : 'text-green-600'"
               >
-                {{ transaction.type === 'payment' ? '-' : '+' }}{{ formatMoney(transaction.amount) }}
+                {{ ['payment', 'purchase', 'adjustment'].includes(transaction.type) ? '-' : '+' }}{{ formatMoney(transaction.amount) }}
               </p>
               <span
-                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
+                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap"
                 :class="getTransactionTypeClass(transaction.type)"
               >
                 {{ getTransactionTypeLabel(transaction.type) }}
@@ -705,10 +705,13 @@ const resetRechargeForm = () => {
 
 // Utility functions
 const formatMoney = (amount) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD'
-  }).format(amount || 0)
+  if (!amount && amount !== 0) return '$0'
+  // Formato colombiano: $1.234.567 (punto como separador de miles)
+  const formatted = new Intl.NumberFormat('es-CO', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(amount)
+  return '$' + formatted
 }
 
 const formatDate = (date) => {
@@ -736,8 +739,10 @@ const getTransactionTypeLabel = (type) => {
   const labels = {
     recharge: 'Recarga',
     payment: 'Pago',
+    purchase: 'Compra',
     refund: 'Reembolso',
-    bonus: 'Bonificación'
+    bonus: 'Bonificación',
+    adjustment: 'Ajuste'
   }
   return labels[type] || type
 }
@@ -746,8 +751,10 @@ const getTransactionTypeClass = (type) => {
   const classes = {
     recharge: 'bg-blue-100 text-blue-800',
     payment: 'bg-red-100 text-red-800',
+    purchase: 'bg-orange-100 text-orange-800',
     refund: 'bg-green-100 text-green-800',
-    bonus: 'bg-purple-100 text-purple-800'
+    bonus: 'bg-purple-100 text-purple-800',
+    adjustment: 'bg-yellow-100 text-yellow-800'
   }
   return classes[type] || 'bg-gray-100 text-gray-800'
 }
@@ -756,8 +763,10 @@ const getTransactionIconClass = (type) => {
   const classes = {
     recharge: 'bg-blue-100 text-blue-600',
     payment: 'bg-red-100 text-red-600',
+    purchase: 'bg-orange-100 text-orange-600',
     refund: 'bg-green-100 text-green-600',
-    bonus: 'bg-purple-100 text-purple-600'
+    bonus: 'bg-purple-100 text-purple-600',
+    adjustment: 'bg-yellow-100 text-yellow-600'
   }
   return classes[type] || 'bg-gray-100 text-gray-600'
 }

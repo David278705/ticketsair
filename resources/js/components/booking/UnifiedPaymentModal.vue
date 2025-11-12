@@ -469,47 +469,42 @@ const processPayment = async () => {
         let paymentData = {}
 
         if (paymentMethod.value === 'wallet') {
+            // Verificar saldo suficiente antes de procesar
+            if (walletBalance.value < props.totalAmount) {
+                generalError.value = `Saldo insuficiente. Tienes ${formatMoney(walletBalance.value)} pero necesitas ${formatMoney(props.totalAmount)}`
+                processing.value = false
+                return
+            }
+            
             // Pago con billetera
             paymentData = {
                 method: 'wallet',
-                amount: props.totalAmount
+                amount: props.totalAmount,
+                currency: 'COP'
             }
         } else if (paymentMethod.value === 'saved_card') {
             // Pago con tarjeta guardada
             const card = savedCards.value.find(c => c.id === selectedCardId.value)
             if (!card) {
                 generalError.value = 'Tarjeta no encontrada'
+                processing.value = false
                 return
             }
             paymentData = {
                 method: 'saved_card',
                 card_id: card.id,
                 card_type: card.card_type,
-                card_holder: card.holder_name,
+                card_holder: card.card_holder_name,
                 last_four: card.last4,
-                expiry_date: `${card.exp_month}/${card.exp_year}`
+                expiry_date: `${card.exp_month}/${card.exp_year}`,
+                transaction_id: 'TXN' + Date.now() + Math.random().toString(36).substr(2, 9).toUpperCase(),
+                save_card: false
             }
         } else if (paymentMethod.value === 'new_card') {
             // Pago con nueva tarjeta
             if (!validateNewCard()) {
+                processing.value = false
                 return
-            }
-
-            // Si quiere guardar la tarjeta, primero la guardamos
-            if (newCard.value.save_card) {
-                try {
-                    await api.post('/payment-methods', {
-                        card_number: newCard.value.card_number.replace(/\s/g, ''),
-                        card_holder_name: newCard.value.card_holder_name,
-                        card_type: newCard.value.card_type,
-                        expiry_month: newCard.value.expiry_month,
-                        expiry_year: newCard.value.expiry_year,
-                        cvv: newCard.value.cvv,
-                        is_default: savedCards.value.length === 0
-                    })
-                } catch (error) {
-                    console.error('Error saving card:', error)
-                }
             }
 
             paymentData = {
@@ -519,7 +514,9 @@ const processPayment = async () => {
                 card_type: newCard.value.card_type,
                 expiry_date: `${newCard.value.expiry_month}/${newCard.value.expiry_year}`,
                 cvv: newCard.value.cvv,
-                last_four: newCard.value.card_number.replace(/\s/g, '').slice(-4)
+                last_four: newCard.value.card_number.replace(/\s/g, '').slice(-4),
+                transaction_id: 'TXN' + Date.now() + Math.random().toString(36).substr(2, 9).toUpperCase(),
+                save_card: newCard.value.save_card
             }
         }
 
@@ -527,6 +524,12 @@ const processPayment = async () => {
         await new Promise(resolve => setTimeout(resolve, 1500))
 
         emit('payment-success', paymentData)
+        
+        // Si pagó con wallet, recargar saldo
+        if (paymentMethod.value === 'wallet') {
+            await fetchWallet()
+        }
+        
         close()
     } catch (error) {
         generalError.value = error.response?.data?.message || 'Error al procesar el pago'

@@ -147,7 +147,7 @@
                     >
                         <button
                             v-if="canConvertToPurchase(b)"
-                            @click="convertToPurchase(b)"
+                            @click="buyNow(b)"
                             class="h-10 px-4 text-sm rounded-xl bg-blue-600 text-white hover:bg-blue-700"
                         >
                             💳 Completar Compra
@@ -334,7 +334,7 @@ async function convertToPurchase(paymentData) {
     try {
         await api.post(
             `/bookings/${selectedBooking.value.id}/convert-to-purchase`,
-            paymentData,
+            { payment: paymentData },
             { headers: { Authorization: "Bearer " + auth.token } }
         );
         await success(
