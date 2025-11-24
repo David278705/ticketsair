@@ -523,16 +523,15 @@ const processPayment = async () => {
         // Simular delay de procesamiento
         await new Promise(resolve => setTimeout(resolve, 1500))
 
+        // Emitir evento con los datos de pago al componente padre
         emit('payment-success', paymentData)
         
-        // Si pagó con wallet, recargar saldo
-        if (paymentMethod.value === 'wallet') {
-            await fetchWallet()
-        }
-        
+        // Cerrar modal
         close()
     } catch (error) {
-        generalError.value = error.response?.data?.message || 'Error al procesar el pago'
+        // Solo capturar errores críticos del modal (no errores de backend)
+        console.error('Error en el modal de pago:', error)
+        generalError.value = 'Ocurrió un error inesperado. Por favor intenta nuevamente.'
     } finally {
         processing.value = false
     }
@@ -559,6 +558,7 @@ const resetForm = () => {
 // Cerrar modal
 const close = () => {
     if (!processing.value) {
+        resetForm() // Limpiar formulario y errores al cerrar
         emit('update:open', false)
     }
 }

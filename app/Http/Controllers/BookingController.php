@@ -489,12 +489,12 @@ class BookingController extends Controller
             'meta' => $paymentMeta,
         ]);
 
-        // Enviar correo de confirmación de compra
-        foreach ($booking->passengers as $p) {
+        // Enviar correo de confirmación de compra a cada pasajero
+        $bookingWithData = $booking->load('flight.origin','flight.destination','passengers.seat');
+        foreach ($bookingWithData->passengers as $p) {
             if ($p->email) {
-                $bookingData = $booking->load('flight.origin','flight.destination','passengers.seat');
                 try {
-                    Mail::to($p->email)->queue(new \App\Mail\PurchaseMail($bookingData, $p));
+                    Mail::to($p->email)->send(new \App\Mail\PurchaseMail($bookingWithData, $p));
                     Log::info("Email de conversión a compra enviado a: {$p->email}");
                 } catch (\Exception $e) {
                     Log::error("Error enviando email de conversión a {$p->email}: " . $e->getMessage());

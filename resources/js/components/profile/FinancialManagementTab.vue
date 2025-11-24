@@ -27,7 +27,7 @@
               </div>
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-medium text-green-900">Ingresos Totales</p>
-                <p class="text-base md:text-lg font-semibold text-green-700 break-words">{{ formatMoney(statistics.totalIncome) }}</p>
+                <p class="text-sm md:text-base font-semibold text-green-700 break-words">{{ formatMoney(statistics.totalIncome) }}</p>
               </div>
             </div>
           </div>
@@ -42,7 +42,7 @@
               </div>
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-medium text-red-900">Gastos Totales</p>
-                <p class="text-base md:text-lg font-semibold text-red-700 break-words">{{ formatMoney(statistics.totalExpenses) }}</p>
+                <p class="text-sm md:text-base font-semibold text-red-700 break-words">{{ formatMoney(statistics.totalExpenses) }}</p>
               </div>
             </div>
           </div>
@@ -181,7 +181,7 @@
         <!-- Transaction Filters -->
         <div class="mb-4 flex flex-wrap gap-2">
           <button
-            v-for="type in ['all', 'recharge', 'payment', 'refund', 'bonus']"
+            v-for="type in ['all', 'recharge', 'purchase', 'payment', 'refund', 'bonus', 'adjustment']"
             :key="type"
             @click="filterType = type"
             :class="filterType === type ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
@@ -728,9 +728,11 @@ const getFilterLabel = (type) => {
   const labels = {
     all: 'Todas',
     recharge: 'Recargas',
+    purchase: 'Compras',
     payment: 'Pagos',
     refund: 'Reembolsos',
-    bonus: 'Bonificaciones'
+    bonus: 'Bonificaciones',
+    adjustment: 'Ajustes'
   }
   return labels[type] || type
 }
