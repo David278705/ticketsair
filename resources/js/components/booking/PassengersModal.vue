@@ -76,6 +76,45 @@
 
                                     <!-- Campos del pasajero -->
                                     <div class="grid grid-cols-2 gap-3 mb-4">
+                                        <!-- DNI primero -->
+                                        <div class="col-span-2 sm:col-span-1 relative">
+                                            <input
+                                                v-model="p.dni"
+                                                placeholder="Documento *"
+                                                @input="checkDuplicateDni"
+                                                @blur="() => checkUserByDni(idx)"
+                                                :class="[
+                                                    'h-11 rounded-lg border px-3 bg-white w-full focus:ring-2',
+                                                    isDniDuplicate(p.dni, idx)
+                                                        ? 'border-red-500 focus:border-red-500 focus:ring-red-200'
+                                                        : p.loadingDni
+                                                        ? 'border-blue-500 focus:border-blue-500 focus:ring-blue-200'
+                                                        : p.foundUser
+                                                        ? 'border-green-500 focus:border-green-500 focus:ring-green-200'
+                                                        : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200',
+                                                ]"
+                                            />
+                                            <div v-if="p.loadingDni" class="absolute right-3 top-3">
+                                                <svg class="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                            </div>
+                                            <div v-if="p.foundUser && !p.loadingDni" class="absolute right-3 top-3">
+                                                <svg class="h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                </svg>
+                                            </div>
+                                            <p
+                                                v-if="
+                                                    isDniDuplicate(p.dni, idx)
+                                                "
+                                                class="text-xs text-red-600 mt-1"
+                                            >
+                                                ⚠️ Cédula duplicada
+                                            </p>
+                                        </div>
+                                        <!-- Nombres y Apellidos después del DNI -->
                                         <input
                                             v-model="p.first_name"
                                             placeholder="Nombres *"
@@ -86,27 +125,7 @@
                                             placeholder="Apellidos *"
                                             class="h-11 rounded-lg border border-gray-300 px-3 bg-white col-span-2 sm:col-span-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                                         />
-                                        <div class="col-span-2 sm:col-span-1">
-                                            <input
-                                                v-model="p.dni"
-                                                placeholder="Documento *"
-                                                @input="checkDuplicateDni"
-                                                :class="[
-                                                    'h-11 rounded-lg border px-3 bg-white w-full focus:ring-2',
-                                                    isDniDuplicate(p.dni, idx)
-                                                        ? 'border-red-500 focus:border-red-500 focus:ring-red-200'
-                                                        : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200',
-                                                ]"
-                                            />
-                                            <p
-                                                v-if="
-                                                    isDniDuplicate(p.dni, idx)
-                                                "
-                                                class="text-xs text-red-600 mt-1"
-                                            >
-                                                ⚠️ Cédula duplicada
-                                            </p>
-                                        </div>
+                                        <!-- Fecha de nacimiento, género y email -->
                                         <input
                                             v-model="p.birth_date"
                                             type="date"
@@ -367,6 +386,8 @@ function createBlankPassenger() {
         gender: "",
         email: "",
         flight_class: "economy", // Por defecto económica
+        loadingDni: false, // Para mostrar loading al buscar usuario
+        foundUser: false, // Para indicar si se encontró usuario
     };
 }
 
@@ -427,6 +448,49 @@ function checkDuplicateDni() {
 
 function checkDuplicateEmail() {
     // Forzar re-evaluación de la validación
+}
+
+// Función para buscar usuario por DNI y autocompletar campos
+async function checkUserByDni(index) {
+    const passenger = passengers.value[index];
+    
+    // No buscar si el DNI está vacío o es muy corto
+    if (!passenger.dni || passenger.dni.trim().length < 3) {
+        passenger.loadingDni = false;
+        passenger.foundUser = false;
+        return;
+    }
+
+    // No buscar si ya hay datos llenados (el usuario ya editó manualmente)
+    if (passenger.first_name || passenger.last_name || passenger.email) {
+        return;
+    }
+
+    passenger.loadingDni = true;
+    passenger.foundUser = false;
+
+    try {
+        const response = await fetch(`/api/users/by-dni/${encodeURIComponent(passenger.dni.trim())}`);
+        const data = await response.json();
+
+        if (response.ok && data.found && data.user) {
+            // Autocompletar los campos con los datos del usuario
+            passenger.first_name = data.user.first_name || '';
+            passenger.last_name = data.user.last_name || '';
+            passenger.birth_date = data.user.birth_date || '';
+            passenger.gender = data.user.gender || '';
+            passenger.email = data.user.email || '';
+            passenger.foundUser = true;
+        } else {
+            // Usuario no encontrado, no hacer nada (el usuario puede llenar manualmente)
+            passenger.foundUser = false;
+        }
+    } catch (err) {
+        console.error('Error al buscar usuario por DNI:', err);
+        passenger.foundUser = false;
+    } finally {
+        passenger.loadingDni = false;
+    }
 }
 
 function submit() {

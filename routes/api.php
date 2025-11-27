@@ -36,6 +36,7 @@ Route::get('/cities', fn() => \App\Models\City::orderBy('name')->get());
 Route::get('/aircraft', fn() => \App\Models\Aircraft::where('is_active', true)->orderBy('name')->get());
 Route::get('/news', [NewsController::class, 'index']);
 Route::post('/checkin/fast', [CheckinController::class,'fast']); // por código o DNI
+Route::get('/users/by-dni/{dni}', [AuthController::class, 'getUserByDni']); // buscar usuario por DNI para autocompletar
 
 // Rutas para completar registro de administrador
 Route::post('/verify-admin-token', [AdminRegistrationController::class, 'verifyToken']);

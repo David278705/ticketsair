@@ -229,6 +229,33 @@ class AuthController extends Controller
         'email' => $user->email,
         'role' => $user->role->name ?? 'client'
       ]
+    ], 200);
+  }
+
+  /**
+   * Buscar usuario por DNI para autocompletar formularios
+   */
+  public function getUserByDni($dni) {
+    $user = User::where('dni', $dni)->first();
+    
+    if (!$user) {
+      return response()->json([
+        'found' => false,
+        'message' => 'Usuario no encontrado'
+      ], 404);
+    }
+
+    // Retornar solo información básica necesaria para autocompletar
+    return response()->json([
+      'found' => true,
+      'user' => [
+        'dni' => $user->dni,
+        'first_name' => $user->first_name,
+        'last_name' => $user->last_name,
+        'birth_date' => $user->birth_date,
+        'gender' => $user->gender,
+        'email' => $user->email,
+      ]
     ]);
   }
 }
