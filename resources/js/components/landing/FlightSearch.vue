@@ -3,7 +3,7 @@
         <div
             class="rounded-2xl border border-slate-200/80 bg-white/60 backdrop-blur p-4 md:p-5 shadow-sm transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg"
         >
-            <div class="grid gap-4 md:grid-cols-5 md:items-end">
+            <div class="grid gap-4 md:grid-cols-7 md:items-end">
                 <!-- Origen -->
                 <div class="relative">
                     <label
@@ -13,28 +13,38 @@
                     >
 
                     <Listbox v-model="originId" by="id" v-slot="{ open }">
-                        <ListboxButton
-                            ref="originBtn"
-                            class="relative w-full cursor-default rounded-xl bg-white border border-slate-300 h-11 pl-10 pr-10 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 flex items-center"
-                        >
-                            <MapPin
-                                class="absolute left-3 w-5 h-5 text-slate-400"
-                            />
-                            <span
-                                class="block truncate"
-                                :class="{ 'text-slate-400': !originId }"
+                        <div class="relative">
+                            <ListboxButton
+                                ref="originBtn"
+                                class="relative w-full cursor-default rounded-xl bg-white border border-slate-300 h-11 pl-10 pr-10 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 flex items-center"
                             >
-                                {{ originLabel }}
-                            </span>
-                            <span
-                                class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2"
-                            >
-                                <ChevronsUpDown
-                                    class="h-5 w-5 text-gray-400"
-                                    aria-hidden="true"
+                                <MapPin
+                                    class="absolute left-3 w-5 h-5 text-slate-400"
                                 />
-                            </span>
-                        </ListboxButton>
+                                <span
+                                    class="block truncate"
+                                    :class="{ 'text-slate-400': !originId }"
+                                >
+                                    {{ originLabel }}
+                                </span>
+                                <span
+                                    class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2"
+                                >
+                                    <ChevronsUpDown
+                                        class="h-5 w-5 text-gray-400"
+                                        aria-hidden="true"
+                                    />
+                                </span>
+                            </ListboxButton>
+                            <button
+                                v-if="originId"
+                                @click.stop="originId = null"
+                                class="absolute right-8 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 z-10"
+                                type="button"
+                            >
+                                ✕
+                            </button>
+                        </div>
 
                         <Teleport to="body">
                             <ListboxOptions
@@ -103,28 +113,38 @@
                     >
 
                     <Listbox v-model="destinationId" by="id" v-slot="{ open }">
-                        <ListboxButton
-                            ref="destBtn"
-                            class="relative w-full cursor-default rounded-xl bg-white border border-slate-300 h-11 pl-10 pr-10 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 flex items-center"
-                        >
-                            <MapPin
-                                class="absolute left-3 w-5 h-5 text-slate-400"
-                            />
-                            <span
-                                class="block truncate"
-                                :class="{ 'text-slate-400': !destinationId }"
+                        <div class="relative">
+                            <ListboxButton
+                                ref="destBtn"
+                                class="relative w-full cursor-default rounded-xl bg-white border border-slate-300 h-11 pl-10 pr-10 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 flex items-center"
                             >
-                                {{ destinationLabel }}
-                            </span>
-                            <span
-                                class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2"
-                            >
-                                <ChevronsUpDown
-                                    class="h-5 w-5 text-gray-400"
-                                    aria-hidden="true"
+                                <MapPin
+                                    class="absolute left-3 w-5 h-5 text-slate-400"
                                 />
-                            </span>
-                        </ListboxButton>
+                                <span
+                                    class="block truncate"
+                                    :class="{ 'text-slate-400': !destinationId }"
+                                >
+                                    {{ destinationLabel }}
+                                </span>
+                                <span
+                                    class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2"
+                                >
+                                    <ChevronsUpDown
+                                        class="h-5 w-5 text-gray-400"
+                                        aria-hidden="true"
+                                    />
+                                </span>
+                            </ListboxButton>
+                            <button
+                                v-if="destinationId"
+                                @click.stop="destinationId = null"
+                                class="absolute right-8 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 z-10"
+                                type="button"
+                            >
+                                ✕
+                            </button>
+                        </div>
 
                         <Teleport to="body">
                             <ListboxOptions
@@ -209,22 +229,32 @@
                         >Clase</label
                     >
                     <Listbox v-model="selectedClass" v-slot="{ open }">
-                        <ListboxButton
-                            ref="listboxButtonRef"
-                            class="relative w-full cursor-default rounded-xl bg-white border border-slate-300 h-11 pl-3 pr-10 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                        >
-                            <span class="block truncate">{{
-                                selectedClass.name
-                            }}</span>
-                            <span
-                                class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2"
+                        <div class="relative">
+                            <ListboxButton
+                                ref="listboxButtonRef"
+                                class="relative w-full cursor-default rounded-xl bg-white border border-slate-300 h-11 pl-3 pr-10 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                             >
-                                <ChevronsUpDown
-                                    class="h-5 w-5 text-gray-400"
-                                    aria-hidden="true"
-                                />
-                            </span>
-                        </ListboxButton>
+                                <span class="block truncate" :class="{ 'text-slate-400': !selectedClass }">{{
+                                    selectedClass ? selectedClass.name : 'Todas las clases'
+                                }}</span>
+                                <span
+                                    class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2"
+                                >
+                                    <ChevronsUpDown
+                                        class="h-5 w-5 text-gray-400"
+                                        aria-hidden="true"
+                                    />
+                                </span>
+                            </ListboxButton>
+                            <button
+                                v-if="selectedClass"
+                                @click.stop="selectedClass = null"
+                                class="absolute right-8 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 z-10"
+                                type="button"
+                            >
+                                ✕
+                            </button>
+                        </div>
                         <Teleport to="body">
                             <ListboxOptions
                                 v-if="open"
@@ -272,17 +302,61 @@
                     </Listbox>
                 </div>
 
-                <!-- Buscar -->
-                <div class="md:col-start-5">
+                <!-- Precio Mínimo -->
+                <div>
+                    <label class="block text-xs text-slate-500 mb-2"
+                        >Precio Min</label
+                    >
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
+                        <input
+                            type="number"
+                            v-model.number="minPrice"
+                            min="0"
+                            step="10"
+                            class="relative w-full rounded-xl bg-white border border-slate-300 h-11 pl-7 pr-3 text-left focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="0"
+                        />
+                    </div>
+                </div>
+
+                <!-- Precio Máximo -->
+                <div>
+                    <label class="block text-xs text-slate-500 mb-2"
+                        >Precio Max</label
+                    >
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
+                        <input
+                            type="number"
+                            v-model.number="maxPrice"
+                            min="0"
+                            step="10"
+                            class="relative w-full rounded-xl bg-white border border-slate-300 h-11 pl-7 pr-3 text-left focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="∞"
+                        />
+                    </div>
+                </div>
+
+                <!-- Buscar y Limpiar -->
+                <div class="md:col-span-2 flex gap-2">
+                    <button
+                        type="button"
+                        @click="clearFilters"
+                        class="flex-1 rounded-xl bg-slate-100 text-slate-700 h-11 px-4 shadow-sm hover:bg-slate-200 transition-colors flex items-center justify-center gap-2"
+                        :disabled="loading"
+                    >
+                        <span>Limpiar</span>
+                    </button>
                     <button
                         type="button"
                         @click="search"
-                        class="w-full rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-400 text-white h-11 px-6 shadow hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-60"
+                        class="flex-1 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-400 text-white h-11 px-6 shadow hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-60"
                         :disabled="loading"
                     >
                         <Search class="w-5 h-5" />
                         <span>{{
-                            loading ? "Buscando…" : "Buscar vuelos"
+                            loading ? "Buscando…" : "Buscar"
                         }}</span>
                     </button>
                 </div>
@@ -323,27 +397,60 @@
                         new Date(f.departure_at).toLocaleString()
                     }}</span>
                 </header>
-                <div class="mt-2 text-sm">
-                    <span v-if="!f.active_promotion">
-                        Precio por silla:
-                        <b>{{ formatPrice(+f.price_per_seat) }}</b>
-                    </span>
-                    <div v-else class="flex items-center gap-2">
-                        <span class="text-gray-500 line-through text-xs">
+                <div class="mt-2 space-y-1">
+                    <!-- Precio Económica -->
+                    <div class="text-sm">
+                        <span class="text-gray-600">Clase Económica: </span>
+                        <span v-if="!f.active_promotion" class="font-bold">
                             {{ formatPrice(+f.price_per_seat) }}
                         </span>
-                        <span class="text-green-600 font-bold text-base">
-                            {{
-                                formatPrice(
-                                    +f.price_per_seat *
-                                        (1 -
-                                            f.active_promotion
-                                                .discount_percent /
-                                                100)
-                                )
-                            }}
+                        <span v-else class="inline-flex items-center gap-2">
+                            <span class="text-gray-400 line-through text-xs">
+                                {{ formatPrice(+f.price_per_seat) }}
+                            </span>
+                            <span class="text-green-600 font-bold">
+                                {{
+                                    formatPrice(
+                                        +f.price_per_seat *
+                                            (1 -
+                                                f.active_promotion
+                                                    .discount_percent /
+                                                    100)
+                                    )
+                                }}
+                            </span>
                         </span>
-                        <span class="text-xs text-gray-500">por silla</span>
+                    </div>
+                    
+                    <!-- Precio Primera Clase -->
+                    <div class="text-sm">
+                        <span class="text-gray-600">Primera Clase: </span>
+                        <span v-if="!f.active_promotion" class="font-bold">
+                            {{ formatPrice(+f.first_class_price) }}
+                        </span>
+                        <span v-else class="inline-flex items-center gap-2">
+                            <span class="text-gray-400 line-through text-xs">
+                                {{ formatPrice(+f.first_class_price) }}
+                            </span>
+                            <span class="text-green-600 font-bold">
+                                {{
+                                    formatPrice(
+                                        +f.first_class_price *
+                                            (1 -
+                                                f.active_promotion
+                                                    .discount_percent /
+                                                    100)
+                                    )
+                                }}
+                            </span>
+                        </span>
+                    </div>
+                    
+                    <!-- Badge de descuento si aplica -->
+                    <div v-if="f.active_promotion" class="inline-block">
+                        <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">
+                            🎉 {{ f.active_promotion.discount_percent }}% OFF
+                        </span>
                     </div>
                 </div>
                 <div class="mt-3 flex gap-2">
@@ -440,8 +547,22 @@ import UnifiedPaymentModal from "../booking/UnifiedPaymentModal.vue";
 
 const auth = useAuth();
 const ui = useUi();
-const { formatPrice } = useCurrency();
+const { formatPrice, currentCurrency } = useCurrency();
 const { success, error: showError } = useSweetAlert();
+
+// Tasas de cambio (para convertir a COP antes de enviar al backend)
+const EXCHANGE_RATES = {
+    COP: 1,
+    USD: 0.00024, // 1 COP = 0.00024 USD
+    EUR: 0.00022, // 1 COP = 0.00022 EUR
+};
+
+// Convertir precio de la moneda actual a COP
+const convertToCOP = (price) => {
+    if (!price) return null;
+    const rate = EXCHANGE_RATES[currentCurrency.value];
+    return price / rate; // Convertir a COP
+};
 
 // Ciudades
 const cities = ref([]);
@@ -488,10 +609,14 @@ const minDate = computed(() => {
 });
 
 const classes = [
-    { id: "economy", name: "Economy" },
-    { id: "first", name: "First" },
+    { id: "economy", name: "Económica" },
+    { id: "first", name: "Primera" },
 ];
-const selectedClass = ref(classes[0]);
+const selectedClass = ref(null); // Sin selección por defecto
+
+// Filtros de precio
+const minPrice = ref(null);
+const maxPrice = ref(null);
 
 // FloatingUI
 const originBtn = ref(null),
@@ -565,11 +690,21 @@ async function search(url) {
     loading.value = true;
     resultsLoading.value = true;
     try {
+        // Convertir precios a COP antes de enviar al backend
+        const minPriceCOP = minPrice.value !== null && minPrice.value !== '' 
+            ? convertToCOP(minPrice.value) 
+            : "";
+        const maxPriceCOP = maxPrice.value !== null && maxPrice.value !== '' 
+            ? convertToCOP(maxPrice.value) 
+            : "";
+        
         const params = {
             origin_id: originId.value?.id || "",
             destination_id: destinationId.value?.id || "",
             date: dateInput.value || "",
-            class: selectedClass.value.id,
+            class: selectedClass.value?.id || "", // Puede estar vacío para mostrar todas
+            min_price: minPriceCOP,
+            max_price: maxPriceCOP,
         };
         const { data } = await api.get("/flights", { params });
         results.value = data;
@@ -581,6 +716,17 @@ async function search(url) {
 function go(url) {
     const u = new URL(url);
     search(u.pathname + u.search);
+}
+
+// Limpiar filtros
+function clearFilters() {
+    originId.value = null;
+    destinationId.value = null;
+    dateInput.value = "";
+    selectedClass.value = null;
+    minPrice.value = null;
+    maxPrice.value = null;
+    results.value = { data: [], meta: null };
 }
 
 // Flujo de acciones

@@ -193,6 +193,32 @@
                                             </p>
                                         </div>
                                     </div>
+
+                                    <!-- Precios por Clase -->
+                                    <div class="grid grid-cols-2 gap-4 mt-4">
+                                        <div class="p-3 bg-white/60 rounded-lg">
+                                            <p class="text-xs text-gray-500">
+                                                Clase Económica
+                                            </p>
+                                            <p class="text-lg font-bold text-blue-600">
+                                                {{ formatCurrency(flight.price_per_seat) }}
+                                            </p>
+                                            <p v-if="flight.active_promotion" class="text-xs text-green-600 font-semibold">
+                                                {{ flight.active_promotion.discount_percent }}% descuento
+                                            </p>
+                                        </div>
+                                        <div class="p-3 bg-white/60 rounded-lg">
+                                            <p class="text-xs text-gray-500">
+                                                Primera Clase
+                                            </p>
+                                            <p class="text-lg font-bold text-cyan-600">
+                                                {{ formatCurrency(flight.first_class_price) }}
+                                            </p>
+                                            <p v-if="flight.active_promotion" class="text-xs text-green-600 font-semibold">
+                                                {{ flight.active_promotion.discount_percent }}% descuento
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- Número de Pasajeros -->
@@ -320,8 +346,10 @@ import {
     DialogTitle,
 } from "@headlessui/vue";
 import { useFlightTime } from "../../composables/useFlightTime";
+import { useCurrency } from "../../composables/useCurrency";
 
 const { formatDuration } = useFlightTime();
+const { formatPrice: formatCurrency } = useCurrency();
 
 const props = defineProps({
     open: Boolean,
