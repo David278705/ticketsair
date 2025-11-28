@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 
@@ -18,7 +19,7 @@ class BookingController extends Controller
 {
 
     public function myBookings(Request $r) {
-  return \App\Models\Booking::with(['flight.origin','flight.destination','tickets','passengers.seat'])
+  return \App\Models\Booking::with(['flight.origin','flight.destination','originalFlight.origin','originalFlight.destination','tickets','passengers.seat'])
     ->where('user_id',$r->user()->id)
     ->orderByDesc('created_at')
     ->paginate(10);
@@ -31,7 +32,47 @@ class BookingController extends Controller
 
     $flight = $booking->flight;
     $now = now();
+    
+    // Caso especial: Si es un vuelo reubicado, permitir cancelación con reembolso completo
+    if ($booking->relocated_from_flight_id) {
+        // Reembolsar el monto total a la billetera
+        \App\Models\WalletTransaction::createTransaction(
+            $request->user()->id,
+            'refund',
+            $booking->total_amount,
+            "Reembolso completo por cancelación de vuelo reubicado - Reserva {$booking->reservation_code}",
+            $booking,
+            [
+                'booking_id' => $booking->id,
+                'relocated_from_flight_id' => $booking->relocated_from_flight_id,
+                'original_flight_id' => $booking->relocated_from_flight_id,
+                'new_flight_id' => $booking->flight_id,
+                'reason' => 'relocated_flight_cancelled_by_user'
+            ],
+            'COP'
+        );
+        
+        // Marcar pagos como reembolsados
+        foreach ($booking->payments as $payment) {
+            if ($payment->status === 'completed' || $payment->status === 'paid') {
+                $payment->update(['status' => 'refunded']);
+            }
+        }
+        
+        $booking->update(['status'=>'cancelled']);
+        
+        // Liberar asientos
+        foreach ($booking->passengers as $bp) {
+            if ($bp->seat) {
+                $bp->seat->update(['status'=>'available']);
+                $bp->update(['seat_id'=>null]);
+            }
+        }
+        
+        return response()->json(['ok'=>true, 'refunded' => true, 'amount' => $booking->total_amount]);
+    }
 
+    // Lógica normal de cancelación para vuelos no reubicados
     if ($booking->type === 'purchase') {
         // Se puede cancelar hasta 1 hora antes del vuelo -> refund
         if ($flight->departure_at->diffInMinutes($now, false) >= -60) {
@@ -508,6 +549,84 @@ class BookingController extends Controller
             'booking' => $booking->fresh()->load('passengers.seat', 'tickets', 'payments')
         ]);
     });
+}
+
+/**
+ * Asignar asiento a un pasajero durante check-in
+ */
+public function assignSeat(Request $request, $bookingId, $passengerId)
+{
+    $validator = Validator::make($request->all(), [
+        'seat_id' => 'required|exists:seats,id'
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'ok' => false,
+            'message' => 'Datos inválidos',
+            'errors' => $validator->errors()
+        ], 422);
+    }
+
+    // Verificar que la reserva pertenezca al usuario
+    $booking = \App\Models\Booking::where('id', $bookingId)
+        ->where('user_id', auth()->id())
+        ->with('passengers', 'flight')
+        ->first();
+
+    if (!$booking) {
+        return response()->json([
+            'ok' => false,
+            'message' => 'Reserva no encontrada'
+        ], 404);
+    }
+
+    // Verificar que el pasajero pertenezca a esta reserva
+    $passenger = $booking->passengers()->where('id', $passengerId)->first();
+    
+    if (!$passenger) {
+        return response()->json([
+            'ok' => false,
+            'message' => 'Pasajero no encontrado en esta reserva'
+        ], 404);
+    }
+
+    // Verificar que el asiento esté disponible o sea el asiento actual del pasajero
+    $seat = \App\Models\Seat::where('id', $request->seat_id)
+        ->where('flight_id', $booking->flight_id)
+        ->where('class', $passenger->class)
+        ->where(function($query) use ($passenger) {
+            $query->where('status', 'available')
+                  ->orWhere('id', $passenger->seat_id); // Permitir el asiento actual
+        })
+        ->first();
+
+    if (!$seat) {
+        return response()->json([
+            'ok' => false,
+            'message' => 'El asiento no está disponible'
+        ], 422);
+    }
+
+    // Si el pasajero ya tiene un asiento asignado y está cambiando a otro, liberarlo
+    if ($passenger->seat_id && $passenger->seat_id != $seat->id) {
+        $oldSeat = \App\Models\Seat::find($passenger->seat_id);
+        if ($oldSeat) {
+            $oldSeat->update(['status' => 'available']);
+        }
+    }
+
+    // Asignar asiento (actualizar solo si es diferente)
+    if ($passenger->seat_id != $seat->id) {
+        $passenger->update(['seat_id' => $seat->id]);
+        $seat->update(['status' => 'assigned']);
+    }
+
+    return response()->json([
+        'ok' => true,
+        'message' => 'Asiento asignado exitosamente',
+        'passenger' => $passenger->fresh('seat')
+    ]);
 }
 
 }

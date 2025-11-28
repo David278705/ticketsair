@@ -281,6 +281,23 @@
                         </div>
                     </div>
                 </div>
+                
+                @if($ticket->luggage)
+                <div class="passenger-grid" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                    <div class="passenger-item">
+                        <div class="detail-label">Equipaje</div>
+                        <div class="detail-value" style="font-size: 14px;">
+                            {{ $ticket->luggage->type === 'cabin' ? 'Cabina' : 'Facturado' }}
+                        </div>
+                    </div>
+                    <div class="passenger-item">
+                        <div class="detail-label">Piezas</div>
+                        <div class="detail-value" style="font-size: 14px;">
+                            {{ $ticket->luggage->pieces }} {{ $ticket->luggage->pieces == 1 ? 'pieza' : 'piezas' }}
+                        </div>
+                    </div>
+                </div>
+                @endif
             </div>
             
             @if($booking->passengers->count() > 1)

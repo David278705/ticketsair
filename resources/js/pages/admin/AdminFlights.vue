@@ -761,6 +761,125 @@
                 </div>
             </div>
         </BaseModal>
+
+        <!-- Modal de Cancelación con Reubicación -->
+        <BaseModal :open="cancelModalOpen" @update:open="cancelModalOpen = $event">
+            <template #title>
+                Cancelar Vuelo {{ flightToCancel?.code }}
+            </template>
+
+            <div class="space-y-6">
+                <!-- Información del vuelo -->
+                <div class="rounded-lg bg-slate-50 p-4">
+                    <h4 class="font-semibold text-slate-800 mb-2">Información del vuelo</h4>
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                            <span class="text-slate-600">Ruta:</span>
+                            <span class="ml-2 font-medium">{{ flightToCancel?.origin?.name }} → {{ flightToCancel?.destination?.name }}</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-600">Salida:</span>
+                            <span class="ml-2 font-medium">{{ fmt(flightToCancel?.departure_at) }}</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-600">Pasajeros afectados:</span>
+                            <span class="ml-2 font-medium text-orange-600">{{ affectedPassengers }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Opciones de cancelación -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-3">Opciones de cancelación</label>
+                    
+                    <!-- Opción: Reubicar -->
+                    <div class="space-y-3">
+                        <label 
+                            :class="[
+                                'flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all',
+                                cancelOption === 'relocate' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-blue-300'
+                            ]"
+                        >
+                            <input 
+                                type="radio" 
+                                v-model="cancelOption" 
+                                value="relocate"
+                                class="mt-1"
+                            />
+                            <div class="flex-1">
+                                <div class="font-medium text-slate-800">Reubicar pasajeros en otro vuelo</div>
+                                <p class="text-sm text-slate-600 mt-1">
+                                    Los pasajeros serán movidos automáticamente a un vuelo alternativo. Se les enviará un correo con la opción de cancelar si lo prefieren.
+                                </p>
+                                
+                                <!-- Selector de vuelo alternativo -->
+                                <div v-if="cancelOption === 'relocate'" class="mt-4">
+                                    <div v-if="loadingAlternatives" class="text-sm text-slate-600">
+                                        Buscando vuelos alternativos...
+                                    </div>
+                                    <div v-else-if="alternativeFlights.length === 0" class="text-sm text-amber-600 bg-amber-50 p-3 rounded-lg">
+                                        ⚠️ No hay vuelos alternativos disponibles con suficiente capacidad. Deberás reembolsar a los pasajeros.
+                                    </div>
+                                    <div v-else class="space-y-2">
+                                        <label class="text-sm font-medium text-slate-700">Selecciona el vuelo alternativo:</label>
+                                        <select 
+                                            v-model="selectedAlternativeFlight" 
+                                            class="w-full h-10 rounded-lg border-slate-300 px-3"
+                                        >
+                                            <option :value="null">-- Selecciona un vuelo --</option>
+                                            <option v-for="alt in alternativeFlights" :key="alt.id" :value="alt.id">
+                                                {{ alt.code }} | {{ alt.origin.name }} → {{ alt.destination.name }} | 
+                                                {{ fmt(alt.departure_at) }} | 
+                                                Disponibles: {{ alt.available_economy }}/{{ alt.available_first_class }} (E/F)
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </label>
+
+                        <!-- Opción: Reembolsar -->
+                        <label 
+                            :class="[
+                                'flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all',
+                                cancelOption === 'refund' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-blue-300'
+                            ]"
+                        >
+                            <input 
+                                type="radio" 
+                                v-model="cancelOption" 
+                                value="refund"
+                                class="mt-1"
+                            />
+                            <div class="flex-1">
+                                <div class="font-medium text-slate-800">Reembolsar a todos los pasajeros</div>
+                                <p class="text-sm text-slate-600 mt-1">
+                                    Se procesará el reembolso automático para todos los pasajeros. Recibirán un correo con la confirmación.
+                                </p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Acciones -->
+                <div class="flex justify-end gap-3 pt-4 border-t">
+                    <button
+                        class="h-10 px-4 rounded-lg border hover:bg-slate-50 transition-colors"
+                        @click="cancelModalOpen = false"
+                        :disabled="processingCancellation"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        class="h-10 px-6 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors disabled:opacity-50"
+                        @click="confirmCancellation"
+                        :disabled="processingCancellation || (cancelOption === 'relocate' && alternativeFlights.length === 0)"
+                    >
+                        {{ processingCancellation ? 'Procesando...' : 'Confirmar Cancelación' }}
+                    </button>
+                </div>
+            </div>
+        </BaseModal>
     </section>
 </template>
 
@@ -871,6 +990,7 @@ const form = reactive({
 const promoOpen = ref(false);
 const promoError = ref("");
 const savingPromo = ref(false);
+const currentFlight = ref(null); // Vuelo actual para promoción
 const promo = reactive({
     id: null,
     title: "",
@@ -879,6 +999,16 @@ const promo = reactive({
     ends_at: "",
     is_active: true,
 });
+
+// Estado para Cancelación con Reubicación
+const cancelModalOpen = ref(false);
+const flightToCancel = ref(null);
+const cancelOption = ref('relocate'); // 'relocate' o 'refund'
+const alternativeFlights = ref([]);
+const selectedAlternativeFlight = ref(null);
+const loadingAlternatives = ref(false);
+const processingCancellation = ref(false);
+const affectedPassengers = ref(0);
 
 // --- Watchers ---
 // Variable para controlar si estamos editando
@@ -1279,25 +1409,79 @@ async function save() {
 }
 
 async function cancelFlight(f) {
+    flightToCancel.value = f;
+    cancelOption.value = 'relocate';
+    selectedAlternativeFlight.value = null;
+    
+    // Obtener número de pasajeros afectados
+    try {
+        const { data } = await api.get(`/admin/flights/${f.id}/affected-passengers`, {
+            headers: { Authorization: "Bearer " + auth.token }
+        });
+        affectedPassengers.value = data.count || 0;
+    } catch (error) {
+        affectedPassengers.value = 0;
+    }
+    
+    // Buscar vuelos alternativos
+    await loadAlternativeFlights(f);
+    
+    cancelModalOpen.value = true;
+}
+
+async function loadAlternativeFlights(flight) {
+    loadingAlternatives.value = true;
+    try {
+        const { data } = await api.get(`/admin/flights/${flight.id}/alternative-flights`, {
+            headers: { Authorization: "Bearer " + auth.token }
+        });
+        alternativeFlights.value = data.flights || [];
+    } catch (error) {
+        console.error('Error loading alternatives:', error);
+        alternativeFlights.value = [];
+    } finally {
+        loadingAlternatives.value = false;
+    }
+}
+
+async function confirmCancellation() {
+    if (cancelOption.value === 'relocate' && !selectedAlternativeFlight.value) {
+        showError('Error', 'Debes seleccionar un vuelo alternativo para reubicar a los pasajeros.');
+        return;
+    }
+    
     const confirmed = await showConfirm(
-        "¿Cancelar vuelo?",
-        `¿Seguro que quieres cancelar el vuelo ${f.code}? Esta acción no se puede deshacer.`,
+        "¿Confirmar cancelación?",
+        cancelOption.value === 'relocate' 
+            ? `¿Seguro que quieres cancelar el vuelo ${flightToCancel.value.code} y reubicar a ${affectedPassengers.value} pasajero(s) al vuelo alternativo?`
+            : `¿Seguro que quieres cancelar el vuelo ${flightToCancel.value.code} y reembolsar a ${affectedPassengers.value} pasajero(s)?`,
         "Sí, cancelar",
         "No"
     );
 
     if (!confirmed) return;
 
+    processingCancellation.value = true;
     try {
+        const payload = {
+            cancel_option: cancelOption.value,
+            alternative_flight_id: cancelOption.value === 'relocate' ? selectedAlternativeFlight.value : null
+        };
+        
         await api.post(
-            `/admin/flights/${f.id}/cancel`,
-            {},
+            `/admin/flights/${flightToCancel.value.id}/cancel`,
+            payload,
             { headers: { Authorization: "Bearer " + auth.token } }
         );
+        
+        cancelModalOpen.value = false;
         await reload();
+        
         await success(
             "Vuelo cancelado",
-            "El vuelo ha sido cancelado exitosamente."
+            cancelOption.value === 'relocate'
+                ? `El vuelo ha sido cancelado y los pasajeros han sido reubicados exitosamente. Se les ha enviado un correo con la información.`
+                : `El vuelo ha sido cancelado y se ha iniciado el proceso de reembolso. Los pasajeros recibirán un correo con instrucciones.`
         );
     } catch (error) {
         showError(
@@ -1305,6 +1489,8 @@ async function cancelFlight(f) {
             error.response?.data?.message || error.message
         );
         console.error(error);
+    } finally {
+        processingCancellation.value = false;
     }
 }
 

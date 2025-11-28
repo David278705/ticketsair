@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Booking extends Model {
   protected $fillable = [
-    'user_id','flight_id','promotion_id','type','status','reservation_code',
+    'user_id','flight_id','relocated_from_flight_id','promotion_id','type','status','reservation_code',
     'travel_type','expires_at','notified_at','seats_count','total_amount',
     'original_amount','discount_amount'
   ];
@@ -16,6 +16,7 @@ class Booking extends Model {
   ];
   public function user(){ return $this->belongsTo(User::class); }
   public function flight(){ return $this->belongsTo(Flight::class); }
+  public function originalFlight(){ return $this->belongsTo(Flight::class, 'relocated_from_flight_id'); }
   public function promotion(){ return $this->belongsTo(Promotion::class); }
   public function passengers(){ return $this->hasMany(BookingPassenger::class); }
   public function tickets(){ return $this->hasMany(Ticket::class); }

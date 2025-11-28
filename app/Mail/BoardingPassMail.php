@@ -25,7 +25,7 @@ class BoardingPassMail extends Mailable
         $booking = $this->ticket->booking;
         $flight = $booking->flight;
         
-        return $this->subject('✈️ Tu Pasabordo - Vuelo ' . $flight->code)
+        return $this->subject('Tu Pasabordo - Vuelo ' . $flight->flight_number)
             ->markdown('mail.boarding-pass', [
                 'ticket' => $this->ticket,
                 'booking' => $booking,

@@ -23,13 +23,31 @@
                             class="flex flex-wrap items-center justify-between gap-2"
                         >
                             <div>
-                                <h3 class="font-semibold text-lg">
-                                    {{ b.flight.origin.name }} →
-                                    {{ b.flight.destination.name }}
-                                </h3>
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h3 class="font-semibold text-lg">
+                                        {{ b.flight.origin.name }} →
+                                        {{ b.flight.destination.name }}
+                                    </h3>
+                                    <!-- Badge de Reubicación -->
+                                    <span
+                                        v-if="b.relocated_from_flight_id"
+                                        class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800"
+                                    >
+                                        ✈️ Reubicado
+                                    </span>
+                                </div>
                                 <p class="text-sm text-slate-500">
                                     Sale:
                                     {{ formatDate(b.flight.departure_at) }}
+                                </p>
+                                <!-- Información del vuelo original si fue reubicado -->
+                                <p
+                                    v-if="b.relocated_from_flight_id && b.original_flight"
+                                    class="text-xs text-slate-400 mt-1"
+                                >
+                                    Vuelo original cancelado: {{ b.original_flight.origin.name }} →
+                                    {{ b.original_flight.destination.name }} 
+                                    ({{ formatDate(b.original_flight.departure_at) }})
                                 </p>
                             </div>
                             <div class="text-right">
@@ -112,17 +130,8 @@
                                     <td class="py-3 pl-2">
                                         <div class="flex flex-wrap gap-2">
                                             <button
-                                                v-if="canChangeSeat(b, p)"
-                                                @click="
-                                                    openSeatChangeModal(b, p)
-                                                "
-                                                class="h-9 px-3 text-xs rounded-lg border hover:bg-slate-100"
-                                            >
-                                                Cambiar Asiento
-                                            </button>
-                                            <button
                                                 v-if="canCheckin(b, p)"
-                                                @click="performCheckin(p)"
+                                                @click="performCheckin(b, p)"
                                                 class="h-9 px-3 text-xs rounded-lg bg-blue-600 text-white hover:bg-blue-700"
                                             >
                                                 Check-in
@@ -157,20 +166,23 @@
                             @click="cancelBooking(b)"
                             class="h-10 px-4 text-sm rounded-xl border border-rose-300 text-rose-600 hover:bg-rose-50"
                         >
-                            Cancelar
-                            {{ b.type === "purchase" ? "Compra" : "Reserva" }}
+                            {{ getCancelButtonText(b) }}
                         </button>
                     </footer>
                 </article>
             </div>
         </div>
-        <SeatChangeModal
-            v-model:open="isSeatModalOpen"
-            :flight-id="selectedPassengerInfo.flightId"
-            :booking-passenger-id="selectedPassengerInfo.passengerId"
-            :klass="selectedPassengerInfo.klass"
-            :current-seat-id="selectedPassengerInfo.currentSeatId"
-            @seatChanged="fetchBookings"
+        
+        <!-- Modal de Check-in -->
+        <CheckinModal
+            v-if="selectedCheckinInfo"
+            v-model:open="isCheckinModalOpen"
+            :booking="selectedCheckinInfo.booking"
+            :passenger="selectedCheckinInfo.passenger"
+            :ticket="selectedCheckinInfo.ticket"
+            :flight-id="selectedCheckinInfo.flightId"
+            :klass="selectedCheckinInfo.klass"
+            @checkin-success="fetchBookings"
         />
         
         <!-- Modal de Pago Unificado -->
@@ -189,12 +201,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive } from "vue";
+import { ref, onMounted } from "vue";
 import { api } from "../lib/api";
 import { useAuth } from "../stores/auth";
 import { useCurrency } from "../composables/useCurrency";
 import { useSweetAlert } from "../composables/useSweetAlert";
-import SeatChangeModal from "../components/booking/SeatChangeModal.vue";
+import CheckinModal from "../components/booking/CheckinModal.vue";
 import UnifiedPaymentModal from "../components/booking/UnifiedPaymentModal.vue";
 
 const auth = useAuth();
@@ -208,13 +220,9 @@ const {
 const bookings = ref({ data: [] });
 const loading = ref(true);
 
-const isSeatModalOpen = ref(false);
-const selectedPassengerInfo = reactive({
-    flightId: null,
-    passengerId: null,
-    klass: null,
-    currentSeatId: null,
-});
+// Estados para el modal de check-in
+const isCheckinModalOpen = ref(false);
+const selectedCheckinInfo = ref(null);
 
 // Estados para el modal de pago unificado
 const paymentOpen = ref(false);
@@ -258,11 +266,13 @@ function isFlightDeparted(booking) {
 }
 
 function canCancel(booking) {
-    if (
-        isFlightDeparted(booking) ||
-        booking.status === "cancelled" ||
-        booking.status === "expired"
-    )
+    // Nunca mostrar el botón si ya está cancelada o expirada
+    if (booking.status === "cancelled" || booking.status === "expired") {
+        return false;
+    }
+    
+    // Lógica estándar para todos los vuelos (reubicados o no)
+    if (isFlightDeparted(booking))
         return false;
     if (booking.type === "reservation") return booking.status === "pending";
     if (booking.type === "purchase") {
@@ -292,17 +302,17 @@ function findTicketForPassengerInBooking(booking, passenger) {
 
 function canCheckin(booking, passenger) {
     const ticket = findTicketForPassenger(passenger);
-    return ticket && ticket.status === "issued" && !isFlightDeparted(booking);
-}
-
-function canChangeSeat(booking, passenger) {
-    const ticket = findTicketForPassenger(passenger);
-    return (
-        ticket &&
-        ticket.status === "issued" &&
-        !passenger.seat_changed_once &&
-        !isFlightDeparted(booking)
-    );
+    if (!ticket || ticket.status !== "issued" || isFlightDeparted(booking)) {
+        return false;
+    }
+    
+    // Validar ventana de check-in (24h nacional, 48h internacional)
+    const departureDate = new Date(booking.flight.departure_at);
+    const now = new Date();
+    const hoursBeforeFlight = (departureDate - now) / (1000 * 60 * 60);
+    const requiredHours = booking.flight.scope === 'international' ? 48 : 24;
+    
+    return hoursBeforeFlight <= requiredHours && hoursBeforeFlight > 0;
 }
 
 function getBoardingPassUrl(passenger) {
@@ -318,6 +328,15 @@ function canConvertToPurchase(booking) {
         return false;
     if (!booking.expires_at) return false;
     return new Date(booking.expires_at) > new Date();
+}
+
+function getCancelButtonText(booking) {
+    // Si es un vuelo reubicado, el botón debe decir "Recibir reembolso"
+    if (booking.relocated_from_flight_id) {
+        return "Recibir reembolso";
+    }
+    // En caso contrario, usar el texto estándar
+    return `Cancelar ${booking.type === "purchase" ? "Compra" : "Reserva"}`;
 }
 
 // --- Acciones del Usuario ---
@@ -353,10 +372,18 @@ async function convertToPurchase(paymentData) {
 }
 
 async function cancelBooking(booking) {
+    // Mensajes personalizados para vuelos reubicados
+    const isRelocated = booking.relocated_from_flight_id;
+    const title = isRelocated ? "¿Solicitar reembolso?" : "¿Confirmar cancelación?";
+    const message = isRelocated 
+        ? "Recibirás un reembolso completo en tu billetera por este vuelo reubicado."
+        : `¿Estás seguro de que quieres cancelar esta ${booking.type}?`;
+    const confirmText = isRelocated ? "Sí, recibir reembolso" : "Sí, cancelar";
+    
     const confirmed = await showConfirm(
-        "¿Confirmar cancelación?",
-        `¿Estás seguro de que quieres cancelar esta ${booking.type}?`,
-        "Sí, cancelar",
+        title,
+        message,
+        confirmText,
         "No"
     );
 
@@ -367,10 +394,13 @@ async function cancelBooking(booking) {
                 {},
                 { headers: { Authorization: "Bearer " + auth.token } }
             );
-            await info(
-                "Solicitud procesada",
-                "La solicitud ha sido procesada."
-            );
+            
+            const successTitle = isRelocated ? "Reembolso procesado" : "Solicitud procesada";
+            const successMessage = isRelocated 
+                ? "El reembolso ha sido acreditado en tu billetera."
+                : "La solicitud ha sido procesada.";
+                
+            await info(successTitle, successMessage);
             fetchBookings();
         } catch (e) {
             showError(
@@ -381,29 +411,41 @@ async function cancelBooking(booking) {
     }
 }
 
-async function performCheckin(passenger) {
+async function performCheckin(booking, passenger) {
     const ticket = findTicketForPassenger(passenger);
     if (!ticket) {
         showError("Error", "No se encontró el tiquete para este pasajero.");
         return;
     }
-    try {
-        await api.post("/checkin/fast", { ticket_code: ticket.ticket_code });
-        await success("Check-in exitoso", "Tu pasabordo está disponible.");
-        fetchBookings();
-    } catch (e) {
+    
+    // Validar ventana de check-in antes de abrir modal
+    const departureDate = new Date(booking.flight.departure_at);
+    const now = new Date();
+    const hoursBeforeFlight = (departureDate - now) / (1000 * 60 * 60);
+    const requiredHours = booking.flight.scope === 'international' ? 48 : 24;
+    
+    if (hoursBeforeFlight > requiredHours) {
+        const checkInDate = new Date(departureDate.getTime() - (requiredHours * 60 * 60 * 1000));
         showError(
-            "Error en el check-in",
-            e.response?.data?.message || e.message
+            "Check-in no disponible",
+            `El check-in estará disponible ${requiredHours} horas antes del vuelo (${checkInDate.toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' })})`
         );
+        return;
     }
-}
-
-function openSeatChangeModal(booking, passenger) {
-    selectedPassengerInfo.flightId = booking.flight.id;
-    selectedPassengerInfo.passengerId = passenger.id;
-    selectedPassengerInfo.klass = passenger.class;
-    selectedPassengerInfo.currentSeatId = passenger.seat?.id;
-    isSeatModalOpen.value = true;
+    
+    if (hoursBeforeFlight < 0) {
+        showError("Error", "El vuelo ya ha partido");
+        return;
+    }
+    
+    // Abrir modal de check-in con selección de asiento y equipaje
+    selectedCheckinInfo.value = {
+        booking,
+        passenger,
+        ticket,
+        flightId: booking.flight.id,
+        klass: passenger.class
+    };
+    isCheckinModalOpen.value = true;
 }
 </script>

@@ -10,6 +10,8 @@ use App\Models\Seat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class FlightAdminController extends Controller
 {
@@ -278,38 +280,242 @@ class FlightAdminController extends Controller
     });
   }
 
+  // GET /admin/flights/{flight}/affected-passengers
+  public function affectedPassengers(Flight $flight) {
+    $count = \App\Models\Booking::where('flight_id', $flight->id)
+      ->whereIn('status', ['confirmed', 'pending'])
+      ->withCount('passengers')
+      ->get()
+      ->sum('passengers_count');
+    
+    return response()->json(['count' => $count]);
+  }
+
+  // GET /admin/flights/{flight}/alternative-flights
+  public function alternativeFlights(Flight $flight) {
+    // Obtener número total de pasajeros que necesitan reubicación
+    $totalPassengers = \App\Models\Booking::where('flight_id', $flight->id)
+      ->whereIn('status', ['confirmed', 'pending'])
+      ->withCount('passengers')
+      ->get()
+      ->sum('passengers_count');
+    
+    // Contar pasajeros por clase
+    $passengersByClass = \App\Models\BookingPassenger::whereHas('booking', function($q) use ($flight) {
+      $q->where('flight_id', $flight->id)
+        ->whereIn('status', ['confirmed', 'pending']);
+    })->select('class', DB::raw('count(*) as total'))
+      ->groupBy('class')
+      ->pluck('total', 'class')
+      ->toArray();
+    
+    $economyNeeded = $passengersByClass['economy'] ?? 0;
+    $firstClassNeeded = $passengersByClass['first'] ?? 0;
+    
+    // Buscar vuelos alternativos
+    // Criterios: misma ruta, fecha cercana (+/- 3 días), estado programado
+    $departureDate = \Carbon\Carbon::parse($flight->departure_at);
+    $minDate = $departureDate->copy()->subDays(3);
+    $maxDate = $departureDate->copy()->addDays(3);
+    
+    $alternatives = Flight::where('id', '!=', $flight->id)
+      ->where('origin_id', $flight->origin_id)
+      ->where('destination_id', $flight->destination_id)
+      ->where('status', 'scheduled')
+      ->whereBetween('departure_at', [$minDate, $maxDate])
+      ->with(['origin', 'destination', 'aircraft'])
+      ->get()
+      ->map(function($alt) use ($economyNeeded, $firstClassNeeded) {
+        // Contar asientos disponibles por clase
+        $availableEconomy = \App\Models\Seat::where('flight_id', $alt->id)
+          ->where('class', 'economy')
+          ->where('status', 'available')
+          ->count();
+        
+        $availableFirst = \App\Models\Seat::where('flight_id', $alt->id)
+          ->where('class', 'first')
+          ->where('status', 'available')
+          ->count();
+        
+        return [
+          'id' => $alt->id,
+          'code' => $alt->code,
+          'flight_number' => $alt->flight_number,
+          'departure_at' => $alt->departure_at,
+          'origin' => $alt->origin,
+          'destination' => $alt->destination,
+          'available_economy' => $availableEconomy,
+          'available_first_class' => $availableFirst,
+          'can_accommodate' => $availableEconomy >= $economyNeeded && $availableFirst >= $firstClassNeeded
+        ];
+      })
+      ->filter(function($alt) {
+        return $alt['can_accommodate']; // Solo vuelos con suficiente capacidad
+      })
+      ->values();
+    
+    return response()->json([
+      'flights' => $alternatives,
+      'passengers_needed' => [
+        'economy' => $economyNeeded,
+        'first_class' => $firstClassNeeded,
+        'total' => $totalPassengers
+      ]
+    ]);
+  }
+
   // POST /admin/flights/{flight}/cancel
   public function cancel(Request $r, Flight $flight) {
     if (in_array($flight->status, ['cancelled','completed'])) {
       return response()->json(['error'=>'flight_not_cancellable'], 422);
     }
 
-    return DB::transaction(function() use ($flight) {
-      $flight->update(['status'=>'cancelled']);
+    $r->validate([
+      'cancel_option' => 'required|in:relocate,refund',
+      'alternative_flight_id' => 'nullable|required_if:cancel_option,relocate|exists:flights,id'
+    ]);
 
-      // Cancelar & reembolsar bookings
-      $bookings = $flight->bookings()->with(['tickets','payments','passengers'])->get();
-      foreach ($bookings as $b) {
-        if ($b->type === 'purchase') {
-          // reembolsar pagos
-          foreach ($b->payments as $p) { $p->update(['status'=>'refunded']); }
+    return DB::transaction(function() use ($flight, $r) {
+      $flight->update(['status'=>'cancelled']);
+      
+      // Cargar relaciones necesarias del vuelo
+      $flight->load(['origin', 'destination']);
+
+      // Obtener todas las reservas afectadas
+      $bookings = $flight->bookings()
+        ->whereIn('status', ['confirmed', 'pending'])
+        ->with(['tickets', 'payments', 'passengers.seat', 'user'])
+        ->get();
+
+      if ($r->cancel_option === 'relocate') {
+        // Opción 1: Reubicar pasajeros
+        $alternativeFlight = Flight::with(['origin', 'destination'])->findOrFail($r->alternative_flight_id);
+        
+        foreach ($bookings as $booking) {
+          // Liberar asientos del vuelo cancelado
+          foreach ($booking->passengers as $passenger) {
+            if ($passenger->seat_id) {
+              \App\Models\Seat::where('id', $passenger->seat_id)
+                ->update(['status' => 'available']);
+            }
+          }
+          
+          // Asignar asientos en el vuelo alternativo
+          foreach ($booking->passengers as $passenger) {
+            $newSeat = \App\Models\Seat::where('flight_id', $alternativeFlight->id)
+              ->where('class', $passenger->class)
+              ->where('status', 'available')
+              ->first();
+            
+            if ($newSeat) {
+              $passenger->update(['seat_id' => $newSeat->id]);
+              $newSeat->update(['status' => 'assigned']);
+            }
+          }
+          
+          // Actualizar la reserva al nuevo vuelo y marcar la relocalización
+          $booking->update([
+            'relocated_from_flight_id' => $flight->id, // Registrar el vuelo original
+            'flight_id' => $alternativeFlight->id,
+            'status' => 'confirmed'
+          ]);
+          
+          // Actualizar tickets - mantener como 'issued'
+          foreach ($booking->tickets as $ticket) {
+            $ticket->update(['status' => 'issued']);
+          }
+          
+          // Recargar booking con nuevas relaciones para el correo
+          $booking->load(['flight', 'passengers.seat']);
+          
+          // Enviar correo de reubicación
+          try {
+            Mail::to($booking->user->email)->send(
+              new \App\Mail\FlightRelocatedMail($booking, $flight, $alternativeFlight)
+            );
+            Log::info("Correo de reubicación enviado a: {$booking->user->email}, Reserva: {$booking->booking_code}");
+          } catch (\Exception $e) {
+            Log::error('Error sending relocation email: ' . $e->getMessage());
+          }
         }
-        // liberar asientos / anular tickets
-        foreach ($b->tickets as $t) {
-          $t->update(['status'=>'cancelled']);
-          if ($t->seat_id) { \App\Models\Seat::where('id',$t->seat_id)->update(['status'=>'available']); }
+        
+        // Noticia automática
+        \App\Models\News::create([
+          'title' => "Vuelo {$flight->code} reubicado",
+          'body' => "El vuelo {$flight->code} ha sido cancelado. Los pasajeros han sido reubicados al vuelo {$alternativeFlight->code}. Si deseas cancelar tu reserva, puedes hacerlo desde Mi Viajes para recibir un reembolso completo.",
+          'flight_id' => $flight->id,
+        ]);
+        
+      } else {
+        // Opción 2: Reembolsar a todos
+        foreach ($bookings as $booking) {
+          // Calcular monto total a reembolsar
+          $refundAmount = 0;
+          
+          if ($booking->type === 'purchase') {
+            // Para compras: reembolsar pagos con tarjeta/PSE
+            foreach ($booking->payments as $payment) {
+              if ($payment->status === 'completed') {
+                $payment->update(['status' => 'refunded']);
+                $refundAmount += $payment->amount;
+              }
+            }
+          }
+          
+          // Devolver dinero a la billetera del usuario
+          // Esto incluye tanto pagos con tarjeta como pagos directos con wallet
+          $totalToRefund = $booking->total_amount > 0 ? $booking->total_amount : $refundAmount;
+          
+          if ($totalToRefund > 0) {
+            $transaction = \App\Models\WalletTransaction::createTransaction(
+              $booking->user_id,
+              'refund',
+              $totalToRefund,
+              "Reembolso por cancelación del vuelo {$flight->code} - Reserva {$booking->booking_code}",
+              null,
+              [
+                'flight_id' => $flight->id, 
+                'booking_id' => $booking->id,
+                'flight_code' => $flight->code,
+                'reason' => 'flight_cancelled_by_admin'
+              ],
+              'COP'
+            );
+            
+            Log::info("Reembolso procesado: Usuario {$booking->user_id}, Monto: {$totalToRefund}, Reserva: {$booking->booking_code}, Nuevo balance: {$transaction->balance_after}");
+          }
+          
+          // Liberar asientos y anular tickets
+          foreach ($booking->tickets as $ticket) {
+            $ticket->update(['status' => 'cancelled']);
+            if ($ticket->seat_id) {
+              \App\Models\Seat::where('id', $ticket->seat_id)
+                ->update(['status' => 'available']);
+            }
+          }
+          
+          $booking->update(['status' => 'cancelled']);
+          
+          // Enviar correo de cancelación y reembolso
+          try {
+            Mail::to($booking->user->email)->send(
+              new \App\Mail\FlightCancelledRefundMail($booking, $flight)
+            );
+            Log::info("Correo de reembolso enviado a: {$booking->user->email}, Reserva: {$booking->booking_code}, Monto: {$totalToRefund}");
+          } catch (\Exception $e) {
+            Log::error('Error sending cancellation email: ' . $e->getMessage());
+          }
         }
-        $b->update(['status'=>'cancelled']);
+        
+        // Noticia automática
+        \App\Models\News::create([
+          'title' => "Vuelo {$flight->code} cancelado",
+          'body' => 'Lamentamos los inconvenientes. El vuelo ha sido cancelado y se ha procesado el reembolso automático a tu billetera.',
+          'flight_id' => $flight->id,
+        ]);
       }
 
-      // Noticia automática
-      \App\Models\News::create([
-        'title'        => "Vuelo {$flight->code} cancelado",
-        'body'         => 'Lamentamos los inconvenientes. Si tenías compra, tu reembolso se está procesando automáticamente.',
-        'flight_id'    => $flight->id,
-      ]);
-
-      return ['ok'=>true];
+      return ['ok' => true, 'option' => $r->cancel_option];
     });
   }
 

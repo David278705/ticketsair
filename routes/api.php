@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminRegistrationController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\LuggageController;
 
 use App\Http\Controllers\Admin\FlightAdminController;
 use App\Http\Controllers\Admin\UserAdminController;
@@ -72,6 +73,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/messages/conversation/{user}', [MessageController::class,'getConversation']);
     Route::get('/messages/unread/count', [MessageController::class,'getUnreadCount']);
     
+    // Gestión de equipaje
+    Route::post('/luggage', [LuggageController::class, 'store']);
+    Route::get('/luggage/{ticketId}', [LuggageController::class, 'show']);
+    Route::put('/luggage/{ticketId}', [LuggageController::class, 'update']);
+    Route::delete('/luggage/{ticketId}', [LuggageController::class, 'destroy']);
+    
     // Suscripción a noticias
     Route::post('/news/subscribe', [NewsController::class,'subscribe']);
 });
@@ -109,6 +116,8 @@ Route::middleware(['auth:sanctum','role:admin'])->group(function () {
     Route::post('/admin/flights', [FlightAdminController::class,'store']);
     Route::put('/admin/flights/{flight}', [FlightAdminController::class,'update']);
     Route::delete('/admin/flights/{flight}', [FlightAdminController::class,'destroy']);
+    Route::get('/admin/flights/{flight}/affected-passengers', [FlightAdminController::class,'affectedPassengers']);
+    Route::get('/admin/flights/{flight}/alternative-flights', [FlightAdminController::class,'alternativeFlights']);
     Route::post('/admin/flights/{flight}/cancel', [FlightAdminController::class,'cancel']);
     Route::post('/admin/flights/update-statuses', [FlightAdminController::class,'updateStatuses']);
     
@@ -136,6 +145,7 @@ Route::middleware(['auth:sanctum','role:client'])->group(function () {
     Route::post('/bookings', [BookingController::class,'store']);     // reserva/compra
     Route::post('/bookings/{booking}/cancel', [BookingController::class,'cancel']); // ver reglas tiempo
     Route::post('/bookings/{booking}/convert-to-purchase', [BookingController::class,'convertToPurchase']); // convertir reserva a compra
+    Route::post('/bookings/{booking}/passengers/{passenger}/assign-seat', [BookingController::class,'assignSeat']); // asignar asiento en check-in
     Route::post('/seat-change', [SeatController::class,'change']);
     
     // Mensaje a administradores
@@ -152,6 +162,7 @@ Route::middleware(['auth:sanctum','role:client'])->group(function () {
     // Gestión de Wallet (Saldo)
     Route::get('/wallet', [WalletController::class, 'index']);
     Route::post('/wallet/recharge', [WalletController::class, 'recharge']);
+    Route::post('/wallet/pay', [WalletController::class, 'pay']);
     Route::get('/wallet/statistics', [WalletController::class, 'statistics']);
     Route::get('/wallet/transactions', [WalletController::class, 'transactions']);
 });

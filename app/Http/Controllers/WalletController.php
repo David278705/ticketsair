@@ -7,6 +7,7 @@ use App\Models\WalletTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class WalletController extends Controller
 {
@@ -76,10 +77,70 @@ class WalletController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             
-            \Log::error('Error en recarga de wallet: ' . $e->getMessage());
+            Log::error('Error en recarga de wallet: ' . $e->getMessage());
             
             return response()->json([
                 'error' => 'Error al procesar la recarga',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Realizar un pago desde la billetera
+     */
+    public function pay(Request $request)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'description' => 'required|string|max:255',
+            'booking_id' => 'nullable|exists:bookings,id',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Verificar que el usuario tenga saldo suficiente
+            if ($user->wallet_balance < $request->amount) {
+                return response()->json([
+                    'error' => 'Saldo insuficiente en la billetera',
+                    'current_balance' => $user->wallet_balance,
+                    'required_amount' => $request->amount,
+                ], 400);
+            }
+
+            // Crear la transacción de pago (débito)
+            $transaction = WalletTransaction::createTransaction(
+                $user->id,
+                'payment',
+                -$request->amount, // Negativo porque es un débito
+                $request->description,
+                null, // No pasamos el related como objeto
+                [
+                    'booking_id' => $request->booking_id,
+                    'ip' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                ],
+                'COP'
+            );
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Pago realizado exitosamente',
+                'transaction' => $transaction,
+                'new_balance' => $transaction->balance_after,
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            Log::error('Error en pago desde wallet: ' . $e->getMessage());
+            
+            return response()->json([
+                'error' => 'Error al procesar el pago',
                 'message' => $e->getMessage(),
             ], 500);
         }

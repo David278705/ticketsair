@@ -9,10 +9,44 @@ use Illuminate\Support\Facades\DB;
 
 class SeatController extends Controller
 {
-    public function index(\App\Models\Flight $flight){
-        return \App\Models\Seat::where('flight_id',$flight->id)
-            ->orderBy('number')
-            ->get(['id','number','class','status']);
+    public function index(\App\Models\Flight $flight, Request $request){
+        $seats = \App\Models\Seat::where('flight_id', $flight->id);
+        
+        // Filtrar por clase si se especifica
+        if ($request->has('class')) {
+            $seats->where('class', $request->class);
+        }
+        
+        $seats = $seats->orderBy('number')
+            ->get(['id', 'number', 'class', 'status']);
+        
+        // Obtener el seat_id actual del pasajero si se proporciona
+        $currentSeatId = $request->get('current_seat_id');
+        
+        // Agregar campos calculados para el grid de asientos
+        return $seats->map(function ($seat) use ($currentSeatId) {
+            // Calcular fila y columna basado en el número
+            // Asumiendo 6 asientos por fila (A-F)
+            $row = ceil($seat->number / 6);
+            $col = chr(65 + (($seat->number - 1) % 6)); // A, B, C, D, E, F
+            
+            // El asiento está disponible si:
+            // 1. Su status es 'available', O
+            // 2. Es el asiento actual del pasajero (puede re-seleccionarlo)
+            $isAvailable = $seat->status === 'available' || 
+                          ($currentSeatId && $seat->id == $currentSeatId);
+            
+            return [
+                'id' => $seat->id,
+                'number' => $seat->number,
+                'row_number' => $row,
+                'column' => $col,
+                'seat_number' => $row . $col,
+                'class' => $seat->class,
+                'status' => $seat->status,
+                'available' => $isAvailable
+            ];
+        });
     }
 
     public function change(SeatChangeRequest $request)

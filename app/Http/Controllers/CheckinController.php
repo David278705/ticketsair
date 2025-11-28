@@ -57,7 +57,7 @@ class CheckinController extends Controller
 
     // Generar PDF del pasabordo INDIVIDUAL para este pasajero
     try {
-        $ticketData = $ticket->load('passenger.seat', 'booking.flight.origin', 'booking.flight.destination', 'booking.flight.aircraft', 'booking.passengers.seat');
+        $ticketData = $ticket->load('passenger.seat', 'booking.flight.origin', 'booking.flight.destination', 'booking.flight.aircraft', 'booking.passengers.seat', 'luggage');
         
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.boarding-pass', [
             'ticket' => $ticketData,
