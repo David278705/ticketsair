@@ -42,12 +42,20 @@
                                 </p>
                                 <!-- Información del vuelo original si fue reubicado -->
                                 <p
-                                    v-if="b.relocated_from_flight_id && b.original_flight"
+                                    v-if="
+                                        b.relocated_from_flight_id &&
+                                        b.original_flight
+                                    "
                                     class="text-xs text-slate-400 mt-1"
                                 >
-                                    Vuelo original cancelado: {{ b.original_flight.origin.name }} →
-                                    {{ b.original_flight.destination.name }} 
-                                    ({{ formatDate(b.original_flight.departure_at) }})
+                                    Vuelo original cancelado:
+                                    {{ b.original_flight.origin.name }} →
+                                    {{ b.original_flight.destination.name }}
+                                    ({{
+                                        formatDate(
+                                            b.original_flight.departure_at
+                                        )
+                                    }})
                                 </p>
                             </div>
                             <div class="text-right">
@@ -172,7 +180,7 @@
                 </article>
             </div>
         </div>
-        
+
         <!-- Modal de Check-in -->
         <CheckinModal
             v-if="selectedCheckinInfo"
@@ -184,7 +192,7 @@
             :klass="selectedCheckinInfo.klass"
             @checkin-success="fetchBookings"
         />
-        
+
         <!-- Modal de Pago Unificado -->
         <UnifiedPaymentModal
             v-model:open="paymentOpen"
@@ -270,10 +278,9 @@ function canCancel(booking) {
     if (booking.status === "cancelled" || booking.status === "expired") {
         return false;
     }
-    
+
     // Lógica estándar para todos los vuelos (reubicados o no)
-    if (isFlightDeparted(booking))
-        return false;
+    if (isFlightDeparted(booking)) return false;
     if (booking.type === "reservation") return booking.status === "pending";
     if (booking.type === "purchase") {
         const hoursBeforeDeparture =
@@ -305,13 +312,13 @@ function canCheckin(booking, passenger) {
     if (!ticket || ticket.status !== "issued" || isFlightDeparted(booking)) {
         return false;
     }
-    
+
     // Validar ventana de check-in (24h nacional, 48h internacional)
     const departureDate = new Date(booking.flight.departure_at);
     const now = new Date();
     const hoursBeforeFlight = (departureDate - now) / (1000 * 60 * 60);
-    const requiredHours = booking.flight.scope === 'international' ? 48 : 24;
-    
+    const requiredHours = booking.flight.scope === "international" ? 48 : 24;
+
     return hoursBeforeFlight <= requiredHours && hoursBeforeFlight > 0;
 }
 
@@ -349,7 +356,7 @@ async function buyNow(booking) {
 
 async function convertToPurchase(paymentData) {
     if (!selectedBooking.value) return;
-    
+
     try {
         await api.post(
             `/bookings/${selectedBooking.value.id}/convert-to-purchase`,
@@ -374,18 +381,15 @@ async function convertToPurchase(paymentData) {
 async function cancelBooking(booking) {
     // Mensajes personalizados para vuelos reubicados
     const isRelocated = booking.relocated_from_flight_id;
-    const title = isRelocated ? "¿Solicitar reembolso?" : "¿Confirmar cancelación?";
-    const message = isRelocated 
+    const title = isRelocated
+        ? "¿Solicitar reembolso?"
+        : "¿Confirmar cancelación?";
+    const message = isRelocated
         ? "Recibirás un reembolso completo en tu billetera por este vuelo reubicado."
         : `¿Estás seguro de que quieres cancelar esta ${booking.type}?`;
     const confirmText = isRelocated ? "Sí, recibir reembolso" : "Sí, cancelar";
-    
-    const confirmed = await showConfirm(
-        title,
-        message,
-        confirmText,
-        "No"
-    );
+
+    const confirmed = await showConfirm(title, message, confirmText, "No");
 
     if (confirmed) {
         try {
@@ -394,12 +398,14 @@ async function cancelBooking(booking) {
                 {},
                 { headers: { Authorization: "Bearer " + auth.token } }
             );
-            
-            const successTitle = isRelocated ? "Reembolso procesado" : "Solicitud procesada";
-            const successMessage = isRelocated 
+
+            const successTitle = isRelocated
+                ? "Reembolso procesado"
+                : "Solicitud procesada";
+            const successMessage = isRelocated
                 ? "El reembolso ha sido acreditado en tu billetera."
                 : "La solicitud ha sido procesada.";
-                
+
             await info(successTitle, successMessage);
             fetchBookings();
         } catch (e) {
@@ -417,34 +423,39 @@ async function performCheckin(booking, passenger) {
         showError("Error", "No se encontró el tiquete para este pasajero.");
         return;
     }
-    
+
     // Validar ventana de check-in antes de abrir modal
     const departureDate = new Date(booking.flight.departure_at);
     const now = new Date();
     const hoursBeforeFlight = (departureDate - now) / (1000 * 60 * 60);
-    const requiredHours = booking.flight.scope === 'international' ? 48 : 24;
-    
+    const requiredHours = booking.flight.scope === "international" ? 48 : 24;
+
     if (hoursBeforeFlight > requiredHours) {
-        const checkInDate = new Date(departureDate.getTime() - (requiredHours * 60 * 60 * 1000));
+        const checkInDate = new Date(
+            departureDate.getTime() - requiredHours * 60 * 60 * 1000
+        );
         showError(
             "Check-in no disponible",
-            `El check-in estará disponible ${requiredHours} horas antes del vuelo (${checkInDate.toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' })})`
+            `El check-in estará disponible ${requiredHours} horas antes del vuelo (${checkInDate.toLocaleString(
+                "es-CO",
+                { dateStyle: "short", timeStyle: "short" }
+            )})`
         );
         return;
     }
-    
+
     if (hoursBeforeFlight < 0) {
         showError("Error", "El vuelo ya ha partido");
         return;
     }
-    
+
     // Abrir modal de check-in con selección de asiento y equipaje
     selectedCheckinInfo.value = {
         booking,
         passenger,
         ticket,
         flightId: booking.flight.id,
-        klass: passenger.class
+        klass: passenger.class,
     };
     isCheckinModalOpen.value = true;
 }

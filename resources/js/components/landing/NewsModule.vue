@@ -627,7 +627,7 @@ const calculateDiscountedPrice = (price, discount) => {
 const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
     if (imagePath.startsWith("http")) return imagePath;
-    return `${BASE_URL}/storage/${imagePath}`;
+    return `${BASE_URL}storage/${imagePath}`;
 };
 
 // Abrir modal de booking
