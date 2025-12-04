@@ -173,7 +173,7 @@ const getImageUrl = (imagePath) => {
     // Si ya es una URL completa, devolverla tal cual
     if (imagePath.startsWith("http")) return imagePath;
     // Si no, construir la URL completa al storage
-    return `${BASE_URL}/storage/${imagePath}`;
+    return `${BASE_URL}storage/${imagePath}`;
 };
 
 onMounted(async () => {
