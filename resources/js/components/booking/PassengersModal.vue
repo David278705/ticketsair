@@ -75,14 +75,23 @@
                                     </div>
 
                                     <!-- Campos del pasajero -->
-                                    <div class="grid grid-cols-2 gap-3 mb-4">
+                                    <div class="grid grid-cols-2 gap-4 mb-4">
                                         <!-- DNI primero -->
-                                        <div class="col-span-2 sm:col-span-1 relative">
+                                        <div
+                                            class="col-span-2 sm:col-span-1 relative"
+                                        >
+                                            <label
+                                                class="block text-sm font-medium text-gray-700 mb-1"
+                                            >
+                                                Documento *
+                                            </label>
                                             <input
                                                 v-model="p.dni"
-                                                placeholder="Documento *"
+                                                placeholder="Ingrese el número de documento"
                                                 @input="checkDuplicateDni"
-                                                @blur="() => checkUserByDni(idx)"
+                                                @blur="
+                                                    () => checkUserByDni(idx)
+                                                "
                                                 :class="[
                                                     'h-11 rounded-lg border px-3 bg-white w-full focus:ring-2',
                                                     isDniDuplicate(p.dni, idx)
@@ -94,15 +103,47 @@
                                                         : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200',
                                                 ]"
                                             />
-                                            <div v-if="p.loadingDni" class="absolute right-3 top-3">
-                                                <svg class="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            <div
+                                                v-if="p.loadingDni"
+                                                class="absolute right-3 top-9"
+                                            >
+                                                <svg
+                                                    class="animate-spin h-5 w-5 text-blue-500"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <circle
+                                                        class="opacity-25"
+                                                        cx="12"
+                                                        cy="12"
+                                                        r="10"
+                                                        stroke="currentColor"
+                                                        stroke-width="4"
+                                                    ></circle>
+                                                    <path
+                                                        class="opacity-75"
+                                                        fill="currentColor"
+                                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                                    ></path>
                                                 </svg>
                                             </div>
-                                            <div v-if="p.foundUser && !p.loadingDni" class="absolute right-3 top-3">
-                                                <svg class="h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                            <div
+                                                v-if="
+                                                    p.foundUser && !p.loadingDni
+                                                "
+                                                class="absolute right-3 top-9"
+                                            >
+                                                <svg
+                                                    class="h-5 w-5 text-green-500"
+                                                    fill="currentColor"
+                                                    viewBox="0 0 20 20"
+                                                >
+                                                    <path
+                                                        fill-rule="evenodd"
+                                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                        clip-rule="evenodd"
+                                                    />
                                                 </svg>
                                             </div>
                                             <p
@@ -115,39 +156,84 @@
                                             </p>
                                         </div>
                                         <!-- Nombres y Apellidos después del DNI -->
-                                        <input
-                                            v-model="p.first_name"
-                                            placeholder="Nombres *"
-                                            class="h-11 rounded-lg border border-gray-300 px-3 bg-white col-span-2 sm:col-span-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                        />
-                                        <input
-                                            v-model="p.last_name"
-                                            placeholder="Apellidos *"
-                                            class="h-11 rounded-lg border border-gray-300 px-3 bg-white col-span-2 sm:col-span-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                        />
-                                        <!-- Fecha de nacimiento, género y email -->
-                                        <input
-                                            v-model="p.birth_date"
-                                            type="date"
-                                            title="Fecha de Nacimiento *"
-                                            class="h-11 rounded-lg border border-gray-300 px-3 bg-white col-span-2 sm:col-span-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                        />
-                                        <select
-                                            v-model="p.gender"
-                                            class="h-11 rounded-lg border border-gray-300 px-3 bg-white col-span-2 sm:col-span-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                        >
-                                            <option value="">Género *</option>
-                                            <option value="M">Masculino</option>
-                                            <option value="F">Femenino</option>
-                                            <option value="X">
-                                                No binario
-                                            </option>
-                                        </select>
                                         <div class="col-span-2 sm:col-span-1">
+                                            <label
+                                                class="block text-sm font-medium text-gray-700 mb-1"
+                                            >
+                                                Nombres *
+                                            </label>
+                                            <input
+                                                v-model="p.first_name"
+                                                placeholder="Ingrese los nombres"
+                                                class="h-11 rounded-lg border border-gray-300 px-3 bg-white w-full focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                                            />
+                                        </div>
+                                        <div class="col-span-2 sm:col-span-1">
+                                            <label
+                                                class="block text-sm font-medium text-gray-700 mb-1"
+                                            >
+                                                Apellidos *
+                                            </label>
+                                            <input
+                                                v-model="p.last_name"
+                                                placeholder="Ingrese los apellidos"
+                                                class="h-11 rounded-lg border border-gray-300 px-3 bg-white w-full focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                                            />
+                                        </div>
+                                        <!-- Fecha de nacimiento -->
+                                        <div class="col-span-2 sm:col-span-1">
+                                            <label
+                                                class="block text-sm font-medium text-gray-700 mb-1"
+                                            >
+                                                Fecha de Nacimiento *
+                                            </label>
+                                            <input
+                                                v-model="p.birth_date"
+                                                type="date"
+                                                :max="
+                                                    new Date()
+                                                        .toISOString()
+                                                        .split('T')[0]
+                                                "
+                                                class="h-11 rounded-lg border border-gray-300 px-3 bg-white w-full focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                                            />
+                                        </div>
+                                        <!-- Género -->
+                                        <div class="col-span-2 sm:col-span-1">
+                                            <label
+                                                class="block text-sm font-medium text-gray-700 mb-1"
+                                            >
+                                                Género *
+                                            </label>
+                                            <select
+                                                v-model="p.gender"
+                                                class="h-11 rounded-lg border border-gray-300 px-3 bg-white w-full focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                                            >
+                                                <option value="">
+                                                    Seleccione género
+                                                </option>
+                                                <option value="M">
+                                                    Masculino
+                                                </option>
+                                                <option value="F">
+                                                    Femenino
+                                                </option>
+                                                <option value="X">
+                                                    No binario
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <!-- Email -->
+                                        <div class="col-span-2">
+                                            <label
+                                                class="block text-sm font-medium text-gray-700 mb-1"
+                                            >
+                                                Email *
+                                            </label>
                                             <input
                                                 v-model="p.email"
                                                 type="email"
-                                                placeholder="Email *"
+                                                placeholder="ejemplo@correo.com"
                                                 required
                                                 @input="checkDuplicateEmail"
                                                 :class="[
@@ -157,7 +243,7 @@
                                                         idx
                                                     )
                                                         ? 'border-red-500 focus:border-red-500 focus:ring-red-200'
-                                                        : 'border-blue-300 focus:border-blue-500 focus:ring-blue-200',
+                                                        : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200',
                                                 ]"
                                             />
                                             <p
@@ -453,7 +539,7 @@ function checkDuplicateEmail() {
 // Función para buscar usuario por DNI y autocompletar campos
 async function checkUserByDni(index) {
     const passenger = passengers.value[index];
-    
+
     // No buscar si el DNI está vacío o es muy corto
     if (!passenger.dni || passenger.dni.trim().length < 3) {
         passenger.loadingDni = false;
@@ -461,32 +547,49 @@ async function checkUserByDni(index) {
         return;
     }
 
-    // No buscar si ya hay datos llenados (el usuario ya editó manualmente)
-    if (passenger.first_name || passenger.last_name || passenger.email) {
-        return;
-    }
-
     passenger.loadingDni = true;
     passenger.foundUser = false;
 
     try {
-        const response = await fetch(`/api/users/by-dni/${encodeURIComponent(passenger.dni.trim())}`);
+        const response = await fetch(
+            `/api/users/by-dni/${encodeURIComponent(passenger.dni.trim())}`
+        );
         const data = await response.json();
 
+        console.log("Respuesta API usuario:", data); // Debug
+
         if (response.ok && data.found && data.user) {
+            console.log("Usuario encontrado, autocompleting con:", data.user); // Debug
+
             // Autocompletar los campos con los datos del usuario
-            passenger.first_name = data.user.first_name || '';
-            passenger.last_name = data.user.last_name || '';
-            passenger.birth_date = data.user.birth_date || '';
-            passenger.gender = data.user.gender || '';
-            passenger.email = data.user.email || '';
+            // Solo autocompletar si los campos están vacíos
+            if (!passenger.first_name) {
+                passenger.first_name = data.user.first_name || "";
+            }
+            if (!passenger.last_name) {
+                passenger.last_name = data.user.last_name || "";
+            }
+            if (!passenger.birth_date) {
+                passenger.birth_date = data.user.birth_date || "";
+                console.log(
+                    "Fecha de nacimiento establecida:",
+                    passenger.birth_date
+                ); // Debug
+            }
+            if (!passenger.gender) {
+                passenger.gender = data.user.gender || "";
+            }
+            if (!passenger.email) {
+                passenger.email = data.user.email || "";
+            }
+
             passenger.foundUser = true;
         } else {
-            // Usuario no encontrado, no hacer nada (el usuario puede llenar manualmente)
+            console.log("Usuario no encontrado"); // Debug
             passenger.foundUser = false;
         }
     } catch (err) {
-        console.error('Error al buscar usuario por DNI:', err);
+        console.error("Error al buscar usuario por DNI:", err);
         passenger.foundUser = false;
     } finally {
         passenger.loadingDni = false;

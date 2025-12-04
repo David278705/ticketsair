@@ -252,7 +252,7 @@ class AuthController extends Controller
         'dni' => $user->dni,
         'first_name' => $user->first_name,
         'last_name' => $user->last_name,
-        'birth_date' => $user->birth_date,
+        'birth_date' => $user->birth_date ? $user->birth_date->format('Y-m-d') : null,
         'gender' => $user->gender,
         'email' => $user->email,
       ]
