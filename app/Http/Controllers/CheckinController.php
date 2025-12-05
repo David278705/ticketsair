@@ -11,6 +11,45 @@ use Illuminate\Support\Str;
 
 class CheckinController extends Controller
 {
+ /**
+  * Buscar tickets disponibles para check-in por código de reserva o DNI
+  */
+ public function search(Request $request)
+ {
+     $search = $request->input('search');
+     
+     if (empty($search)) {
+         return response()->json(['error' => 'Parámetro de búsqueda requerido'], 400);
+     }
+
+     // Buscar tickets por código de reserva o DNI del pasajero
+     $tickets = \App\Models\Ticket::with([
+         'passenger',
+         'booking.flight.origin',
+         'booking.flight.destination'
+     ])
+     ->where(function($query) use ($search) {
+         // Buscar por código de ticket
+         $query->where('ticket_code', $search)
+               // O por código de reserva
+               ->orWhereHas('booking', fn($q) => $q->where('reservation_code', $search))
+               // O por DNI del pasajero
+               ->orWhereHas('passenger', fn($q) => $q->where('dni', $search));
+     })
+     ->where('status', '!=', 'checked_in') // Solo tickets sin check-in
+     ->whereHas('booking', function($query) {
+         // Solo bookings confirmados o pendientes
+         $query->whereIn('status', ['confirmed', 'pending']);
+     })
+     ->whereHas('booking.flight', function($query) {
+         // Solo vuelos que aún no han partido
+         $query->where('departure_at', '>', now());
+     })
+     ->get();
+
+     return response()->json(['tickets' => $tickets]);
+ }
+
  public function fast(\App\Http\Requests\CheckinStoreRequest $request)
 {
     $data = $request->validated();

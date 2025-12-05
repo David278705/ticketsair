@@ -2,11 +2,11 @@
     <main>
         <Hero />
         <FlightSearch ref="flightSearchRef" />
+        <CheckinBox class="mt-16" />
         <!-- <PopularRoutes class="mt-16" /> -->
         <NewsModule class="mt-16" />
         <Benefits class="mt-16" />
         <Testimonials class="mt-16" />
-        <CheckinBox class="mt-16" />
     </main>
 </template>
 

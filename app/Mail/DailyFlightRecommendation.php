@@ -51,7 +51,7 @@ class DailyFlightRecommendation extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: '✈️ Vuelo Recomendado del Día - TicketsAir',
+            subject: 'Vuelo Recomendado - TicketsAir',
         );
     }
 

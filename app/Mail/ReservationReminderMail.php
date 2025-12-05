@@ -19,7 +19,7 @@ class ReservationReminderMail extends Mailable implements ShouldQueue
 
     public function build()
     {
-        return $this->subject('⚠️ Tu Reserva Expira Pronto - TicketsAir')
+        return $this->subject('Tu Reserva Expira Pronto - TicketsAir')
             ->markdown('mail.reservation-reminder', ['booking' => $this->booking]);
     }
 }

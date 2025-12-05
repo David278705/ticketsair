@@ -16,7 +16,7 @@ class PurchaseMail extends Mailable {
   ) {}
   
   public function build(){
-    return $this->subject('✅ Confirmación de Compra - Vuelo ' . $this->booking->flight->code)
+    return $this->subject('Confirmación de Compra - Vuelo ' . $this->booking->flight->code)
       ->markdown('mail.purchase', [
         'booking' => $this->booking,
         'passenger' => $this->passenger

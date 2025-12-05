@@ -185,18 +185,17 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>✈️ Vuelo Recomendado del Día</h1>
+            <h1>Vuelo Recomendado</h1>
             <p>{{ $originCity }} → {{ $destinationCity }}</p>
         </div>
         
         <div class="content">
             <div class="greeting">
-                ¡Hola <strong>{{ $user->first_name ?? $user->name }}</strong>! 👋
+                Hola <strong>{{ $user->first_name ?? $user->name }}</strong>
             </div>
             
             <p class="intro-text">
-                Hemos seleccionado especialmente para ti este increíble vuelo. 
-                ¡No dejes pasar esta oportunidad de viajar al mejor precio!
+                Hemos seleccionado este vuelo especialmente para ti.
             </p>
             
             <div class="flight-card">
@@ -221,29 +220,29 @@
                 
                 <div class="flight-details">
                     <div class="detail-row">
-                        <span class="detail-label">📅 Fecha de Salida</span>
+                        <span class="detail-label">Fecha de Salida</span>
                         <span class="detail-value">{{ \Carbon\Carbon::parse($flight->departure_at)->locale('es')->isoFormat('D [de] MMMM [de] YYYY') }}</span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">🕐 Hora de Salida</span>
+                        <span class="detail-label">Hora de Salida</span>
                         <span class="detail-value">{{ \Carbon\Carbon::parse($flight->departure_at)->format('h:i A') }}</span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">🕑 Hora de Llegada</span>
+                        <span class="detail-label">Hora de Llegada</span>
                         <span class="detail-value">{{ \Carbon\Carbon::parse($flight->arrival_at)->format('h:i A') }}</span>
                     </div>
                     @if($aircraftModel)
                     <div class="detail-row">
-                        <span class="detail-label">✈️ Aeronave</span>
+                        <span class="detail-label">Aeronave</span>
                         <span class="detail-value">{{ $aircraftModel }}</span>
                     </div>
                     @endif
                     <div class="detail-row">
-                        <span class="detail-label">🎫 Vuelo</span>
+                        <span class="detail-label">Vuelo</span>
                         <span class="detail-value">{{ $flight->code }}</span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">💺 Asientos Disponibles</span>
+                        <span class="detail-label">Asientos Disponibles</span>
                         <span class="detail-value">{{ $flight->capacity_economy + $flight->capacity_first }}</span>
                     </div>
                 </div>

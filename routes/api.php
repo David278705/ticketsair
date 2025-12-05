@@ -36,6 +36,7 @@ Route::get('/flights/{flight}/seats', [SeatController::class,'index']); // públ
 Route::get('/cities', fn() => \App\Models\City::orderBy('name')->get());
 Route::get('/aircraft', fn() => \App\Models\Aircraft::where('is_active', true)->orderBy('name')->get());
 Route::get('/news', [NewsController::class, 'index']);
+Route::get('/checkin/search', [CheckinController::class, 'search']); // buscar tickets para check-in
 Route::post('/checkin/fast', [CheckinController::class,'fast']); // por código o DNI
 Route::get('/users/by-dni/{dni}', [AuthController::class, 'getUserByDni']); // buscar usuario por DNI para autocompletar
 
