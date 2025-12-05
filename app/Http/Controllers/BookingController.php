@@ -355,13 +355,21 @@ class BookingController extends Controller
                 // Si es nueva tarjeta y quiere guardarla
                 if ($paymentMethod === 'new_card' && isset($paymentData['save_card']) && $paymentData['save_card']) {
                     $expiryParts = explode('/', $paymentData['expiry_date'] ?? '');
+                    $expYear = $expiryParts[1] ?? date('Y');
+                    
+                    // Si el año viene en formato de 2 dígitos (28), añadir "20"
+                    // Si ya viene en formato completo (2028), dejarlo así
+                    if (strlen($expYear) == 2) {
+                        $expYear = '20' . $expYear;
+                    }
+                    
                     \App\Models\Card::create([
                         'user_id' => $request->user()->id,
                         'brand' => $paymentData['card_type'] ?? 'unknown',
                         'holder_name' => $paymentData['card_holder'] ?? '',
                         'last4' => $paymentData['last_four'] ?? 'XXXX',
                         'exp_month' => $expiryParts[0] ?? '01',
-                        'exp_year' => isset($expiryParts[1]) ? '20' . $expiryParts[1] : date('Y'),
+                        'exp_year' => $expYear,
                         'token' => null,
                     ]);
                 }
@@ -506,13 +514,21 @@ class BookingController extends Controller
             // Si es nueva tarjeta y quiere guardarla
             if ($paymentMethod === 'new_card' && isset($paymentData['save_card']) && $paymentData['save_card']) {
                 $expiryParts = explode('/', $paymentData['expiry_date'] ?? '');
+                $expYear = $expiryParts[1] ?? date('Y');
+                
+                // Si el año viene en formato de 2 dígitos (28), añadir "20"
+                // Si ya viene en formato completo (2028), dejarlo así
+                if (strlen($expYear) == 2) {
+                    $expYear = '20' . $expYear;
+                }
+                
                 \App\Models\Card::create([
                     'user_id' => $request->user()->id,
                     'brand' => $paymentData['card_type'] ?? 'unknown',
                     'holder_name' => $paymentData['card_holder'] ?? '',
                     'last4' => $paymentData['last_four'] ?? 'XXXX',
                     'exp_month' => $expiryParts[0] ?? '01',
-                    'exp_year' => isset($expiryParts[1]) ? '20' . $expiryParts[1] : date('Y'),
+                    'exp_year' => $expYear,
                     'token' => null,
                 ]);
             }
