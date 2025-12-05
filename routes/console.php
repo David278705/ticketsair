@@ -16,3 +16,6 @@ Schedule::command('reservations:expire')->everyThirtyMinutes();
 
 // Enviar recordatorios de reservas cada hora
 Schedule::command('reservations:send-reminders')->hourly();
+
+// Enviar recomendaciones diarias de vuelos a clientes suscritos (cada 24 horas a las 9 AM)
+Schedule::command('flights:send-recommendations')->everyTenMinutes();

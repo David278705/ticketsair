@@ -131,5 +131,23 @@ class FlightController extends Controller
   return $flights;
 }
 
+/**
+ * Obtener un vuelo específico con sus relaciones
+ */
+public function show(Flight $flight)
+{
+    // Cargar relaciones necesarias
+    $flight->load([
+        'origin',
+        'destination',
+        'aircraft',
+        'activePromotion'
+    ]);
+    
+    // Agregar información de hora de llegada
+    $flight->arrival_info = $flight->getFormattedArrivalTime();
+    
+    return response()->json($flight);
 }
 
+}

@@ -16,8 +16,6 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
-        // Debug: Log datos recibidos
-        \Log::info('Profile update data:', $request->all());
 
         $request->validate([
             'first_name' => 'required|string|max:255',
@@ -32,9 +30,9 @@ class ProfileController extends Controller
             // Campos de ubicación
             'location.country' => 'required|string|max:3',
             'location.country_name' => 'required|string|max:100',
-            'location.state' => 'nullable|string|max:10',
+            'location.state' => 'nullable|string|max:50',
             'location.state_name' => 'nullable|string|max:100',
-            'location.city' => 'nullable|string|max:20',
+            'location.city' => 'nullable|string|max:100',
             'location.city_name' => 'nullable|string|max:100',
         ], [
             'first_name.required' => 'El nombre es requerido.',
@@ -74,10 +72,14 @@ class ProfileController extends Controller
             'city_name' => $request->input('location.city_name'),
         ]);
 
+        // Debug: verificar que se guardó
+        $user->refresh();
+
+
         return response()->json([
             'status' => 'success',
             'message' => 'Perfil actualizado exitosamente.',
-            'data' => $user->load('role')
+            'data' => $user->fresh()->load('role')
         ]);
     }
 
@@ -171,7 +173,6 @@ class ProfileController extends Controller
                 ]
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error al subir avatar: ' . $e->getMessage());
             
             return response()->json([
                 'status' => 'error',
@@ -203,7 +204,7 @@ class ProfileController extends Controller
                 'message' => 'Foto de perfil eliminada exitosamente.'
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error al eliminar avatar: ' . $e->getMessage());
+
             
             return response()->json([
                 'status' => 'error',

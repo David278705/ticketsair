@@ -123,7 +123,9 @@
                                 />
                                 <span
                                     class="block truncate"
-                                    :class="{ 'text-slate-400': !destinationId }"
+                                    :class="{
+                                        'text-slate-400': !destinationId,
+                                    }"
                                 >
                                     {{ destinationLabel }}
                                 </span>
@@ -234,9 +236,17 @@
                                 ref="listboxButtonRef"
                                 class="relative w-full cursor-default rounded-xl bg-white border border-slate-300 h-11 pl-3 pr-10 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                             >
-                                <span class="block truncate" :class="{ 'text-slate-400': !selectedClass }">{{
-                                    selectedClass ? selectedClass.name : 'Todas las clases'
-                                }}</span>
+                                <span
+                                    class="block truncate"
+                                    :class="{
+                                        'text-slate-400': !selectedClass,
+                                    }"
+                                    >{{
+                                        selectedClass
+                                            ? selectedClass.name
+                                            : "Todas las clases"
+                                    }}</span
+                                >
                                 <span
                                     class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2"
                                 >
@@ -308,7 +318,10 @@
                         >Precio Min</label
                     >
                     <div class="relative">
-                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
+                        <span
+                            class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"
+                            >$</span
+                        >
                         <input
                             type="number"
                             v-model.number="minPrice"
@@ -326,7 +339,10 @@
                         >Precio Max</label
                     >
                     <div class="relative">
-                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
+                        <span
+                            class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"
+                            >$</span
+                        >
                         <input
                             type="number"
                             v-model.number="maxPrice"
@@ -355,9 +371,7 @@
                         :disabled="loading"
                     >
                         <Search class="w-5 h-5" />
-                        <span>{{
-                            loading ? "Buscando…" : "Buscar"
-                        }}</span>
+                        <span>{{ loading ? "Buscando…" : "Buscar" }}</span>
                     </button>
                 </div>
             </div>
@@ -421,7 +435,7 @@
                             </span>
                         </span>
                     </div>
-                    
+
                     <!-- Precio Primera Clase -->
                     <div class="text-sm">
                         <span class="text-gray-600">Primera Clase: </span>
@@ -445,10 +459,12 @@
                             </span>
                         </span>
                     </div>
-                    
+
                     <!-- Badge de descuento si aplica -->
                     <div v-if="f.active_promotion" class="inline-block">
-                        <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">
+                        <span
+                            class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold"
+                        >
                             🎉 {{ f.active_promotion.discount_percent }}% OFF
                         </span>
                     </div>
@@ -605,7 +621,7 @@ const date = ref();
 const dateInput = ref("");
 const minDate = computed(() => {
     const today = new Date();
-    return today.toISOString().split('T')[0];
+    return today.toISOString().split("T")[0];
 });
 
 const classes = [
@@ -691,13 +707,15 @@ async function search(url) {
     resultsLoading.value = true;
     try {
         // Convertir precios a COP antes de enviar al backend
-        const minPriceCOP = minPrice.value !== null && minPrice.value !== '' 
-            ? convertToCOP(minPrice.value) 
-            : "";
-        const maxPriceCOP = maxPrice.value !== null && maxPrice.value !== '' 
-            ? convertToCOP(maxPrice.value) 
-            : "";
-        
+        const minPriceCOP =
+            minPrice.value !== null && minPrice.value !== ""
+                ? convertToCOP(minPrice.value)
+                : "";
+        const maxPriceCOP =
+            maxPrice.value !== null && maxPrice.value !== ""
+                ? convertToCOP(maxPrice.value)
+                : "";
+
         const params = {
             origin_id: originId.value?.id || "",
             destination_id: destinationId.value?.id || "",
@@ -851,4 +869,29 @@ async function processBooking(paymentData) {
         actionLoading.value = false;
     }
 }
+
+// Función para abrir modal desde URL (recomendaciones de email)
+async function openFlightModal(flightId) {
+    if (!ensureAuth()) return;
+
+    try {
+        // Obtener el vuelo por ID
+        const response = await api.get(`/flights/${flightId}`);
+        const flight = response.data;
+
+        // Establecer el vuelo actual y abrir modal de compra
+        ensureClass();
+        currentFlight.value = flight;
+        pendingAction.value = "purchase";
+        flightInfoOpen.value = true;
+    } catch (error) {
+        console.error("Error al cargar el vuelo:", error);
+        showError("Error", "No se pudo cargar el vuelo recomendado.");
+    }
+}
+
+// Exponer la función para que HomePage pueda llamarla
+defineExpose({
+    openFlightModal,
+});
 </script>
